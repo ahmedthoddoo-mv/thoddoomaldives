@@ -1,173 +1,102 @@
 export default function Home() {
   return (
-    <main style={{ fontFamily: "Arial" }}>
-<nav style={{
-  display: "flex",
-  justifyContent: "space-between",
-  padding: "20px 40px",
-  position: "absolute",
-  width: "100%",
-  color: "white",
-  zIndex: 10
-}}>
-  <div style={{ fontWeight: "bold", fontSize: "20px" }}>
-    iThoddoo Maldives
-  </div>
+    <main className="min-h-screen bg-white text-slate-900">
+      <nav className="absolute top-0 z-20 flex w-full items-center justify-between px-6 py-5 text-white md:px-12">
+        <div className="text-xl font-bold">iThoddoo Maldives</div>
+        <div className="hidden gap-6 text-sm font-medium md:flex">
+          <a href="/">Home</a>
+          <a href="/stay">Stay</a>
+          <a href="/experiences">Experiences</a>
+          <a href="/transfer">Transfer</a>
+          <a href="/contact">Contact</a>
+        </div>
+      </nav>
 
-  <div style={{ display: "flex", gap: "20px" }}>
-    <span>Home</span>
-    <span>Stay</span>
-    <span>Tours</span>
-    <span>Contact</span>
-  </div>
-</nav>
-      {/* HERO SECTION */}
-      <section style={{
-        height: "100vh",
-        backgroundImage: "url('https://images.unsplash.com/photo-1500375592092-40eb2168fd21')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        color: "white",
-        textAlign: "center",
-        padding: "20px"
-      }}>
-        <div>
-          <h1 style={{ fontSize: "64px", fontWeight: "bold" }}>
-            iThoddoo Maldives
-          </h1>
-          <p style={{ fontSize: "20px", marginTop: "10px" }}>
-            Discover paradise. Live the island life.
+      <section
+        className="relative flex min-h-screen items-center bg-cover bg-center px-6 text-white md:px-12"
+        style={{ backgroundImage: "url('/images/hero-thoddoo.jpg')" }}
+      >
+        <div className="absolute inset-0 bg-black/45" />
+
+        <div className="relative z-10 max-w-3xl">
+          <p className="mb-4 text-sm font-semibold uppercase tracking-[0.3em]">
+            Local Island Paradise
           </p>
 
-          <button style={{
-            marginTop: "25px",
-            padding: "14px 28px",
-            fontSize: "16px",
-            background: "#00bcd4",
-            border: "none",
-            borderRadius: "30px",
-            color: "white",
-            cursor: "pointer"
-          }}>
-            Plan Your Trip
-          </button>
+          <h1 className="text-5xl font-bold leading-tight md:text-7xl">
+            Discover Thoddoo Maldives
+          </h1>
+
+          <p className="mt-6 max-w-2xl text-lg text-white/90">
+            Stay, explore, and experience Thoddoo with trusted local guidance,
+            guesthouse bookings, transfers, and unforgettable island adventures.
+          </p>
+
+          <div className="mt-8 flex flex-wrap gap-4">
+            <a
+              href="/stay"
+              className="rounded-full bg-white px-6 py-3 font-semibold text-slate-900"
+            >
+              Book Your Stay
+            </a>
+
+            <a
+              href="https://wa.me/9609142538?text=Hi%20I%20want%20to%20plan%20a%20trip%20to%20Thoddoo"
+              target="_blank"
+              className="rounded-full bg-green-500 px-6 py-3 font-semibold text-white"
+            >
+              WhatsApp Us
+            </a>
+          </div>
         </div>
       </section>
 
-      {/* ABOUT SECTION */}
-      <section style={{ padding: "80px 20px", textAlign: "center" }}>
-        <h2 style={{ fontSize: "36px" }}>Welcome to iThoddoo</h2>
-        <p style={{ maxWidth: "700px", margin: "20px auto", fontSize: "18px", color: "#555" }}>
-          iThoddoo Maldives is your complete guide to one of the most beautiful local islands in the Maldives.
-          White sandy beaches, crystal clear waters, and authentic island culture await you.
+      <section className="px-6 py-20 text-center">
+        <h2 className="text-4xl font-bold">Why Visit Thoddoo?</h2>
+        <p className="mx-auto mt-4 max-w-2xl text-slate-600">
+          Thoddoo is famous for beautiful beaches, local island life,
+          snorkeling, agriculture, and fresh watermelon farms.
         </p>
+
+        <div className="mx-auto mt-10 grid max-w-6xl gap-6 md:grid-cols-4">
+          {[
+            ["🏖️", "Bikini Beach", "White sand and clear turquoise water"],
+            ["🐢", "Snorkeling", "Reefs, turtles, and marine life"],
+            ["🍉", "Watermelon Farms", "A unique agricultural island experience"],
+            ["🚤", "Excursions", "Sandbanks, fishing, and island trips"],
+          ].map(([icon, title, desc]) => (
+            <div key={title} className="rounded-2xl border p-6 shadow-sm">
+              <div className="text-3xl">{icon}</div>
+              <h3 className="mt-4 text-xl font-bold">{title}</h3>
+              <p className="mt-2 text-sm text-slate-600">{desc}</p>
+            </div>
+          ))}
+        </div>
       </section>
 
-      {/* HIGHLIGHTS */}
-      <section style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-        gap: "20px",
-        padding: "40px",
-        maxWidth: "1000px",
-        margin: "0 auto"
-      }}>
+      <section className="bg-slate-50 px-6 py-20">
+        <div className="mx-auto max-w-6xl">
+          <h2 className="text-4xl font-bold">Plan Everything in One Place</h2>
 
-        {[
-          { title: "Beaches", desc: "Soft white sand & turquoise water" },
-          { title: "Snorkeling", desc: "Coral reefs & marine life" },
-          { title: "Excursions", desc: "Sandbank & island trips" },
-          { title: "Local Culture", desc: "Real Maldivian island life" }
-        ].map((item) => (
-          <div key={item.title} style={{
-            padding: "20px",
-            borderRadius: "16px",
-            border: "1px solid #eee",
-            textAlign: "center",
-            background: "#fff"
-          }}>
-            <h3>{item.title}</h3>
-            <p style={{ color: "#666" }}>{item.desc}</p>
+          <div className="mt-10 grid gap-6 md:grid-cols-3">
+            {[
+              ["Stay", "Find guesthouses and send booking inquiries.", "/stay"],
+              ["Experiences", "Book snorkeling, sandbank, fishing, and tours.", "/experiences"],
+              ["Transfers", "Check speedboat and ferry information.", "/transfer"],
+            ].map(([title, desc, link]) => (
+              <a key={title} href={link} className="rounded-2xl bg-white p-6 shadow-sm">
+                <h3 className="text-2xl font-bold">{title}</h3>
+                <p className="mt-3 text-slate-600">{desc}</p>
+                <p className="mt-5 font-semibold text-cyan-700">Explore →</p>
+              </a>
+            ))}
           </div>
-        ))}
-      </section>
-<section style={{
-  padding: "60px 20px",
-  textAlign: "center"
-}}>
-  <h2 style={{ fontSize: "36px" }}>What We Offer</h2>
-
-  <div style={{
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-    gap: "20px",
-    marginTop: "30px",
-    maxWidth: "1000px",
-    marginLeft: "auto",
-    marginRight: "auto"
-  }}>
-    
-    <div style={{ padding: "20px", border: "1px solid #eee", borderRadius: "16px" }}>
-      <h3>🏨 Guesthouses</h3>
-      <p>Best stays in Thoddoo island</p>
-    </div>
-
-    <div style={{ padding: "20px", border: "1px solid #eee", borderRadius: "16px" }}>
-      <h3>🚤 Transfers</h3>
-      <p>Speedboat & ferry booking help</p>
-    </div>
-
-    <div style={{ padding: "20px", border: "1px solid #eee", borderRadius: "16px" }}>
-      <h3>🐠 Excursions</h3>
-      <p>Snorkeling, sandbank & fishing trips</p>
-    </div>
-
-  </div>
-</section>
-      {/* CTA SECTION */}
-      <section style={{
-        padding: "80px 20px",
-        textAlign: "center",
-        background: "#f5f5f5"
-      }}>
-        <h2>Start Your Maldives Journey</h2>
-        <p style={{ marginTop: "10px", color: "#666" }}>
-          Book stays, excursions, and experiences in Thoddoo
-        </p>
-
-        <button>
-<a
-  href="https://wa.me/9609142538?text=Hi%20I%20want%20to%20book%20a%20trip%20to%20Thoddoo"
-  target="_blank"
-  style={{
-    marginTop: "20px",
-    padding: "14px 30px",
-    fontSize: "16px",
-    background: "#25D366",
-    color: "white",
-    borderRadius: "30px",
-    textDecoration: "none",
-    display: "inline-block"
-  }}
->
-  Book on WhatsApp
-</a>
-        </button>
+        </div>
       </section>
 
-      {/* FOOTER */}
-      <footer style={{
-        textAlign: "center",
-        padding: "20px",
-        background: "#111",
-        color: "white"
-      }}>
-        © 2026 iThoddoo Maldives — All Rights Reserved
+      <footer className="bg-slate-950 px-6 py-8 text-center text-white">
+        © 2026 iThoddoo Maldives — Built for island travel and bookings
       </footer>
-
     </main>
   );
 }
