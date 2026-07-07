@@ -17,9 +17,9 @@ export const metadata: Metadata = {
   description:
     "Discover Thoddoo Maldives. Book guesthouses, transfers, excursions, and local experiences with trusted island experts.",
   icons: {
-    icon: "/icon.png",
-    shortcut: "/icon.png",
-    apple: "/icon.png",
+    icon: "/icon.png?v=3",
+    shortcut: "/icon.png?v=3",
+    apple: "/icon.png?v=3",
   },
 };
 
