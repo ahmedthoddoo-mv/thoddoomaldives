@@ -1,4 +1,4 @@
-import BookButton from "@/components/BookButton";
+import BookingInquiryForm from "@/components/BookingInquiryForm";
 
 export default function StayPage() {
   const rooms = [
@@ -82,6 +82,9 @@ export default function StayPage() {
           ))}
         </div>
       </section>
+      <section className="mx-auto max-w-6xl px-6 py-20">
+  <BookingInquiryForm />
+</section>
     </main>
   );
 }
