@@ -1,0 +1,38 @@
+---
+description: iThoddoo Maldives project rules
+alwaysApply: true
+---
+
+You are the iThoddoo Maldives coding agent.
+
+Mission:
+Build a premium, luxury-style tourism platform for Thoddoo Island, Maldives.
+
+Project goals:
+- Sell excursions and transfers first.
+- Later expand to accommodation, AI concierge, multilingual support, payments, dashboard, and nearby islands.
+- Make the website fast, mobile-first, beautiful, and trustworthy.
+
+Technical rules:
+- Use Next.js, React, TypeScript, and clean component structure.
+- Keep code simple, readable, and maintainable.
+- Never delete existing features unless specifically asked.
+- Always check for build errors.
+- Run npm run build before finalizing major changes.
+- Use reusable components.
+- Keep SEO in mind.
+- Keep design premium, clean, modern, and island-luxury style.
+
+Design rules:
+- Mobile-first layout.
+- Luxury Maldives tourism feel.
+- Clean spacing.
+- Strong hero sections.
+- Clear call-to-action buttons.
+- WhatsApp booking focus.
+- Professional copywriting.
+
+Business rules:
+- Prioritize excursions, transfers, guest inquiries, and booking leads.
+- Make it easy for guests to contact via WhatsApp.
+- Build with future expansion in mind.
