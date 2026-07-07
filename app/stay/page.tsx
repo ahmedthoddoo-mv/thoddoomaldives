@@ -66,6 +66,53 @@ export default function StayPage() {
             <div className="mt-8">
               <BookButton phone="9609910136" name="Thoddoo Sun Sky Inn" />
             </div>
+            <div className="mt-10 grid gap-6 md:grid-cols-2">
+  {[
+    {
+      name: "Deluxe Double Room",
+      price: "$85",
+      rooms: "8 Rooms Available",
+      guests: "2 Adults",
+    },
+    {
+      name: "Family Room",
+      price: "$110",
+      rooms: "1 Room Available",
+      guests: "4 Adults",
+    },
+  ].map((room) => (
+    <div
+      key={room.name}
+      className="rounded-2xl border p-6 shadow-sm bg-white"
+    >
+      <h3 className="text-2xl font-bold">{room.name}</h3>
+
+      <p className="mt-2 text-gray-600">
+        👥 {room.guests}
+      </p>
+
+      <p className="mt-2 text-gray-600">
+        🛏 {room.rooms}
+      </p>
+
+      <p className="mt-2 text-gray-600">
+        🍳 Breakfast Included
+      </p>
+
+      <p className="mt-6 text-3xl font-bold">
+        {room.price}
+        <span className="text-lg font-normal"> / night</span>
+      </p>
+
+      <div className="mt-6">
+        <BookButton
+          phone="9609910136"
+          name={`Thoddoo Sun Sky Inn - ${room.name}`}
+        />
+      </div>
+    </div>
+  ))}
+</div>
           </div>
         </div>
       </section>
