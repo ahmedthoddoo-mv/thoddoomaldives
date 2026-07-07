@@ -57,7 +57,7 @@ export default function StayPage() {
 
             <div className="mt-8 rounded-2xl bg-slate-50 p-5">
               <p className="text-sm text-slate-500">Starting from</p>
-              <p className="text-3xl font-bold">$45 / night</p>
+              <p className="text-3xl font-bold">$85 / night</p>
               <p className="mt-1 text-sm text-slate-500">
                 Final price depends on dates, guests, and room type.
               </p>
