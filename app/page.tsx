@@ -1,3 +1,4 @@
+import HeroSlider from "@/components/HeroSlider";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
@@ -21,7 +22,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-white text-slate-900">
       <Navbar />
-
+<HeroSlider />
       <section
         className="relative flex min-h-screen items-center bg-cover bg-center px-6 text-white md:px-12"
         style={{ backgroundImage: `url('${heroImages[0]}')` }}
