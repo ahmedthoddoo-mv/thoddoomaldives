@@ -1,3 +1,4 @@
+import BookButton from "@/components/BookButton";
 import BookingInquiryForm from "@/components/BookingInquiryForm";
 
 export default function StayPage() {
