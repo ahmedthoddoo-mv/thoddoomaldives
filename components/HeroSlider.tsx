@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 const images = [
@@ -51,19 +52,19 @@ export default function HeroSlider() {
         </p>
 
         <div className="mt-8 flex flex-wrap gap-4">
-          <a
+          <Link
             href="/stay"
             className="rounded-full bg-white px-6 py-3 font-semibold text-slate-900"
           >
             Book Your Stay
-          </a>
+          </Link>
 
-          <a
+          <Link
             href="/experiences"
             className="rounded-full border border-white px-6 py-3 font-semibold text-white"
           >
             Explore Experiences
-          </a>
+          </Link>
         </div>
       </div>
     </section>

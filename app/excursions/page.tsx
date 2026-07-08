@@ -1,7 +1,4 @@
 import type { Metadata } from "next";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import WhatsAppButton from "@/components/WhatsAppButton";
 import ExperienceCard from "@/components/ExperienceCard";
 import ExcursionInquiryForm from "@/components/ExcursionInquiryForm";
 import {
@@ -33,8 +30,6 @@ export default function ExcursionsPage() {
 
   return (
     <main className="min-h-screen bg-white text-slate-900">
-      <Navbar />
-
       {/* Hero */}
       <section
         className="relative flex min-h-[70vh] items-center bg-cover bg-center px-6 text-white md:px-12"
@@ -240,9 +235,6 @@ export default function ExcursionsPage() {
           </a>
         </div>
       </section>
-
-      <Footer />
-      <WhatsAppButton />
     </main>
   );
 }

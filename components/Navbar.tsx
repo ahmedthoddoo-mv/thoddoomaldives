@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 export default function Navbar() {
@@ -19,15 +20,15 @@ export default function Navbar() {
   return (
     <nav className="absolute top-0 z-40 w-full px-6 py-5 text-white md:px-12">
       <div className="flex items-center justify-between">
-        <a href="/" className="text-xl font-bold">
+        <Link href="/" className="text-xl font-bold">
           iThoddoo Maldives
-        </a>
+        </Link>
 
         <div className="hidden gap-6 text-sm font-medium md:flex">
           {links.map(([label, href]) => (
-            <a key={href} href={href} className="hover:text-cyan-200">
+            <Link key={href} href={href} className="hover:text-cyan-200">
               {label}
-            </a>
+            </Link>
           ))}
         </div>
 
@@ -43,13 +44,14 @@ export default function Navbar() {
         <div className="mt-4 rounded-2xl bg-white p-4 text-slate-900 shadow-xl md:hidden">
           <div className="grid gap-3">
             {links.map(([label, href]) => (
-              <a
+              <Link
                 key={href}
                 href={href}
+                onClick={() => setOpen(false)}
                 className="rounded-xl px-4 py-3 font-semibold hover:bg-slate-100"
               >
                 {label}
-              </a>
+              </Link>
             ))}
           </div>
         </div>
