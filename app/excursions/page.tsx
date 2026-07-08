@@ -33,7 +33,7 @@ export default function ExcursionsPage() {
       {/* Hero */}
       <section
         className="relative flex min-h-[70vh] items-center bg-cover bg-center px-6 text-white md:px-12"
-        style={{ backgroundImage: "url('/images/homepage/hero-1.jpg')" }}
+        style={{ backgroundImage: "url('/images/homepage/hero-4.jpg')" }}
       >
         <div className="absolute inset-0 bg-black/55" />
 

@@ -1,17 +1,16 @@
 export default function GalleryPage() {
   const photos = [
+    "/images/hero-thoddoo.jpg",
     "/images/homepage/hero-1.jpg",
-    "/images/homepage/hero-2.jpg",
-    "/images/homepage/hero-3.jpg",
     "/images/homepage/hero-4.jpg",
-    "/images/homepage/hero-5.jpg",
+    "/images/homepage/hero-6.jpg",
   ];
 
   return (
     <main className="min-h-screen bg-white text-slate-900">
       <section
         className="relative flex min-h-[60vh] items-center bg-cover bg-center px-6 text-white md:px-12"
-        style={{ backgroundImage: "url('/images/homepage/hero-3.jpg')" }}
+        style={{ backgroundImage: "url('/images/hero-thoddoo.jpg')" }}
       >
         <div className="absolute inset-0 bg-black/50" />
 

@@ -61,25 +61,25 @@ const reasons = [
 const experiencePlaceholders = [
   {
     title: "Snorkeling",
-    image: "/images/homepage/hero-1.jpg",
+    image: "/images/homepage/hero-4.jpg",
     description:
       "Explore Thoddoo reef areas with local guidance, clear lagoons, and a chance to see turtles.",
   },
   {
     title: "Sandbank",
-    image: "/images/homepage/hero-3.jpg",
+    image: "/images/hero-thoddoo.jpg",
     description:
       "Spend a picture-perfect island day on soft white sand surrounded by turquoise water.",
   },
   {
     title: "Fishing",
-    image: "/images/homepage/hero-4.jpg",
+    image: "/images/homepage/hero-1.jpg",
     description:
       "Join a traditional fishing trip and enjoy the calm ocean around golden hour.",
   },
   {
     title: "Water Sports",
-    image: "/images/homepage/hero-2.jpg",
+    image: "/images/hero-thoddoo.jpg",
     description:
       "Add lagoon fun to your holiday with kayaking, paddleboarding, and local water activities.",
   },
@@ -119,7 +119,7 @@ type HeroMedia =
 
 const heroMedia: HeroMedia = {
   type: "image",
-  src: "/images/homepage/hero-6.jpg",
+  src: "/images/homepage/hero-1.jpg",
 };
 
 function HeroBackground({ media }: { media: HeroMedia }) {
@@ -359,7 +359,7 @@ export default function Home() {
       <section className="relative overflow-hidden bg-white py-24">
         <div
           className="absolute inset-0 bg-cover bg-center opacity-10"
-          style={{ backgroundImage: "url('/images/homepage/hero-3.jpg')" }}
+          style={{ backgroundImage: "url('/images/hero-thoddoo.jpg')" }}
         />
         <Container>
           <div className="relative rounded-3xl bg-slate-950 px-6 py-16 text-center text-white shadow-2xl md:px-12">

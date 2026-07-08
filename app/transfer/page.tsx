@@ -59,7 +59,7 @@ export default function TransferPage() {
       <section
         className="relative flex min-h-[65vh] items-center bg-cover bg-center px-6 text-white md:px-12"
         style={{
-          backgroundImage: "url('/images/homepage/hero-2.jpg')",
+          backgroundImage: "url('/images/hero-thoddoo.jpg')",
         }}
       >
         <div className="absolute inset-0 bg-black/50"></div>

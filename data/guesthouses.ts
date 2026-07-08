@@ -13,12 +13,12 @@ export const guesthouses: Guesthouse[] = [
     rating: "4.9",
     priceFrom: "$85 / night",
     whatsapp: "9609910136",
-    heroImage: "/images/stay/guesthouse-front.jpg",
+    heroImage: "/images/hero-thoddoo.jpg",
     gallery: [
-      "/images/stay/guesthouse-front.jpg",
-      "/images/rooms/deluxe-1.jpg",
-      "/images/rooms/family-1.jpg",
-      "/images/rooms/bathroom.jpg",
+      "/images/hero-thoddoo.jpg",
+      "/images/homepage/hero-1.jpg",
+      "/images/homepage/hero-6.jpg",
+      "/images/homepage/hero-4.jpg",
     ],
     amenities: [
       "Free Wi-Fi",
@@ -84,7 +84,7 @@ export const guesthouses: Guesthouse[] = [
         bedType: "1 Double Bed",
         description:
           "Comfortable double room with air conditioning, private bathroom, and breakfast included.",
-        image: "/images/rooms/deluxe-1.jpg",
+        image: "/images/hero-thoddoo.jpg",
         amenities: [
           "Air conditioning",
           "Private bathroom",
@@ -101,7 +101,7 @@ export const guesthouses: Guesthouse[] = [
         bedType: "1 Double Bed + 2 Single Beds",
         description:
           "Spacious room for families or groups with private bathroom and breakfast included.",
-        image: "/images/rooms/family-1.jpg",
+        image: "/images/homepage/hero-1.jpg",
         amenities: [
           "Air conditioning",
           "Private bathroom",

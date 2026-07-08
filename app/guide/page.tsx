@@ -12,7 +12,7 @@ export default function GuidePage() {
     <main className="min-h-screen bg-white text-slate-900">
       <section
         className="relative flex min-h-[60vh] items-center bg-cover bg-center px-6 text-white md:px-12"
-        style={{ backgroundImage: "url('/images/homepage/hero-5.jpg')" }}
+        style={{ backgroundImage: "url('/images/homepage/hero-1.jpg')" }}
       >
         <div className="absolute inset-0 bg-black/50" />
         <div className="relative z-10 max-w-3xl">

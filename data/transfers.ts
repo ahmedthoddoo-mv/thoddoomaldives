@@ -13,7 +13,7 @@ export const transfers: Transfer[] = [
     departurePoint: "Male / Velana International Airport area",
     arrivalPoint: "Thoddoo harbour",
     scheduleNote: "Schedules can change due to season, demand, and weather.",
-    image: "/images/homepage/hero-2.jpg",
+    image: "/images/hero-thoddoo.jpg",
     highlights: [
       "Most popular option",
       "Advance booking recommended",
@@ -33,7 +33,7 @@ export const transfers: Transfer[] = [
     departurePoint: "Airport or Male pickup by arrangement",
     arrivalPoint: "Thoddoo harbour",
     scheduleNote: "Subject to weather, sea conditions, and operator availability.",
-    image: "/images/homepage/hero-6.jpg",
+    image: "/images/homepage/hero-1.jpg",
     highlights: [
       "Flexible timing",
       "Best for groups",

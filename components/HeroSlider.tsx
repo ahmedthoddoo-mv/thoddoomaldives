@@ -4,11 +4,9 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 const images = [
+  "/images/hero-thoddoo.jpg",
   "/images/homepage/hero-1.jpg",
-  "/images/homepage/hero-2.jpg",
-  "/images/homepage/hero-3.jpg",
   "/images/homepage/hero-4.jpg",
-  "/images/homepage/hero-5.jpg",
   "/images/homepage/hero-6.jpg",
 ];
 

@@ -26,7 +26,7 @@ export default function RestaurantsPage() {
     <main className="min-h-screen bg-white text-slate-900">
       <section
         className="relative flex min-h-[60vh] items-center bg-cover bg-center px-6 text-white md:px-12"
-        style={{ backgroundImage: "url('/images/homepage/hero-2.jpg')" }}
+        style={{ backgroundImage: "url('/images/homepage/hero-6.jpg')" }}
       >
         <div className="absolute inset-0 bg-black/50" />
 

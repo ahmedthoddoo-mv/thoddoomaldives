@@ -62,7 +62,7 @@ export const experiences: Experience[] = [
     ],
     category: "snorkeling",
     featured: true,
-    image: "/images/homepage/hero-1.jpg",
+    image: "/images/homepage/hero-4.jpg",
   },
   {
     slug: "sandbank-trip",
@@ -80,7 +80,7 @@ export const experiences: Experience[] = [
       "Flexible departure times",
     ],
     category: "island",
-    image: "/images/homepage/hero-3.jpg",
+    image: "/images/hero-thoddoo.jpg",
   },
   {
     slug: "sunset-fishing",
@@ -98,7 +98,7 @@ export const experiences: Experience[] = [
       "Complimentary refreshments",
     ],
     category: "fishing",
-    image: "/images/homepage/hero-4.jpg",
+    image: "/images/homepage/hero-1.jpg",
   },
   {
     slug: "dolphin-cruise",
@@ -116,7 +116,7 @@ export const experiences: Experience[] = [
       "Great for photography",
     ],
     category: "island",
-    image: "/images/homepage/hero-5.jpg",
+    image: "/images/homepage/hero-4.jpg",
   },
   {
     slug: "water-sports",
@@ -134,7 +134,7 @@ export const experiences: Experience[] = [
       "Perfect for active travellers",
     ],
     category: "water-sports",
-    image: "/images/homepage/hero-2.jpg",
+    image: "/images/hero-thoddoo.jpg",
   },
   {
     slug: "watermelon-farm-tour",
@@ -152,7 +152,7 @@ export const experiences: Experience[] = [
       "Unique Thoddoo experience",
     ],
     category: "culture",
-    image: "/images/hero-thoddoo.jpg",
+    image: "/images/homepage/hero-6.jpg",
   },
 ];
 

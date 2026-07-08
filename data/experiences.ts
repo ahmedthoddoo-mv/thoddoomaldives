@@ -11,7 +11,7 @@ export const experiences: Experience[] = [
     category: "snorkeling",
     duration: "2-3 hours",
     price: "From USD 35 per person",
-    image: "/images/homepage/hero-1.jpg",
+    image: "/images/homepage/hero-4.jpg",
     highlights: [
       "Local guide",
       "Snorkeling equipment",
@@ -30,7 +30,7 @@ export const experiences: Experience[] = [
     category: "sandbank",
     duration: "Half day",
     price: "From USD 60 per person",
-    image: "/images/homepage/hero-3.jpg",
+    image: "/images/hero-thoddoo.jpg",
     highlights: [
       "Boat transfer",
       "Lagoon swimming",
@@ -49,7 +49,7 @@ export const experiences: Experience[] = [
     category: "fishing",
     duration: "2-3 hours",
     price: "From USD 40 per person",
-    image: "/images/homepage/hero-4.jpg",
+    image: "/images/homepage/hero-1.jpg",
     highlights: [
       "Local captain",
       "Traditional line fishing",

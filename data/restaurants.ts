@@ -12,7 +12,7 @@ export const restaurants: Restaurant[] = [
     location: "Thoddoo, Maldives",
     priceRange: "$$",
     openingHours: "Daily hours vary by season",
-    image: "/images/homepage/hero-5.jpg",
+    image: "/images/homepage/hero-6.jpg",
     featured: true,
   },
   {
@@ -26,7 +26,7 @@ export const restaurants: Restaurant[] = [
     location: "Near Thoddoo harbour",
     priceRange: "$$",
     openingHours: "Evening service, confirm locally",
-    image: "/images/homepage/hero-2.jpg",
+    image: "/images/hero-thoddoo.jpg",
     featured: false,
   },
 ];
