@@ -1,177 +1,107 @@
-import HeroSlider from "@/components/HeroSlider";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import WhatsAppButton from "@/components/WhatsAppButton";
+import BookButton from "@/components/BookButton";
+import BookingInquiryForm from "@/components/BookingInquiryForm";
 
-export default function Home() {
-  const heroImages = [
-    "/images/homepage/hero-1.jpg",
-    "/images/homepage/hero-2.jpg",
-    "/images/homepage/hero-3.jpg",
-    "/images/homepage/hero-4.jpg",
-    "/images/homepage/hero-5.jpg",
-  ];
-
-  const experiences = [
-    ["🐢", "Turtle Snorkeling", "Swim with turtles and explore Thoddoo reefs."],
-    ["🏝️", "Sandbank Trip", "Visit beautiful sandbanks with crystal-clear water."],
-    ["🎣", "Fishing Trips", "Sunset fishing and local-style fishing adventures."],
-    ["🍉", "Watermelon Farms", "Discover Thoddoo’s famous agricultural side."],
+export default function ThoddooSunSkyInnPage() {
+  const amenities = [
+    "📶 Free Wi-Fi",
+    "❄️ Air Conditioning",
+    "🚿 Private Bathroom",
+    "🔥 Hot Water",
+    "🍳 Breakfast Included",
+    "🚲 Bicycle Rental",
+    "🚤 Airport Transfer Help",
+    "🏖️ Near Bikini Beach",
+    "🤿 Excursion Assistance",
   ];
 
   return (
     <main className="min-h-screen bg-white text-slate-900">
-      <Navbar />
-<HeroSlider />
       <section
-        className="relative flex min-h-screen items-center bg-cover bg-center px-6 text-white md:px-12"
-        style={{ backgroundImage: `url('${heroImages[0]}')` }}
+        className="relative flex min-h-[70vh] items-center bg-cover bg-center px-6 text-white md:px-12"
+        style={{ backgroundImage: "url('/images/stay/guesthouse-front.jpg')" }}
       >
         <div className="absolute inset-0 bg-black/50" />
-
-        <div className="relative z-10 max-w-4xl">
-          <p className="mb-4 text-sm font-semibold uppercase tracking-[0.35em]">
-            Local Island Maldives
+        <div className="relative z-10 max-w-3xl">
+          <p className="mb-4 text-sm font-semibold uppercase tracking-[0.3em]">
+            Featured Guesthouse
           </p>
-
-          <h1 className="text-5xl font-bold leading-tight md:text-7xl">
-            Discover the Real Maldives in Thoddoo
+          <h1 className="text-5xl font-bold md:text-7xl">
+            Thoddoo Sun Sky Inn
           </h1>
-
-          <p className="mt-6 max-w-2xl text-lg text-white/90">
-            Plan your stay, book island experiences, arrange transfers, and
-            explore Thoddoo with trusted local guidance.
+          <p className="mt-6 text-lg text-white/90">
+            A peaceful tropical guesthouse with comfortable rooms, breakfast,
+            local support, and easy access to island experiences.
           </p>
 
-          <div className="mt-8 flex flex-wrap gap-4">
-            <a
-              href="/stay"
-              className="rounded-full bg-white px-6 py-3 font-semibold text-slate-900"
-            >
-              Book Your Stay
-            </a>
-
-            <a
-              href="/excursions"
-              className="rounded-full border border-white px-6 py-3 font-semibold text-white"
-            >
-              Explore Excursions
-            </a>
+          <div className="mt-8">
+            <BookButton phone="9609910136" name="Thoddoo Sun Sky Inn" />
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-6 py-20">
-        <p className="text-sm font-semibold uppercase tracking-widest text-cyan-700">
-          Photo Gallery
-        </p>
-        <h2 className="mt-3 text-4xl font-bold">
-          See Thoddoo Before You Arrive
-        </h2>
+      <section className="mx-auto max-w-6xl px-6 py-16">
+        <h2 className="text-4xl font-bold">Rooms</h2>
 
-        <div className="mt-8 grid gap-4 md:grid-cols-5">
-          {heroImages.map((image, index) => (
+        <div className="mt-8 grid gap-8 md:grid-cols-2">
+          <div className="overflow-hidden rounded-3xl border bg-white shadow-sm">
             <div
-              key={image}
-              className="h-64 rounded-3xl bg-cover bg-center shadow-sm"
-              style={{ backgroundImage: `url('${image}')` }}
-              aria-label={`Thoddoo photo ${index + 1}`}
+              className="h-80 bg-cover bg-center"
+              style={{ backgroundImage: "url('/images/rooms/deluxe-1.jpg')" }}
             />
-          ))}
+            <div className="p-6">
+              <h3 className="text-2xl font-bold">Deluxe Double Room</h3>
+              <p className="mt-3 text-slate-600">
+                Spacious room with wooden ceiling, air conditioning, private
+                bathroom, and comfortable double bed.
+              </p>
+              <p className="mt-5 text-3xl font-bold">$85 / night</p>
+              <p className="mt-2 text-sm text-slate-500">Breakfast included</p>
+              <div className="mt-6">
+                <BookButton
+                  phone="9609910136"
+                  name="Thoddoo Sun Sky Inn - Deluxe Double Room"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="overflow-hidden rounded-3xl border bg-white shadow-sm">
+            <div
+              className="h-80 bg-cover bg-center"
+              style={{ backgroundImage: "url('/images/rooms/family-1.jpg')" }}
+            />
+            <div className="p-6">
+              <h3 className="text-2xl font-bold">Family / Twin Room</h3>
+              <p className="mt-3 text-slate-600">
+                Comfortable twin room option for friends, families, and divers,
+                with private bathroom and garden access.
+              </p>
+              <p className="mt-5 text-3xl font-bold">$110 / night</p>
+              <p className="mt-2 text-sm text-slate-500">Breakfast included</p>
+              <div className="mt-6">
+                <BookButton
+                  phone="9609910136"
+                  name="Thoddoo Sun Sky Inn - Family Room"
+                />
+              </div>
+            </div>
+          </div>
         </div>
-      </section>
 
-      <section className="mx-auto max-w-6xl px-6 py-20">
-        <p className="text-sm font-semibold uppercase tracking-widest text-cyan-700">
-          Why Thoddoo
-        </p>
+        <h2 className="mt-16 text-4xl font-bold">Amenities</h2>
 
-        <h2 className="mt-3 text-4xl font-bold">
-          Beaches, turtles, farms, and real island life.
-        </h2>
-
-        <p className="mt-5 max-w-3xl text-slate-600">
-          Thoddoo is one of the Maldives’ most beautiful local islands, known
-          for white sandy beaches, turquoise lagoons, snorkeling, friendly island
-          life, and famous watermelon farms.
-        </p>
-
-        <div className="mt-8 grid gap-4 md:grid-cols-3">
-          {[
-            "🏖️ Beautiful Bikini Beach",
-            "🐢 Turtle snorkeling areas",
-            "🍉 Famous watermelon farms",
-            "🚤 Easy speedboat transfers",
-            "🏨 Local guesthouse stays",
-            "🤿 Local island experiences",
-          ].map((item) => (
-            <div key={item} className="rounded-2xl border bg-white p-5 font-medium">
+        <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {amenities.map((item) => (
+            <div key={item} className="rounded-2xl border bg-slate-50 p-4 text-lg">
               {item}
             </div>
           ))}
         </div>
+
+        <section className="mt-16">
+          <BookingInquiryForm />
+        </section>
       </section>
-
-      <section className="bg-slate-50 px-6 py-20">
-        <div className="mx-auto max-w-6xl">
-          <p className="text-sm font-semibold uppercase tracking-widest text-cyan-700">
-            Featured Stay
-          </p>
-
-          <h2 className="mt-3 text-4xl font-bold">Thoddoo Sun Sky Inn</h2>
-
-          <div className="mt-8 overflow-hidden rounded-3xl bg-white shadow-sm md:grid md:grid-cols-2">
-            <div
-              className="min-h-[320px] bg-cover bg-center"
-              style={{ backgroundImage: "url('/images/homepage/hero-2.jpg')" }}
-            />
-
-            <div className="p-6 md:p-10">
-              <h3 className="text-3xl font-bold">Stay close to island life</h3>
-
-              <p className="mt-4 text-slate-600">
-                Comfortable rooms with breakfast, Wi-Fi, air conditioning,
-                private bathroom, hot water, bicycle rental, and transfer help.
-              </p>
-
-              <div className="mt-6 grid gap-3 text-sm text-slate-700 md:grid-cols-2">
-                <p>✅ Deluxe Double Room — $85</p>
-                <p>✅ Family Room — $110</p>
-                <p>✅ Breakfast included</p>
-                <p>✅ WhatsApp booking</p>
-              </div>
-
-              <a
-                href="/stay"
-                className="mt-8 inline-block rounded-full bg-slate-900 px-6 py-3 font-semibold text-white"
-              >
-                View Rooms
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-6xl px-6 py-20">
-        <p className="text-sm font-semibold uppercase tracking-widest text-cyan-700">
-          Island Experiences
-        </p>
-
-        <h2 className="mt-3 text-4xl font-bold">Things to do in Thoddoo</h2>
-
-        <div className="mt-8 grid gap-6 md:grid-cols-4">
-          {experiences.map(([icon, title, desc]) => (
-            <div key={title} className="rounded-3xl border bg-white p-6 shadow-sm">
-              <div className="text-4xl">{icon}</div>
-              <h3 className="mt-4 text-xl font-bold">{title}</h3>
-              <p className="mt-3 text-sm text-slate-600">{desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <Footer />
-      <WhatsAppButton />
     </main>
   );
 }
