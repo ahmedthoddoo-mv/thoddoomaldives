@@ -7,49 +7,80 @@ import Card from "@/components/ui/Card";
 import Container from "@/components/ui/Container";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { guesthouses } from "@/data/guesthouses";
-import { experiences } from "@/lib/experiences";
+import { generateGuesthouseLink } from "@/lib/whatsapp";
 
 export const metadata: Metadata = {
   title: "iThoddoo Maldives | Stays, Experiences & Local Island Travel",
   description:
-    "Plan your Thoddoo Maldives trip with local experts. Discover verified stays, premium experiences, transfers, and fast WhatsApp support.",
+    "Discover the real Maldives with luxury stays, unforgettable experiences, and local concierge service in Thoddoo.",
 };
 
 const trustItems = [
   {
     title: "Local Experts",
-    text: "Island-based help from people who know Thoddoo, transfer timing, guesthouses, beaches, and local operators.",
+    text: "Island-based guidance from people who know Thoddoo, transfers, beaches, and trusted local operators.",
   },
   {
-    title: "Verified Properties",
-    text: "Structured property pages with practical room, amenity, location, and booking details.",
+    title: "Verified Guesthouses",
+    text: "Curated stays with practical room, amenity, location, and booking details before you arrive.",
   },
   {
     title: "Fast WhatsApp Support",
-    text: "Ask questions, share your travel dates, and get help planning your stay directly on WhatsApp.",
+    text: "Share your dates and questions, then get quick help from a real local contact.",
   },
   {
-    title: "Best Local Prices",
-    text: "Connect with local partners and receive current stay, transfer, and experience options for your trip.",
+    title: "Trusted Local Concierge",
+    text: "Plan stays, transfers, excursions, and island days with one clear support channel.",
   },
 ];
 
 const reasons = [
   {
-    title: "One Island, Deep Knowledge",
-    text: "Focused Thoddoo guidance instead of generic Maldives advice.",
+    icon: "01",
+    title: "Real Local Knowledge",
+    text: "Specific Thoddoo advice instead of generic Maldives travel content.",
   },
   {
-    title: "Smooth Arrival Planning",
-    text: "Transfer help based on your flight time, budget, and group size.",
+    icon: "02",
+    title: "Stress-Free Vacation",
+    text: "Arrival, transfer, stay, and activity planning made easier before you land.",
   },
   {
-    title: "Curated Experiences",
-    text: "Snorkeling, fishing, sandbanks, dolphins, farms, and local culture.",
+    icon: "03",
+    title: "Handpicked Experiences",
+    text: "Snorkeling, sandbanks, fishing, water sports, farms, and local island life.",
   },
   {
-    title: "Human Booking Support",
-    text: "A real local team helps you choose, confirm, and prepare.",
+    icon: "04",
+    title: "Reliable Support",
+    text: "A human local concierge helps you choose, confirm, and prepare.",
+  },
+];
+
+const experiencePlaceholders = [
+  {
+    title: "Snorkeling",
+    image: "/images/homepage/hero-1.jpg",
+    description:
+      "Explore Thoddoo reef areas with local guidance, clear lagoons, and a chance to see turtles.",
+  },
+  {
+    title: "Sandbank",
+    image: "/images/homepage/hero-3.jpg",
+    description:
+      "Spend a picture-perfect island day on soft white sand surrounded by turquoise water.",
+  },
+  {
+    title: "Fishing",
+    image: "/images/homepage/hero-4.jpg",
+    description:
+      "Join a traditional fishing trip and enjoy the calm ocean around golden hour.",
+  },
+  {
+    title: "Water Sports",
+    image: "/images/homepage/hero-2.jpg",
+    description:
+      "Add lagoon fun to your holiday with kayaking, paddleboarding, and local water activities.",
   },
 ];
 
@@ -73,8 +104,6 @@ const testimonials = [
     detail: "Solo traveler",
   },
 ];
-
-const featuredExperiences = experiences.slice(0, 3);
 
 type HeroMedia =
   | {
@@ -122,7 +151,7 @@ export default function Home() {
     <main className="min-h-screen bg-white text-slate-900">
       <section className="relative flex min-h-screen items-center overflow-hidden bg-slate-950 px-6 pt-28 text-white md:px-12">
         <HeroBackground media={heroMedia} />
-        <div className="absolute inset-0 bg-black/60" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/45 to-slate-950/85" />
         <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-slate-950 to-transparent" />
 
         <div className="relative z-10 mx-auto w-full max-w-7xl">
@@ -131,11 +160,11 @@ export default function Home() {
               Thoddoo Island, Maldives
             </p>
             <h1 className="text-5xl font-bold leading-[0.95] md:text-7xl lg:text-8xl">
-              Plan a Maldives local island escape with people who know it best.
+              Discover the Real Maldives
             </h1>
             <p className="mt-8 max-w-2xl text-lg leading-8 text-white/85 md:text-xl">
-              Discover verified stays, premium excursions, airport transfers,
-              and practical Thoddoo travel help in one trusted place.
+              Luxury stays, unforgettable experiences and local concierge
+              service in Thoddoo.
             </p>
 
             <div className="mt-10 flex flex-wrap gap-4">
@@ -148,9 +177,17 @@ export default function Home() {
             </div>
           </div>
         </div>
+
+        <a
+          href="#trust"
+          className="absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-3 text-xs font-semibold uppercase tracking-[0.3em] text-white/70"
+        >
+          Scroll
+          <span className="h-10 w-px animate-pulse bg-white/60" />
+        </a>
       </section>
 
-      <section className="relative z-10 -mt-20 px-6 pb-16">
+      <section id="trust" className="relative z-10 -mt-20 px-6 pb-16">
         <div className="mx-auto grid max-w-7xl gap-4 md:grid-cols-4">
           {trustItems.map((item) => (
             <div
@@ -206,12 +243,25 @@ export default function Home() {
                   <p className="mt-3 leading-7 text-slate-600">
                     {guesthouse.tagline}
                   </p>
-                  <Link
-                    href={`/stay/${guesthouse.slug}`}
-                    className="mt-6 inline-block rounded-full bg-slate-900 px-6 py-3 font-semibold text-white transition hover:bg-slate-700"
-                  >
-                    View Details
-                  </Link>
+                  <div className="mt-6 flex flex-wrap gap-3">
+                    <Link
+                      href={`/stay/${guesthouse.slug}`}
+                      className="inline-block rounded-full bg-slate-900 px-6 py-3 font-semibold text-white transition hover:bg-slate-700"
+                    >
+                      View Details
+                    </Link>
+                    <a
+                      href={generateGuesthouseLink({
+                        phone: guesthouse.whatsapp,
+                        guesthouse: guesthouse.name,
+                      })}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block rounded-full bg-green-500 px-6 py-3 font-semibold text-white transition hover:bg-green-600"
+                    >
+                      Book Now
+                    </a>
+                  </div>
                 </div>
               </article>
             ))}
@@ -224,7 +274,7 @@ export default function Home() {
           <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <SectionTitle
               eyebrow="Featured Experiences"
-              title="Premium days on the water and island"
+              title="Unforgettable Thoddoo experiences"
             />
             <Link
               href="/excursions"
@@ -234,30 +284,27 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="mt-10 grid gap-8 lg:grid-cols-3">
-            {featuredExperiences.map((experience) => (
+          <div className="mt-10 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+            {experiencePlaceholders.map((experience) => (
               <article
-                key={experience.slug}
+                key={experience.title}
                 className="group overflow-hidden rounded-3xl bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
               >
                 <div
                   className="min-h-72 bg-slate-200 bg-cover bg-center"
                   style={{
-                    backgroundImage: `linear-gradient(rgb(15 23 42 / 0.12), rgb(15 23 42 / 0.12)), url('${experience.image ?? "/images/hero-thoddoo.jpg"}')`,
+                    backgroundImage: `linear-gradient(rgb(15 23 42 / 0.12), rgb(15 23 42 / 0.12)), url('${experience.image}')`,
                   }}
                 />
                 <div className="p-6">
                   <p className="text-sm font-semibold uppercase tracking-widest text-cyan-700">
-                    {experience.duration}
+                    Premium Experience
                   </p>
                   <h3 className="mt-3 text-2xl font-bold">
                     {experience.title}
                   </h3>
                   <p className="mt-3 leading-7 text-slate-600">
                     {experience.description}
-                  </p>
-                  <p className="mt-5 font-bold text-slate-900">
-                    {experience.price}
                   </p>
                 </div>
               </article>
@@ -274,10 +321,10 @@ export default function Home() {
           />
 
           <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {reasons.map((reason, index) => (
+            {reasons.map((reason) => (
               <Card key={reason.title}>
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-50 text-sm font-bold text-cyan-700">
-                  {String(index + 1).padStart(2, "0")}
+                  {reason.icon}
                 </div>
                 <h3 className="mt-6 text-xl font-bold">{reason.title}</h3>
                 <p className="mt-3 leading-7 text-slate-600">{reason.text}</p>

@@ -106,6 +106,156 @@ Core rules:
 - Use real images for inspectable places, rooms, restaurants, and activities.
 - Keep WhatsApp booking actions clear and easy to find.
 
+## Platform Engine
+
+The Platform Engine is the reusable foundation for Project Atlas. It turns iThoddoo Maldives from a set of pages into a structured travel platform where future islands, properties, experiences, restaurants, transfers, testimonials, and FAQs can be added through typed data and reusable UI.
+
+### Data Layer
+
+Platform data lives in `data/` and should be typed from `types/`.
+
+Current engine modules:
+- `data/guesthouses.ts`
+- `data/experiences.ts`
+- `data/restaurants.ts`
+- `data/transfers.ts`
+- `data/testimonials.ts`
+- `data/faq.ts`
+
+Type contracts:
+- `types/guesthouse.ts`
+- `types/experience.ts`
+- `types/restaurant.ts`
+- `types/transfer.ts`
+- `types/testimonial.ts`
+- `types/faq.ts`
+
+Rules:
+- Every platform record needs a stable `id`.
+- Public records that may become pages should include a `slug`.
+- Data should be accurate, honest, and ready to move to a database later.
+- Mock data is acceptable only when clearly structured like production data.
+
+### UI Layer
+
+The UI layer should compose small primitives and domain components.
+
+Primary folders:
+- `components/ui/` for primitives.
+- `components/cards/` for reusable listing cards.
+- `components/property/` for property-specific rendering.
+- `components/layout/` for future shared layout pieces.
+- `components/sections/` for reusable page sections.
+- `components/forms/` for reusable forms.
+- `components/booking/` for future booking flows.
+- `components/gallery/` for visual galleries.
+- `components/maps/` for future maps.
+
+Pages should stay thin. They should import data, choose sections, and compose components rather than owning large repeated UI blocks.
+
+### Card Components
+
+Cards in `components/cards/` are the standard public preview components for platform records:
+- `GuesthouseCard`
+- `ExperienceCard`
+- `RestaurantCard`
+- `TransferCard`
+- `TestimonialCard`
+- `FAQCard`
+
+Card rules:
+- Props must be strongly typed.
+- Cards should be mobile-first.
+- Cards should use existing UI primitives where possible.
+- Cards should not own page-specific business logic.
+- Booking actions should use shared helper functions.
+
+### Booking Components
+
+Booking is WhatsApp-first today and should remain simple until the manual process is fully understood.
+
+Current helpers live in:
+- `lib/whatsapp.ts`
+
+Future booking components should live in:
+- `components/booking/`
+
+Rules:
+- Booking CTAs must be clear and easy to find.
+- WhatsApp messages should include useful context.
+- Prices, schedules, and availability must not be presented as guaranteed unless confirmed.
+- Future online payment flows should reuse the same platform data contracts.
+
+### Dynamic Routes
+
+The dynamic property route is the first route powered by the engine:
+
+```text
+app/stay/[slug]/page.tsx
+```
+
+Future dynamic routes should follow the same pattern:
+- route params read a `slug`
+- data lookup happens through a shared helper
+- missing records call `notFound()`
+- `generateStaticParams()` is used where records can be prerendered
+- metadata is generated from structured data
+- rendering is delegated to reusable components
+
+Candidate future routes:
+- `/experiences/[slug]`
+- `/restaurants/[slug]`
+- `/transfer/[slug]`
+- `/islands/[slug]`
+
+### Future AI Concierge
+
+The AI Concierge should consume approved platform data, not scattered page copy.
+
+Expected inputs:
+- guesthouses
+- rooms
+- experiences
+- transfers
+- restaurants
+- FAQs
+- local guide content
+- partner rules and availability notes
+
+Expected outputs:
+- itinerary suggestions
+- stay recommendations
+- transfer guidance
+- experience recommendations
+- WhatsApp handoff messages
+- qualified lead context for the team
+
+The AI Concierge must protect trust by avoiding invented prices, schedules, availability, or policies.
+
+### Future Partner Dashboard
+
+The Partner Dashboard should eventually replace code-edited local data with managed records.
+
+Dashboard domains:
+- guesthouses
+- rooms
+- amenities
+- experiences
+- transfers
+- restaurants
+- testimonials
+- FAQs
+- leads
+- media assets
+
+Architecture direction:
+- keep the public component contracts stable
+- move records from `data/` to a database or CMS
+- add protected admin routes
+- add server-side mutation flows
+- keep public pages statically optimized where possible
+- preserve WhatsApp-first booking while adding better lead tracking
+
 ## Future Admin Dashboard
 
 The future Admin Dashboard should manage platform data without requiring code edits.
