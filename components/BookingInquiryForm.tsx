@@ -1,20 +1,25 @@
 "use client";
 
 import { useState } from "react";
+import type { Guesthouse } from "@/types/guesthouse";
 
-export default function BookingInquiryForm() {
+export default function BookingInquiryForm({
+  guesthouse,
+}: {
+  guesthouse: Guesthouse;
+}) {
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [adults, setAdults] = useState("2");
   const [children, setChildren] = useState("0");
-  const [roomType, setRoomType] = useState("Deluxe Double Room");
+  const [roomType, setRoomType] = useState(guesthouse.rooms[0]?.name ?? "");
   const [transfer, setTransfer] = useState("Yes");
   const [request, setRequest] = useState("");
 
   function handleSubmit() {
     const message = `Hi,
 
-I would like to book Thoddoo Sun Sky Inn.
+I would like to book ${guesthouse.name}.
 
 📅 Check-in: ${checkIn}
 📅 Check-out: ${checkOut}
@@ -29,14 +34,14 @@ ${request}
 I found you on iThoddoo Maldives.`;
 
     window.open(
-      `https://wa.me/9609910136?text=${encodeURIComponent(message)}`,
+      `https://wa.me/${guesthouse.whatsapp}?text=${encodeURIComponent(message)}`,
       "_blank"
     );
   }
 
   return (
-    <div className="rounded-3xl border bg-white p-6 shadow-sm">
-      <h2 className="text-3xl font-bold">Quick Booking Inquiry</h2>
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <h2 className="text-2xl font-bold sm:text-3xl">Quick Booking Inquiry</h2>
       <p className="mt-2 text-slate-600">
         Fill this form and send your booking request directly on WhatsApp.
       </p>
@@ -91,8 +96,9 @@ I found you on iThoddoo Maldives.`;
             onChange={(e) => setRoomType(e.target.value)}
             className="rounded-xl border p-3"
           >
-            <option>Deluxe Double Room</option>
-            <option>Family Room</option>
+            {guesthouse.rooms.map((room) => (
+              <option key={room.name}>{room.name}</option>
+            ))}
           </select>
         </label>
 

@@ -11,15 +11,29 @@ export default function PropertyRoomCard({
   whatsapp: string;
 }) {
   return (
-    <div className="overflow-hidden rounded-3xl border bg-white shadow-sm">
+    <div className="grid overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm md:grid-cols-[280px_1fr]">
       <div
-        className="h-80 bg-cover bg-center"
+        className="min-h-72 bg-cover bg-center md:min-h-full"
         style={{ backgroundImage: `url('${room.image}')` }}
       />
 
-      <div className="p-6">
-        <h3 className="text-2xl font-bold">{room.name}</h3>
-        <p className="mt-3 leading-7 text-slate-600">{room.description}</p>
+      <div className="p-5 sm:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h3 className="text-2xl font-bold">{room.name}</h3>
+            <p className="mt-2 text-sm font-semibold text-cyan-700">
+              {room.capacity}
+            </p>
+          </div>
+          <div className="rounded-2xl bg-slate-50 px-4 py-3 text-right">
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">
+              From
+            </p>
+            <p className="text-2xl font-bold">{room.price}</p>
+          </div>
+        </div>
+
+        <p className="mt-4 leading-7 text-slate-600">{room.description}</p>
 
         <dl className="mt-5 grid gap-3 text-sm text-slate-700 sm:grid-cols-2">
           <div>
@@ -50,8 +64,6 @@ export default function PropertyRoomCard({
             </span>
           ))}
         </div>
-
-        <p className="mt-6 text-3xl font-bold">{room.price}</p>
 
         <div className="mt-6">
           <BookButton

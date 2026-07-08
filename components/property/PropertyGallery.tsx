@@ -49,28 +49,34 @@ export default function PropertyGallery({
 
   return (
     <section className="bg-white pt-24">
-      <div className="mx-auto max-w-7xl px-6">
-        <div className="grid gap-4 lg:grid-cols-[1fr_260px]">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <div className="grid gap-3 overflow-hidden rounded-3xl lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.65fr)] lg:gap-4">
           <button
             type="button"
             onClick={() => setViewerOpen(true)}
-            className="min-h-[60vh] rounded-3xl bg-slate-200 bg-cover bg-center text-left shadow-sm"
+            className="min-h-[420px] bg-slate-200 bg-cover bg-center text-left shadow-sm transition hover:brightness-95 sm:min-h-[520px] lg:min-h-[620px]"
             style={{ backgroundImage: `url('${activeImage}')` }}
             aria-label={`Open ${propertyName} gallery`}
           />
 
-          <div className="grid grid-cols-4 gap-3 lg:grid-cols-1">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-1 lg:grid-rows-4 lg:gap-4">
             {safeImages.slice(0, 4).map((image, index) => (
               <button
                 type="button"
                 key={image}
                 onClick={() => goToImage(index)}
-                className={`min-h-24 rounded-2xl bg-slate-200 bg-cover bg-center ring-offset-2 transition ${
+                className={`relative min-h-32 bg-slate-200 bg-cover bg-center ring-offset-2 transition hover:brightness-95 sm:min-h-40 lg:min-h-0 ${
                   index === activeIndex ? "ring-2 ring-cyan-700" : ""
                 }`}
                 style={{ backgroundImage: `url('${image}')` }}
                 aria-label={`View ${propertyName} photo ${index + 1}`}
-              />
+              >
+                {index === 3 && safeImages.length > 4 && (
+                  <span className="absolute inset-0 flex items-center justify-center bg-slate-950/45 text-sm font-bold text-white">
+                    View all photos
+                  </span>
+                )}
+              </button>
             ))}
           </div>
         </div>

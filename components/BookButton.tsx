@@ -12,7 +12,7 @@ export default function BookButton({
       href={generateGuesthouseLink({ phone, guesthouse: name })}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-block rounded-lg bg-green-600 px-4 py-3 font-semibold text-white"
+      className="inline-flex w-full items-center justify-center rounded-full bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-700 sm:w-auto"
     >
       Book via WhatsApp
     </a>

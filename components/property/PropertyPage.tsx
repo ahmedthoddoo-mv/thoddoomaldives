@@ -1,3 +1,4 @@
+import BookingInquiryForm from "@/components/BookingInquiryForm";
 import ExperienceCard from "@/components/cards/ExperienceCard";
 import TestimonialCard from "@/components/cards/TestimonialCard";
 import PropertyAmenities from "@/components/property/PropertyAmenities";
@@ -10,16 +11,27 @@ import Container from "@/components/ui/Container";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { experiences } from "@/data/experiences";
 import { testimonials } from "@/data/testimonials";
+import { generateGuesthouseLink } from "@/lib/whatsapp";
 import type { Guesthouse } from "@/types/guesthouse";
+
+const trustItems = [
+  "Verified Local Partner",
+  "Fast WhatsApp Support",
+  "Breakfast Included",
+  "Transfer Assistance",
+];
 
 export default function PropertyPage({
   guesthouse,
 }: {
   guesthouse: Guesthouse;
 }) {
-  const galleryImages = [guesthouse.heroImage, ...guesthouse.gallery].filter(
-    Boolean
-  );
+  const galleryImages =
+    guesthouse.gallery.length > 0 ? guesthouse.gallery : [guesthouse.heroImage];
+  const bookingLink = generateGuesthouseLink({
+    phone: guesthouse.whatsapp,
+    guesthouse: guesthouse.name,
+  });
   const relatedExperiences = experiences.filter((experience) =>
     guesthouse.relatedExperienceSlugs.includes(experience.slug)
   );
@@ -35,8 +47,8 @@ export default function PropertyPage({
         <Container>
           <div className="grid gap-10 lg:grid-cols-[1fr_360px]">
             <div className="min-w-0">
-              <div className="flex flex-wrap gap-2">
-                <Badge>Rating {guesthouse.rating}</Badge>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge>{guesthouse.rating} guest rating</Badge>
                 <span className="inline-flex rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700">
                   {guesthouse.distanceToBeach}
                 </span>
@@ -49,10 +61,27 @@ export default function PropertyPage({
                 {guesthouse.name}
               </h1>
               <p className="mt-5 max-w-3xl text-xl leading-8 text-slate-600">
-                {guesthouse.tagline}
+                {guesthouse.description}
               </p>
 
-              <dl className="mt-8 grid gap-4 rounded-3xl border bg-slate-50 p-6 md:grid-cols-3">
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <a
+                  href={bookingLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center rounded-full bg-green-600 px-7 py-4 font-semibold text-white transition hover:bg-green-700"
+                >
+                  Book Now on WhatsApp
+                </a>
+                <a
+                  href="#rooms"
+                  className="inline-flex items-center justify-center rounded-full border border-slate-300 px-7 py-4 font-semibold text-slate-900 transition hover:border-cyan-700 hover:text-cyan-800"
+                >
+                  View Rooms
+                </a>
+              </div>
+
+              <dl className="mt-8 grid gap-4 rounded-3xl border border-slate-200 bg-slate-50 p-5 sm:p-6 md:grid-cols-3">
                 <div>
                   <dt className="text-sm font-semibold uppercase tracking-widest text-slate-500">
                     Location
@@ -75,7 +104,18 @@ export default function PropertyPage({
                 </div>
               </dl>
 
-              <section className="mt-16">
+              <section className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                {trustItems.map((item) => (
+                  <div
+                    key={item}
+                    className="rounded-2xl border border-cyan-100 bg-cyan-50/70 p-4"
+                  >
+                    <p className="text-sm font-bold text-cyan-900">{item}</p>
+                  </div>
+                ))}
+              </section>
+
+              <section id="rooms" className="mt-16 scroll-mt-28">
                 <SectionTitle eyebrow="Rooms" title="Choose Your Room" />
                 <div className="mt-8 grid gap-8">
                   {guesthouse.rooms.map((room) => (
@@ -91,8 +131,35 @@ export default function PropertyPage({
 
               <section className="mt-16">
                 <SectionTitle eyebrow="Amenities" title="What is included" />
-                <div className="mt-8">
+                <div className="mt-8 rounded-3xl border border-slate-200 bg-slate-50 p-4 sm:p-6">
                   <PropertyAmenities amenities={guesthouse.amenities} />
+                </div>
+              </section>
+
+              <section className="mt-16">
+                <SectionTitle eyebrow="Booking" title="Send a Stay Request" />
+                <div className="mt-8 grid gap-6 xl:grid-cols-[1fr_320px]">
+                  <BookingInquiryForm guesthouse={guesthouse} />
+                  <aside className="rounded-3xl border border-slate-200 bg-slate-950 p-6 text-white">
+                    <p className="text-sm font-semibold uppercase tracking-widest text-cyan-200">
+                      Direct Booking
+                    </p>
+                    <h3 className="mt-3 text-2xl font-bold">
+                      Confirm availability fast
+                    </h3>
+                    <p className="mt-4 leading-7 text-slate-300">
+                      Ask for live room availability, transfer timing, breakfast
+                      details, and the best direct rate before you arrive.
+                    </p>
+                    <a
+                      href={bookingLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-green-500 px-6 py-4 font-semibold text-white transition hover:bg-green-600"
+                    >
+                      Book Now
+                    </a>
+                  </aside>
                 </div>
               </section>
 
