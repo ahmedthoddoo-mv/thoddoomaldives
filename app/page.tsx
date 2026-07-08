@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import TestimonialCard from "@/components/TestimonialCard";
+import TripPlanner from "@/components/planner/TripPlanner";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
@@ -202,6 +203,8 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      <TripPlanner />
 
       <section className="py-20">
         <Container>
