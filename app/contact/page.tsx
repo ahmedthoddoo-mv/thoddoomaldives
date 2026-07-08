@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
+import ContactBookingHub from "@/components/contact/ContactBookingHub";
+import { parsePlannerSearchParams } from "@/lib/planner";
 import {
   generateExperienceLink,
   generateGeneralLink,
   generateTransferLink,
 } from "@/lib/whatsapp";
+import type { PlannerSearchParams } from "@/types/planner";
 
 export const metadata: Metadata = {
   title: "Contact iThoddoo Maldives | Plan Your Thoddoo Trip",
@@ -11,7 +14,13 @@ export const metadata: Metadata = {
     "Contact iThoddoo Maldives for Thoddoo guesthouses, airport transfers, excursions, and local island travel help.",
 };
 
-export default function ContactPage() {
+type ContactPageProps = {
+  searchParams?: Promise<PlannerSearchParams>;
+};
+
+export default async function ContactPage({ searchParams }: ContactPageProps) {
+  const resolvedSearchParams = searchParams ? await searchParams : {};
+  const plannedTrip = parsePlannerSearchParams(resolvedSearchParams);
   const generalLink = generateGeneralLink({});
   const transferLink = generateTransferLink({});
   const excursionLink = generateExperienceLink({
@@ -55,6 +64,8 @@ export default function ContactPage() {
           </div>
         </div>
       </section>
+
+      <ContactBookingHub plannedTrip={plannedTrip} />
 
       <section id="contact-options" className="mx-auto max-w-6xl px-6 py-20">
         <p className="text-sm font-semibold uppercase tracking-widest text-cyan-700">
