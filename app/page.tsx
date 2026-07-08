@@ -52,10 +52,10 @@ export default function Home() {
             </a>
 
             <a
-              href="/experiences"
+              href="/excursions"
               className="rounded-full border border-white px-6 py-3 font-semibold text-white"
             >
-              Explore Experiences
+              Explore Excursions
             </a>
           </div>
         </div>

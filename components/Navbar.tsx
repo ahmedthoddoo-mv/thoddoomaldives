@@ -8,7 +8,7 @@ export default function Navbar() {
   const links = [
     ["Home", "/"],
     ["Stay", "/stay"],
-    ["Experiences", "/experiences"],
+    ["Excursions", "/excursions"],
     ["Transfer", "/transfer"],
     ["Gallery", "/gallery"],
     ["Restaurants", "/restaurants"],
