@@ -7,10 +7,10 @@ export default function PartnerOnboardingPage() {
       <section className="onboardingHero">
         <div>
           <p className="eyebrow">Partner onboarding</p>
-          <h1>Apply to join iThoddoo Maldives</h1>
+          <h1>Become an iThoddoo Growth Partner</h1>
           <p>
-            Submit your guesthouse, transport, activity, dining, retail, wellness, or local tourism business for partner
-            review. This first version prepares the application for WhatsApp submission only.
+            Submit your guesthouse, transport, activity, dining, retail, wellness, or local tourism business for growth
+            partner review. This application prepares your details for WhatsApp submission only.
           </p>
         </div>
         <aside className="onboardingHeroPanel" aria-label="Onboarding scope">

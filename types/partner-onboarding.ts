@@ -16,6 +16,19 @@ export interface PartnerOnboardingApplication {
   websiteOrSocial: string;
   photoNotes: string;
   membershipInterest: MembershipTier;
+  rooms: string;
+  checkInOut: string;
+  amenities: string;
+  cuisine: string;
+  openingHours: string;
+  menuNotes: string;
+  boatName: string;
+  capacity: string;
+  departureTimes: string;
+  airportTransferSupport: string;
+  activityType: string;
+  duration: string;
+  includedItems: string;
   notes: string;
 }
 
