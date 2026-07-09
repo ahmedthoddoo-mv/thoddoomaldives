@@ -1,5 +1,48 @@
 export type AdminContentStatus = "Published" | "Draft" | "Needs review" | "Archived" | "Ready";
 
+export type AdminPropertyAction =
+  | "Add Property"
+  | "Edit Property"
+  | "Delete Property"
+  | "Verify Property"
+  | "Feature Property"
+  | "Suspend Property";
+
+export type AdminPropertyRoomType = {
+  name: string;
+  price: string;
+  capacity: string;
+};
+
+export type AdminPropertySeoFields = {
+  title: string;
+  description: string;
+  slug: string;
+};
+
+export type AdminManagedProperty = {
+  id: string;
+  name: string;
+  logo: string;
+  coverImage: string;
+  gallery: string[];
+  description: string;
+  roomTypes: AdminPropertyRoomType[];
+  amenities: string[];
+  checkIn: string;
+  checkOut: string;
+  whatsapp: string;
+  email: string;
+  website: string;
+  googleMaps: string;
+  gpsLocation: string;
+  membershipPlan: "Free" | "Verified" | "Premium";
+  verificationStatus: "Draft" | "Pending" | "Verified" | "Suspended";
+  isFeatured: boolean;
+  seo: AdminPropertySeoFields;
+  updated: string;
+};
+
 export type AdminContentItem = {
   id: string;
   name: string;
@@ -23,6 +66,7 @@ export type AdminContentSection = {
 
 export const adminSidebarItems = [
   { label: "Overview", href: "/admin#overview" },
+  { label: "Properties", href: "/admin/properties" },
   { label: "Guesthouses", href: "/admin/guesthouses" },
   { label: "Restaurants", href: "/admin/restaurants" },
   { label: "Experiences", href: "/admin/experiences" },
@@ -33,12 +77,115 @@ export const adminSidebarItems = [
 ];
 
 export const adminQuickActions = [
+  { label: "Add Property", href: "/admin/properties", variant: "primary" as const },
   { label: "Add Guesthouse", href: "/admin/guesthouses", variant: "primary" as const },
   { label: "Add Restaurant", href: "/admin/restaurants" },
   { label: "Add Excursion", href: "/admin/experiences" },
   { label: "Add Transfer Company", href: "/admin/transfers" },
   { label: "Review Applications", href: "/admin#applications", variant: "primary" as const },
   { label: "Upload Photos", href: "/admin/media" }
+];
+
+export const adminPropertyActions: AdminPropertyAction[] = [
+  "Add Property",
+  "Edit Property",
+  "Delete Property",
+  "Verify Property",
+  "Feature Property",
+  "Suspend Property"
+];
+
+export const adminManagedProperties: AdminManagedProperty[] = [
+  {
+    id: "property-thoddoo-sun-sky",
+    name: "Thoddoo Sun Sky Inn",
+    logo: "TS",
+    coverImage: "/images/hero-thoddoo.jpg",
+    gallery: ["/images/hero-thoddoo.jpg", "/images/homepage/hero-1.jpg", "/images/homepage/hero-4.jpg"],
+    description:
+      "Verified guesthouse profile with room content, beach access notes, direct WhatsApp booking, and structured SEO fields.",
+    roomTypes: [
+      { name: "Deluxe Double", price: "From $85/night", capacity: "2 guests" },
+      { name: "Family Room", price: "From $130/night", capacity: "4 guests" }
+    ],
+    amenities: ["Breakfast", "Wi-Fi", "Airport transfer help", "Beach towels", "Bicycles"],
+    checkIn: "14:00",
+    checkOut: "12:00",
+    whatsapp: "+960 914 2538",
+    email: "stay@thoddoosunsky.example",
+    website: "https://thoddoosunsky.example",
+    googleMaps: "Central Thoddoo, Alif Alif Atoll",
+    gpsLocation: "4.4376, 72.9596",
+    membershipPlan: "Verified",
+    verificationStatus: "Verified",
+    isFeatured: true,
+    seo: {
+      title: "Thoddoo Sun Sky Inn | Verified Guesthouse",
+      description: "Book Thoddoo Sun Sky Inn with local support, breakfast, beach access, and WhatsApp booking.",
+      slug: "thoddoo-sun-sky-inn"
+    },
+    updated: "Jul 9, 2026"
+  },
+  {
+    id: "property-palm-garden",
+    name: "Palm Garden Thoddoo",
+    logo: "PG",
+    coverImage: "/images/homepage/hero-2.jpg",
+    gallery: ["/images/homepage/hero-2.jpg", "/images/homepage/hero-3.jpg"],
+    description:
+      "Growth partner applicant with room inventory, amenities, and content review pending before verification.",
+    roomTypes: [
+      { name: "Garden Room", price: "From $72/night", capacity: "2 guests" },
+      { name: "Triple Room", price: "From $105/night", capacity: "3 guests" }
+    ],
+    amenities: ["Garden", "Breakfast", "Wi-Fi", "Laundry support"],
+    checkIn: "13:00",
+    checkOut: "11:00",
+    whatsapp: "+960 700 1020",
+    email: "hello@palmgarden.example",
+    website: "https://palmgarden.example",
+    googleMaps: "Palm Garden Road, Thoddoo",
+    gpsLocation: "4.4380, 72.9611",
+    membershipPlan: "Free",
+    verificationStatus: "Pending",
+    isFeatured: false,
+    seo: {
+      title: "Palm Garden Thoddoo Guesthouse",
+      description: "Palm Garden Thoddoo guesthouse profile prepared for review and future verification.",
+      slug: "palm-garden-thoddoo"
+    },
+    updated: "Jul 8, 2026"
+  },
+  {
+    id: "property-coral-wave",
+    name: "Coral Wave Residence",
+    logo: "CW",
+    coverImage: "/images/homepage/hero-5.jpg",
+    gallery: ["/images/homepage/hero-5.jpg", "/images/homepage/hero-6.jpg"],
+    description:
+      "Premium-ready property mock record for future analytics, featured placement, and rich media workflows.",
+    roomTypes: [
+      { name: "Premium Suite", price: "From $165/night", capacity: "2 guests" },
+      { name: "Two Bedroom Suite", price: "From $240/night", capacity: "5 guests" }
+    ],
+    amenities: ["Premium breakfast", "Private balcony", "Concierge support", "Professional photography"],
+    checkIn: "15:00",
+    checkOut: "12:00",
+    whatsapp: "+960 700 2040",
+    email: "reservations@coralwave.example",
+    website: "https://coralwave.example",
+    googleMaps: "Beach Route, Thoddoo",
+    gpsLocation: "4.4392, 72.9584",
+    membershipPlan: "Premium",
+    verificationStatus: "Suspended",
+    isFeatured: false,
+    seo: {
+      title: "Coral Wave Residence | Premium Thoddoo Stay",
+      description: "Premium residence demo profile with suite inventory, gallery assets, and future analytics readiness.",
+      slug: "coral-wave-residence"
+    },
+    updated: "Jul 5, 2026"
+  }
 ];
 
 export const adminContentSections: Record<AdminContentSection["slug"], AdminContentSection> = {

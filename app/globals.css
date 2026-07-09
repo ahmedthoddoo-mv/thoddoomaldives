@@ -1347,6 +1347,228 @@ body {
   line-height: 1.6;
 }
 
+.adminPropertyManager {
+  display: grid;
+  gap: 18px;
+}
+
+.adminPropertyActionGrid {
+  display: grid;
+  gap: 10px;
+}
+
+.adminPropertyActionGrid button {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #eef7f3;
+  cursor: pointer;
+  font: inherit;
+  min-height: 48px;
+  padding: 11px 14px;
+  font-weight: 900;
+}
+
+.adminPropertyActionGrid .adminPropertyActionPrimary {
+  border-color: rgba(36, 198, 184, 0.7);
+  background: linear-gradient(135deg, #087f7a, #0ca497);
+}
+
+.adminPropertyGrid {
+  display: grid;
+  gap: 18px;
+}
+
+.adminPropertyCard {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.105), rgba(255, 255, 255, 0.055));
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(18px);
+}
+
+.adminPropertyCover {
+  position: relative;
+  display: flex;
+  min-height: 260px;
+  align-items: end;
+  justify-content: space-between;
+  background-position: center;
+  background-size: cover;
+  padding: 18px;
+}
+
+.adminPropertyCover::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent, rgba(3, 11, 9, 0.82));
+}
+
+.adminPropertyLogo,
+.adminPropertyFeatured {
+  position: relative;
+  z-index: 1;
+}
+
+.adminPropertyLogo {
+  display: inline-flex;
+  width: 58px;
+  height: 58px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #087f7a, #b98221);
+  color: #fff;
+  font-weight: 900;
+}
+
+.adminPropertyFeatured {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  padding: 7px 10px;
+  font-size: 0.76rem;
+  font-weight: 900;
+  backdrop-filter: blur(12px);
+}
+
+.adminPropertyBody {
+  display: grid;
+  gap: 18px;
+  padding: 18px;
+}
+
+.adminPropertyTitleRow {
+  display: grid;
+  gap: 12px;
+}
+
+.adminPropertyTitleRow h2 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(1.7rem, 4vw, 2.6rem);
+  letter-spacing: 0;
+}
+
+.adminPropertyBody > p,
+.adminPropertySeo span,
+.adminPropertyContactGrid span {
+  margin: 0;
+  color: rgba(238, 247, 243, 0.68);
+  line-height: 1.65;
+}
+
+.adminPropertyMediaStrip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.adminPropertyMediaStrip span {
+  min-height: 82px;
+  border-radius: 14px;
+  background-position: center;
+  background-size: cover;
+}
+
+.adminPropertyDetailGrid,
+.adminPropertyContactGrid {
+  display: grid;
+  gap: 10px;
+}
+
+.adminPropertyDetailGrid div,
+.adminPropertyRooms,
+.adminPropertySeo,
+.adminPropertyContactGrid span {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.07);
+  padding: 14px;
+}
+
+.adminPropertyDetailGrid span {
+  display: block;
+  color: #91dcd2;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.adminPropertyDetailGrid strong {
+  display: block;
+  margin-top: 5px;
+  color: #fff;
+  overflow-wrap: anywhere;
+}
+
+.adminPropertyRooms {
+  display: grid;
+  gap: 10px;
+}
+
+.adminPropertyRooms h3,
+.adminPropertySeo h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 1rem;
+}
+
+.adminPropertyRooms div {
+  display: grid;
+  gap: 5px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 10px;
+}
+
+.adminPropertyRooms span,
+.adminPropertyRooms strong {
+  color: #fff;
+  font-weight: 900;
+}
+
+.adminPropertyRooms small,
+.adminPropertySeo small {
+  color: rgba(238, 247, 243, 0.58);
+  font-weight: 800;
+}
+
+.adminPropertyAmenities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.adminPropertyAmenities span {
+  border-radius: 999px;
+  background: rgba(36, 198, 184, 0.12);
+  color: #9ce6db;
+  padding: 7px 10px;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.adminPropertySeo {
+  display: grid;
+  gap: 10px;
+}
+
+.adminPropertySeo p {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+}
+
+.adminPropertySeo strong {
+  color: #fff;
+}
+
+.adminPropertyActions button:last-child {
+  color: #ff8f7b;
+}
+
 @media (min-width: 760px) {
   .adminHeader {
     grid-template-columns: minmax(0, 1fr) 360px;
@@ -1432,6 +1654,20 @@ body {
     font-weight: 900;
     text-transform: uppercase;
   }
+
+  .adminPropertyActionGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .adminPropertyTitleRow {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+
+  .adminPropertyDetailGrid,
+  .adminPropertyContactGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (min-width: 1120px) {
@@ -1486,6 +1722,10 @@ body {
 
   .adminTwoColumn {
     grid-template-columns: minmax(0, 1.35fr) minmax(340px, 0.65fr);
+  }
+
+  .adminPropertyGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
