@@ -24,3 +24,286 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* EPIC-011 partner platform styles */
+:root {
+  --ink: #17201c;
+  --muted: #5d6a64;
+  --line: #d9e2dc;
+  --surface: #ffffff;
+  --soft: #f4f7f2;
+  --teal: #087f7a;
+  --teal-dark: #045b58;
+  --coral: #d95d39;
+  --gold: #b98221;
+  --green: #1f7a4d;
+}
+/* EPIC-012 partner onboarding styles */
+.onboardingPage {
+  background: #f4f7f2;
+}
+
+.onboardingHero {
+  display: grid;
+  gap: 24px;
+  min-height: 48vh;
+  align-items: end;
+  padding: 32px 20px;
+  background:
+    linear-gradient(180deg, rgba(6, 58, 55, 0.16), rgba(6, 58, 55, 0.88)),
+    url("https://images.unsplash.com/photo-1583212292454-1fe6229603b7?auto=format&fit=crop&w=1800&q=80");
+  background-position: center;
+  background-size: cover;
+  color: #fff;
+}
+
+.onboardingHero h1 {
+  max-width: 820px;
+  margin: 0;
+  font-size: clamp(2.4rem, 7vw, 5rem);
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.onboardingHero p {
+  max-width: 680px;
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.onboardingHeroPanel {
+  display: grid;
+  gap: 8px;
+  max-width: 400px;
+  border: 1px solid rgba(255, 255, 255, 0.44);
+  border-radius: 8px;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(12px);
+}
+
+.onboardingHeroPanel strong {
+  font-size: 1.15rem;
+}
+
+.onboardingHeroPanel span {
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.55;
+}
+
+.onboardingForm,
+.onboardingReview {
+  display: grid;
+  gap: 24px;
+  margin: 44px 0;
+}
+
+.formSection {
+  display: grid;
+  gap: 20px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 20px;
+  background: var(--surface);
+}
+
+.formSection h2 {
+  margin: 0;
+  font-size: clamp(1.55rem, 4vw, 2.35rem);
+  line-height: 1.1;
+  letter-spacing: 0;
+}
+
+.formGrid {
+  display: grid;
+  gap: 16px;
+}
+
+.fieldGroup {
+  display: grid;
+  gap: 8px;
+}
+
+.onboardingLabel,
+.membershipFieldset legend {
+  color: var(--ink);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.onboardingLabel {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.onboardingLabel span {
+  color: var(--teal);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+}
+
+.fieldGroup input,
+.fieldGroup textarea,
+.fieldGroup select {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  padding: 12px 14px;
+}
+
+.fieldGroup textarea {
+  resize: vertical;
+}
+
+.fieldGroup input:focus,
+.fieldGroup textarea:focus,
+.fieldGroup select:focus {
+  outline: 3px solid rgba(8, 127, 122, 0.16);
+  border-color: var(--teal);
+}
+
+.membershipFieldset {
+  min-width: 0;
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.membershipChoiceGrid {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.membershipChoice {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  font-weight: 800;
+}
+
+.membershipChoice input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--teal);
+}
+
+.onboardingActions {
+  display: grid;
+  gap: 12px;
+}
+
+.onboardingActions .primaryButton,
+.secondaryAction {
+  width: 100%;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.secondaryAction {
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  padding: 12px 18px;
+  font-weight: 800;
+}
+
+.reviewGrid {
+  display: grid;
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--line);
+}
+
+.reviewItem {
+  display: grid;
+  gap: 6px;
+  background: #fff;
+  padding: 14px;
+}
+
+.reviewItem span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.reviewItem strong {
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+
+.messagePreview {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  padding: 18px;
+}
+
+.messagePreview h3 {
+  margin: 0 0 12px;
+}
+
+.messagePreview pre {
+  overflow: auto;
+  margin: 0;
+  white-space: pre-wrap;
+  color: var(--muted);
+  font-family: Arial, Helvetica, sans-serif;
+  line-height: 1.6;
+}
+
+@media (min-width: 760px) {
+  .onboardingHero {
+    grid-template-columns: minmax(0, 1fr) 400px;
+    padding: 48px;
+  }
+
+  .formSection {
+    grid-template-columns: 280px minmax(0, 1fr);
+    padding: 24px;
+  }
+
+  .formGrid,
+  .reviewGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .fieldWide,
+  .membershipFieldset {
+    grid-column: 1 / -1;
+  }
+
+  .membershipChoiceGrid,
+  .onboardingActions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .onboardingActions {
+    justify-content: end;
+  }
+
+  .onboardingActions .primaryButton,
+  .secondaryAction {
+    width: auto;
+  }
+}
