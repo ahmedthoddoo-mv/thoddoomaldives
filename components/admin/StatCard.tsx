@@ -1,3 +1,5 @@
+import { AdminStatCard } from "@/components/admin/AdminStatCard";
+
 type StatCardProps = {
   label: string;
   value: string;
@@ -6,11 +8,5 @@ type StatCardProps = {
 };
 
 export function StatCard({ label, value, detail, tone = "teal" }: StatCardProps) {
-  return (
-    <article className={`adminStatCard adminTone-${tone}`}>
-      <span>{label}</span>
-      <strong>{value}</strong>
-      <p>{detail}</p>
-    </article>
-  );
+  return <AdminStatCard label={label} value={value} detail={detail} tone={tone} />;
 }

@@ -1,4 +1,4 @@
-import { StatCard } from "@/components/admin/StatCard";
+import { AdminStatCard } from "@/components/admin/AdminStatCard";
 
 type DashboardStat = {
   label: string;
@@ -15,7 +15,7 @@ export function DashboardStats({ stats }: DashboardStatsProps) {
   return (
     <section className="adminStatsGrid" aria-label="Admin dashboard statistics">
       {stats.map((stat) => (
-        <StatCard key={stat.label} {...stat} />
+        <AdminStatCard key={stat.label} {...stat} />
       ))}
     </section>
   );

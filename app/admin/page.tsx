@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
+import { AdminHeader } from "@/components/admin/AdminHeader";
+import { AdminQuickActions } from "@/components/admin/AdminQuickActions";
+import { AdminRecentApplications } from "@/components/admin/AdminRecentApplications";
+import { AdminRecentPartners } from "@/components/admin/AdminRecentPartners";
+import { AdminRoadmapPanel } from "@/components/admin/AdminRoadmapPanel";
+import { AdminShell } from "@/components/admin/AdminShell";
+import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { AdminSystemStatus } from "@/components/admin/AdminSystemStatus";
 import { DashboardStats } from "@/components/admin/DashboardStats";
-import { NavigationCard } from "@/components/admin/NavigationCard";
-import { QuickActions } from "@/components/admin/QuickActions";
-import { RecentApplications } from "@/components/admin/RecentApplications";
-import { RecentPartners } from "@/components/admin/RecentPartners";
 
 export const metadata: Metadata = {
   title: "Admin Dashboard",
@@ -169,63 +173,34 @@ const roadmapGroups = [
   }
 ];
 
+const sidebarItems = [
+  { label: "Overview", href: "#overview" },
+  { label: "Actions", href: "#actions" },
+  { label: "Applications", href: "#applications" },
+  { label: "Partners", href: "#partners" },
+  { label: "System", href: "#status" },
+  { label: "Roadmap", href: "#roadmap" }
+];
+
 export default function AdminPage() {
   return (
-    <main className="adminShell">
-      <section className="adminHero">
-        <div>
-          <p className="eyebrow">Internal dashboard</p>
-          <h1>iThoddoo Maldives Admin</h1>
-          <p>Business Control Center</p>
-        </div>
-        <aside className="adminHeroPanel" aria-label="Dashboard environment">
-          <span>Demo mode</span>
-          <strong>UI only</strong>
-          <p>No login, database, API, payments, or authentication are connected.</p>
-        </aside>
-      </section>
+    <AdminShell sidebar={<AdminSidebar items={sidebarItems} />}>
+      <div className="adminContent" id="overview">
+        <AdminHeader />
 
-      <div className="adminContent">
         <DashboardStats stats={dashboardStats} />
 
-        <QuickActions actions={quickActions} />
+        <AdminQuickActions actions={quickActions} />
 
-        <div className="adminTwoColumn" id="applications">
-          <RecentApplications applications={recentApplications} />
-          <RecentPartners partners={recentPartners} />
+        <div className="adminTwoColumn">
+          <AdminRecentApplications applications={recentApplications} />
+          <AdminRecentPartners partners={recentPartners} />
         </div>
 
-        <section className="adminPanel">
-          <div className="adminSectionHeader">
-            <p className="eyebrow">System status</p>
-            <h2>Operational readiness</h2>
-          </div>
-          <div className="adminStatusGrid">
-            {systemStatuses.map((status) => (
-              <NavigationCard key={status.title} {...status} />
-            ))}
-          </div>
-        </section>
+        <AdminSystemStatus statuses={systemStatuses} />
 
-        <section className="adminRoadmapPanel">
-          <div className="adminSectionHeader">
-            <p className="eyebrow">Roadmap</p>
-            <h2>Project Atlas delivery map</h2>
-          </div>
-          <div className="adminRoadmapGrid">
-            {roadmapGroups.map((group) => (
-              <article className="adminRoadmapGroup" key={group.title}>
-                <h3>{group.title}</h3>
-                <ul>
-                  {group.items.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              </article>
-            ))}
-          </div>
-        </section>
+        <AdminRoadmapPanel groups={roadmapGroups} />
       </div>
-    </main>
+    </AdminShell>
   );
 }

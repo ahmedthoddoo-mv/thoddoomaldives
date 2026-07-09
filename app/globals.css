@@ -25,70 +25,107 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* EPIC-015 admin dashboard foundation */
+/* EPIC-016 admin dashboard polish */
 .adminShell {
   min-height: 100vh;
   background:
-    radial-gradient(circle at top left, rgba(8, 127, 122, 0.12), transparent 34rem),
-    linear-gradient(180deg, #f7f9f6 0%, #eef3ef 100%);
-  color: var(--ink);
+    radial-gradient(circle at 18% 0%, rgba(8, 127, 122, 0.26), transparent 30rem),
+    radial-gradient(circle at 88% 12%, rgba(185, 130, 33, 0.16), transparent 26rem),
+    linear-gradient(135deg, #07100e 0%, #0d1714 48%, #111815 100%);
+  color: #eef7f3;
 }
 
-.adminHero {
+.adminAppFrame {
   display: grid;
-  gap: 24px;
-  align-items: end;
-  padding: 32px 20px 24px;
+  min-height: 100vh;
 }
 
-.adminHero h1 {
-  max-width: 780px;
-  margin: 0;
-  color: #12201b;
-  font-size: clamp(2.4rem, 7vw, 5.2rem);
-  line-height: 0.96;
-  letter-spacing: 0;
+.adminSidebar {
+  display: none;
 }
 
-.adminHero p {
-  margin: 14px 0 0;
-  color: var(--muted);
-  font-size: 1.08rem;
-  line-height: 1.7;
-}
-
-.adminHeroPanel,
-.adminPanel,
-.adminRoadmapPanel,
-.adminStatCard,
-.adminNavigationCard {
-  border: 1px solid rgba(23, 32, 28, 0.1);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.88);
-  box-shadow: 0 18px 55px rgba(23, 32, 28, 0.07);
-}
-
-.adminHeroPanel {
-  display: grid;
-  gap: 8px;
-  padding: 20px;
-}
-
-.adminHeroPanel span {
-  color: var(--teal);
-  font-size: 0.78rem;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.adminHeroPanel strong {
-  font-size: 1.4rem;
+.adminMainSurface {
+  min-width: 0;
 }
 
 .adminContent {
   display: grid;
-  gap: 24px;
-  padding: 0 20px 56px;
+  gap: 18px;
+  width: min(100%, 1480px);
+  margin: 0 auto;
+  padding: 22px 16px 56px;
+}
+
+.adminHeader,
+.adminNotice,
+.adminPanel,
+.adminRoadmapPanel,
+.adminStatCard,
+.adminSystemCard {
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.105), rgba(255, 255, 255, 0.055));
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(18px);
+}
+
+.adminHeader {
+  display: grid;
+  gap: 22px;
+  align-items: end;
+  padding: 22px;
+}
+
+.adminHeader .inline-flex {
+  margin-bottom: 18px;
+  background: rgba(8, 127, 122, 0.18);
+  color: #9ce6db;
+}
+
+.adminHeader h1 {
+  max-width: 780px;
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(2.5rem, 7vw, 5.6rem);
+  line-height: 0.96;
+  letter-spacing: 0;
+}
+
+.adminHeader p,
+.adminNotice p,
+.adminStatCard p,
+.adminSystemCard p,
+.adminPartnerCard p {
+  margin: 0;
+  color: rgba(238, 247, 243, 0.68);
+  line-height: 1.6;
+}
+
+.adminHeader > div > p:last-child {
+  max-width: 640px;
+  margin-top: 16px;
+  font-size: 1.02rem;
+}
+
+.adminNotice {
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+}
+
+.adminNotice span,
+.adminStatCard span,
+.adminSystemCard span {
+  color: #91dcd2;
+  font-size: 0.72rem;
+  font-weight: 900;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.adminNotice strong {
+  color: #ffffff;
+  font-size: 1.25rem;
 }
 
 .adminStatsGrid,
@@ -97,14 +134,14 @@ body {
 .adminRoadmapGrid,
 .adminTwoColumn {
   display: grid;
-  gap: 14px;
+  gap: 16px;
 }
 
 .adminStatCard {
   display: grid;
-  min-height: 150px;
+  min-height: 158px;
   align-content: space-between;
-  gap: 14px;
+  gap: 18px;
   overflow: hidden;
   padding: 18px;
   position: relative;
@@ -112,46 +149,32 @@ body {
 
 .adminStatCard::before {
   content: "";
-  width: 72px;
-  height: 4px;
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 3px;
   border-radius: 999px;
-  background: var(--teal);
+  background: linear-gradient(90deg, #24c6b8, transparent);
 }
 
 .adminTone-gold::before {
-  background: var(--gold);
+  background: linear-gradient(90deg, #d5a84b, transparent);
 }
 
 .adminTone-green::before {
-  background: var(--green);
+  background: linear-gradient(90deg, #4ed18a, transparent);
 }
 
 .adminTone-coral::before {
-  background: var(--coral);
-}
-
-.adminStatCard span,
-.adminNavigationCard span {
-  color: var(--muted);
-  font-size: 0.74rem;
-  font-weight: 900;
-  line-height: 1.35;
-  text-transform: uppercase;
+  background: linear-gradient(90deg, #f08262, transparent);
 }
 
 .adminStatCard strong {
-  color: var(--ink);
-  font-size: clamp(2.1rem, 5vw, 3.4rem);
+  display: block;
+  margin-top: 14px;
+  color: #ffffff;
+  font-size: clamp(2rem, 5vw, 3.2rem);
   line-height: 0.95;
-}
-
-.adminStatCard p,
-.adminNavigationCard p,
-.adminPartnerCard p,
-.adminHeroPanel p {
-  margin: 0;
-  color: var(--muted);
-  line-height: 1.55;
 }
 
 .adminPanel,
@@ -168,7 +191,7 @@ body {
 
 .adminSectionHeader h2 {
   margin: 0;
-  color: var(--ink);
+  color: #ffffff;
   font-size: clamp(1.35rem, 3vw, 2rem);
   letter-spacing: 0;
 }
@@ -179,12 +202,22 @@ body {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #fff;
-  color: var(--ink);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #eef7f3;
   padding: 14px 16px;
   font-weight: 900;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.adminActionButton:hover {
+  border-color: rgba(145, 220, 210, 0.42);
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
 }
 
 .adminActionButton span {
@@ -194,13 +227,13 @@ body {
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  background: var(--soft);
-  color: var(--teal-dark);
+  background: rgba(145, 220, 210, 0.14);
+  color: #91dcd2;
 }
 
 .adminActionPrimary {
-  border-color: var(--teal);
-  background: var(--teal);
+  border-color: rgba(36, 198, 184, 0.7);
+  background: linear-gradient(135deg, #087f7a, #0ca497);
   color: #fff;
 }
 
@@ -209,49 +242,42 @@ body {
   color: #fff;
 }
 
-.adminTableWrap {
-  overflow-x: auto;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #fff;
+.adminApplicationList {
+  display: grid;
+  gap: 10px;
 }
 
-.adminTable {
-  width: 100%;
-  min-width: 680px;
-  border-collapse: collapse;
+.adminApplicationHeader {
+  display: none;
 }
 
-.adminTable th,
-.adminTable td {
-  border-bottom: 1px solid var(--line);
+.adminApplicationRow {
+  display: grid;
+  gap: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.07);
   padding: 14px;
-  text-align: left;
 }
 
-.adminTable th {
-  color: var(--muted);
-  font-size: 0.74rem;
-  font-weight: 900;
-  text-transform: uppercase;
+.adminApplicationRow strong {
+  color: #ffffff;
 }
 
-.adminTable td {
-  color: var(--ink);
-  font-weight: 700;
+.adminApplicationRow span,
+.adminApplicationRow time {
+  color: rgba(238, 247, 243, 0.7);
+  font-size: 0.9rem;
+  font-weight: 800;
 }
 
-.adminTable tr:last-child td {
-  border-bottom: 0;
-}
-
-.adminStatusPill,
-.adminPartnerCard span {
+.adminStatusPill {
   display: inline-flex;
+  width: fit-content;
   border-radius: 999px;
-  background: rgba(8, 127, 122, 0.1);
-  color: var(--teal-dark);
-  padding: 6px 9px;
+  background: rgba(36, 198, 184, 0.13);
+  color: #9ce6db;
+  padding: 6px 10px;
   font-size: 0.76rem;
   font-weight: 900;
 }
@@ -263,46 +289,74 @@ body {
 
 .adminPartnerCard {
   display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
   gap: 12px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #fff;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.07);
   padding: 16px;
+}
+
+.adminPartnerAvatar {
+  display: inline-flex;
+  width: 42px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(8, 127, 122, 0.95), rgba(185, 130, 33, 0.72));
+  color: #fff;
+  font-size: 0.86rem;
+  font-weight: 900;
 }
 
 .adminPartnerCard h3 {
   margin: 0 0 6px;
-  color: var(--ink);
+  color: #ffffff;
   font-size: 1.04rem;
   letter-spacing: 0;
+}
+
+.adminPartnerCard span {
+  display: inline-flex;
+  border-radius: 999px;
+  background: rgba(78, 209, 138, 0.13);
+  color: #a7efc6;
+  padding: 6px 9px;
+  font-size: 0.76rem;
+  font-weight: 900;
 }
 
 .adminPartnerCard small {
   display: block;
   margin-top: 8px;
-  color: var(--muted);
+  color: rgba(238, 247, 243, 0.62);
   font-weight: 800;
 }
 
-.adminNavigationCard {
+.adminSystemCard {
   display: grid;
-  gap: 10px;
+  gap: 12px;
   padding: 16px;
 }
 
-.adminNavigationCard strong {
-  color: var(--green);
+.adminSystemCard strong {
+  color: #a7efc6;
   font-size: 1.3rem;
 }
 
 .adminRoadmapGroup {
-  border-left: 3px solid var(--teal);
-  background: rgba(255, 255, 255, 0.66);
-  padding: 14px 0 14px 16px;
+  min-height: 156px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.07);
+  padding: 16px;
 }
 
 .adminRoadmapGroup h3 {
   margin: 0 0 12px;
+  color: #ffffff;
   font-size: 0.9rem;
   text-transform: uppercase;
 }
@@ -318,68 +372,123 @@ body {
 
 .adminRoadmapGroup li {
   border-radius: 999px;
-  background: #fff;
-  color: var(--ink);
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(238, 247, 243, 0.86);
   padding: 7px 10px;
   font-size: 0.8rem;
   font-weight: 800;
 }
 
-@media (prefers-color-scheme: dark) {
-  .adminShell {
-    background:
-      radial-gradient(circle at top left, rgba(8, 127, 122, 0.18), transparent 34rem),
-      linear-gradient(180deg, #0b1210 0%, #111a17 100%);
-    color: #edf5f1;
-  }
-
-  .adminHero h1,
-  .adminSectionHeader h2,
-  .adminStatCard strong,
-  .adminTable td,
-  .adminPartnerCard h3,
-  .adminRoadmapGroup h3,
-  .adminRoadmapGroup li,
-  .adminActionButton,
-  .adminNavigationCard span {
-    color: #edf5f1;
-  }
-
-  .adminHeroPanel,
-  .adminPanel,
-  .adminRoadmapPanel,
-  .adminStatCard,
-  .adminNavigationCard,
-  .adminActionButton,
-  .adminTableWrap,
-  .adminPartnerCard,
-  .adminRoadmapGroup li {
-    border-color: rgba(255, 255, 255, 0.12);
-    background: rgba(17, 26, 23, 0.88);
-  }
-
-  .adminTable th,
-  .adminTable td {
-    border-bottom-color: rgba(255, 255, 255, 0.1);
-  }
-}
-
 @media (min-width: 760px) {
-  .adminHero {
+  .adminHeader {
     grid-template-columns: minmax(0, 1fr) 360px;
-    padding: 52px 48px 32px;
+    padding: 28px;
   }
 
   .adminContent {
-    padding: 0 48px 72px;
+    gap: 22px;
+    padding: 28px 30px 72px;
   }
 
   .adminStatsGrid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .adminActionGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .adminStatusGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .adminRoadmapGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .adminApplicationHeader,
+  .adminApplicationRow {
+    display: grid;
+    grid-template-columns: minmax(180px, 1.4fr) minmax(96px, 0.8fr) minmax(86px, 0.7fr) minmax(128px, 1fr) minmax(96px, 0.8fr);
+    align-items: center;
+  }
+
+  .adminApplicationHeader {
+    padding: 0 14px;
+  }
+
+  .adminApplicationHeader span {
+    color: rgba(238, 247, 243, 0.48);
+    font-size: 0.72rem;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  .adminPartnerCard {
+    grid-template-columns: 42px minmax(0, 1fr) auto;
+  }
+
+  .adminPanel,
+  .adminRoadmapPanel {
+    padding: 22px;
+  }
+}
+
+@media (min-width: 1120px) {
+  .adminAppFrame {
+    grid-template-columns: 236px minmax(0, 1fr);
+  }
+
+  .adminSidebar {
+    position: sticky;
+    top: 0;
+    display: flex;
+    height: 100vh;
+    flex-direction: column;
+    gap: 28px;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(3, 11, 9, 0.44);
+    padding: 26px 18px;
+    backdrop-filter: blur(18px);
+  }
+
+  .adminBrandMark {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #ffffff;
+    font-weight: 900;
+  }
+
+  .adminBrandMark span {
+    display: inline-flex;
+    width: 42px;
+    height: 42px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #087f7a, #b98221);
+  }
+
+  .adminSidebar nav {
+    display: grid;
+    gap: 8px;
+  }
+
+  .adminSidebar nav a {
+    border-radius: 12px;
+    color: rgba(238, 247, 243, 0.7);
+    padding: 12px 14px;
+    font-weight: 800;
+  }
+
+  .adminSidebar nav a:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+  }
+
+  .adminStatsGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .adminStatusGrid {
@@ -391,12 +500,7 @@ body {
   }
 
   .adminTwoColumn {
-    grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
-  }
-
-  .adminPanel,
-  .adminRoadmapPanel {
-    padding: 22px;
+    grid-template-columns: minmax(0, 1.35fr) minmax(340px, 0.65fr);
   }
 }
 
