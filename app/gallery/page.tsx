@@ -1,3 +1,15 @@
+import type { Metadata } from "next";
+import Image from "next/image";
+import { createPageMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = createPageMetadata({
+  title: "Thoddoo Photo Gallery",
+  description:
+    "See temporary Thoddoo Maldives gallery images featuring beaches, island scenery, reef life, and local island moments.",
+  path: "/gallery",
+  image: "/images/hero-thoddoo.jpg",
+});
+
 export default function GalleryPage() {
   const photos = [
     "/images/hero-thoddoo.jpg",
@@ -39,10 +51,17 @@ export default function GalleryPage() {
           {photos.map((photo, index) => (
             <div
               key={photo}
-              className="h-80 rounded-3xl bg-cover bg-center shadow-sm"
-              style={{ backgroundImage: `url('${photo}')` }}
+              className="relative h-80 overflow-hidden rounded-3xl bg-slate-100 shadow-sm"
               aria-label={`Thoddoo gallery photo ${index + 1}`}
-            />
+            >
+              <Image
+                src={photo}
+                alt={`Thoddoo gallery photo ${index + 1}`}
+                fill
+                sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                className="object-cover"
+              />
+            </div>
           ))}
         </div>
       </section>

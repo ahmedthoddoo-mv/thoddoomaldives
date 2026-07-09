@@ -1,4 +1,33 @@
+import type { Metadata } from "next";
+import { SITE_NAME, SITE_URL, createPageMetadata, jsonLdScript } from "@/lib/seo";
+
+export const metadata: Metadata = createPageMetadata({
+  title: "Thoddoo Travel Guide",
+  description:
+    "Read practical Thoddoo travel guidance for Bikini Beach, money, restaurants, transfers, dress code, weather, and local island planning.",
+  path: "/guide",
+  image: "/images/homepage/hero-1.jpg",
+});
+
 export default function GuidePage() {
+  const guideJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "TouristInformationCenter",
+    name: "Thoddoo Travel Guide",
+    url: `${SITE_URL}/guide`,
+    description:
+      "Practical local travel guidance for planning a Thoddoo Maldives island trip.",
+    areaServed: {
+      "@type": "Place",
+      name: "Thoddoo, Maldives",
+    },
+    provider: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      url: SITE_URL,
+    },
+  };
+
   const guides = [
     ["🏖️", "Bikini Beach", "Where tourists can swim and relax."],
     ["💵", "Money & ATM", "Bring cash; check ATM availability before arrival."],
@@ -10,6 +39,10 @@ export default function GuidePage() {
 
   return (
     <main className="min-h-screen bg-white text-slate-900">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(guideJsonLd) }}
+      />
       <section
         className="relative flex min-h-[60vh] items-center bg-cover bg-center px-6 text-white md:px-12"
         style={{ backgroundImage: "url('/images/homepage/hero-1.jpg')" }}

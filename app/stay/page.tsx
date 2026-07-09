@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { guesthouses } from "@/data/guesthouses";
+import { createPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Guesthouses in Thoddoo | iThoddoo Maldives",
+export const metadata: Metadata = createPageMetadata({
+  title: "Guesthouses in Thoddoo Maldives",
   description:
-    "Browse guesthouses in Thoddoo, Maldives with rooms, amenities, location details, and easy WhatsApp booking.",
-};
+    "Browse Thoddoo guesthouses with room details, amenities, beach access, local support, and direct WhatsApp booking.",
+  path: "/stay",
+  image: "/images/hero-thoddoo.jpg",
+});
 
 export default function StayPage() {
   return (

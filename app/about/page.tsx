@@ -1,3 +1,14 @@
+import type { Metadata } from "next";
+import { createPageMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = createPageMetadata({
+  title: "About Thoddoo Maldives",
+  description:
+    "Learn why Thoddoo is known for beaches, snorkeling, agriculture, local cafes, guesthouses, and peaceful Maldives island life.",
+  path: "/about",
+  image: "/images/homepage/hero-1.jpg",
+});
+
 export default function AboutPage() {
   return (
     <main className="min-h-screen bg-white text-slate-900">

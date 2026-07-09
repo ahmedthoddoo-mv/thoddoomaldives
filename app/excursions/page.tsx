@@ -7,13 +7,16 @@ import {
   featuredExperience,
   type ExperienceCategory,
 } from "@/lib/experiences";
+import { createPageMetadata } from "@/lib/seo";
 import { generateExperienceLink } from "@/lib/whatsapp";
 
-export const metadata: Metadata = {
-  title: "Excursions in Thoddoo | iThoddoo Maldives",
+export const metadata: Metadata = createPageMetadata({
+  title: "Thoddoo Excursions & Island Experiences",
   description:
-    "Book premium Thoddoo excursions — turtle snorkeling, sandbank trips, sunset fishing, dolphin cruises, and local island adventures.",
-};
+    "Book Thoddoo excursions including turtle snorkeling, sandbank trips, sunset fishing, dolphin cruises, water sports, and local farm tours.",
+  path: "/excursions",
+  image: "/images/homepage/hero-4.jpg",
+});
 
 const categoryOrder: ExperienceCategory[] = [
   "snorkeling",

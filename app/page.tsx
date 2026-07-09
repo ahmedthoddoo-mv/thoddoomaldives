@@ -8,13 +8,22 @@ import Card from "@/components/ui/Card";
 import Container from "@/components/ui/Container";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { guesthouses } from "@/data/guesthouses";
+import {
+  SITE_NAME,
+  SITE_URL,
+  absoluteUrl,
+  createPageMetadata,
+  jsonLdScript,
+} from "@/lib/seo";
 import { generateGuesthouseLink } from "@/lib/whatsapp";
 
-export const metadata: Metadata = {
-  title: "iThoddoo Maldives | Stays, Experiences & Local Island Travel",
+export const metadata: Metadata = createPageMetadata({
+  title: "Thoddoo Maldives Travel, Stays & Local Experiences",
   description:
-    "Discover the real Maldives with luxury stays, unforgettable experiences, and local concierge service in Thoddoo.",
-};
+    "Plan your Thoddoo Maldives trip with local help for guesthouses, transfers, snorkeling, sandbanks, fishing, restaurants, and island travel.",
+  path: "/",
+  image: "/images/hero-thoddoo.jpg",
+});
 
 const trustItems = [
   {
@@ -148,8 +157,27 @@ function HeroBackground({ media }: { media: HeroMedia }) {
 }
 
 export default function Home() {
+  const websiteJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: SITE_NAME,
+    url: SITE_URL,
+    description:
+      "Local Thoddoo Maldives travel planning for guesthouses, airport transfers, excursions, restaurants, and island guides.",
+    publisher: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      url: SITE_URL,
+      logo: absoluteUrl("/icon.png"),
+    },
+  };
+
   return (
     <main className="min-h-screen bg-white text-slate-900">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(websiteJsonLd) }}
+      />
       <section className="relative flex min-h-screen items-center overflow-hidden bg-slate-950 px-6 pt-28 text-white md:px-12">
         <HeroBackground media={heroMedia} />
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/45 to-slate-950/85" />

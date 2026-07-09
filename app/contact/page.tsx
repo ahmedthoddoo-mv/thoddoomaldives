@@ -6,13 +6,16 @@ import {
   generateGeneralLink,
   generateTransferLink,
 } from "@/lib/whatsapp";
+import { createPageMetadata } from "@/lib/seo";
 import type { PlannerSearchParams } from "@/types/planner";
 
-export const metadata: Metadata = {
-  title: "Contact iThoddoo Maldives | Plan Your Thoddoo Trip",
+export const metadata: Metadata = createPageMetadata({
+  title: "Contact iThoddoo Maldives",
   description:
-    "Contact iThoddoo Maldives for Thoddoo guesthouses, airport transfers, excursions, and local island travel help.",
-};
+    "Contact iThoddoo Maldives for guesthouse booking help, airport transfers, excursions, restaurants, and local Thoddoo travel planning.",
+  path: "/contact",
+  image: "/images/homepage/hero-1.jpg",
+});
 
 type ContactPageProps = {
   searchParams?: Promise<PlannerSearchParams>;

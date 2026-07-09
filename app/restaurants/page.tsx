@@ -1,3 +1,14 @@
+import type { Metadata } from "next";
+import { createPageMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = createPageMetadata({
+  title: "Restaurants & Cafes in Thoddoo",
+  description:
+    "Find local cafes, seafood restaurants, fresh juice, Maldivian meals, and relaxed places to eat during your Thoddoo island stay.",
+  path: "/restaurants",
+  image: "/images/homepage/hero-6.jpg",
+});
+
 export default function RestaurantsPage() {
   const restaurants = [
     {

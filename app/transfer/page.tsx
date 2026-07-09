@@ -1,3 +1,14 @@
+import type { Metadata } from "next";
+import { createPageMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = createPageMetadata({
+  title: "Thoddoo Airport Transfers",
+  description:
+    "Compare and arrange Thoddoo airport transfers by public speedboat, private speedboat, ferry, or seaplane with local schedule guidance.",
+  path: "/transfer",
+  image: "/images/hero-thoddoo.jpg",
+});
+
 export default function TransferPage() {
   const options = [
     {
