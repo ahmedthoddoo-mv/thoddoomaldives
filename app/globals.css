@@ -729,6 +729,89 @@ body {
   color: #eef7f3;
 }
 
+.adminGateShell {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(8, 127, 122, 0.26), transparent 30rem),
+    radial-gradient(circle at 88% 12%, rgba(185, 130, 33, 0.16), transparent 26rem),
+    linear-gradient(135deg, #07100e 0%, #0d1714 48%, #111815 100%);
+  color: #eef7f3;
+  padding: 24px;
+}
+
+.adminGateCard {
+  display: grid;
+  gap: 16px;
+  width: min(100%, 460px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.105), rgba(255, 255, 255, 0.055));
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+  padding: 24px;
+  backdrop-filter: blur(18px);
+}
+
+.adminGateCard h1 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(2rem, 6vw, 3.4rem);
+  line-height: 0.98;
+  letter-spacing: 0;
+}
+
+.adminGateCard p,
+.adminGateCard small {
+  margin: 0;
+  color: rgba(238, 247, 243, 0.68);
+  line-height: 1.65;
+}
+
+.adminGateCard form {
+  display: grid;
+  gap: 10px;
+}
+
+.adminGateCard label {
+  color: #91dcd2;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.adminGateCard input {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font: inherit;
+  padding: 13px 14px;
+}
+
+.adminGateCard input:focus {
+  outline: 3px solid rgba(36, 198, 184, 0.18);
+  border-color: rgba(36, 198, 184, 0.7);
+}
+
+.adminGateCard span[role="alert"] {
+  color: #ffb39e;
+  font-weight: 800;
+}
+
+.adminGateCard button {
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #087f7a, #0ca497);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  min-height: 48px;
+  padding: 12px 16px;
+  font-weight: 900;
+}
+
 .adminAppFrame {
   display: grid;
   min-height: 100vh;
@@ -1569,6 +1652,333 @@ body {
   color: #ff8f7b;
 }
 
+/* EPIC-017 booking and inquiry engine */
+.bookingWidget {
+  display: grid;
+  gap: 22px;
+  border: 1px solid rgba(23, 32, 28, 0.1);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(8, 127, 122, 0.1), transparent 22rem),
+    #fff;
+  box-shadow: 0 24px 80px rgba(23, 32, 28, 0.1);
+  padding: 22px;
+}
+
+.bookingWidgetHeader h2 {
+  margin: 0;
+  color: #12201b;
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  letter-spacing: 0;
+}
+
+.bookingWidgetHeader p:not(.eyebrow),
+.bookingSummaryCard p,
+.propertyAvailabilityCard p {
+  color: #5d6a64;
+  line-height: 1.65;
+}
+
+.bookingWidgetGrid,
+.bookingWidgetForm,
+.bookingWidgetSide {
+  display: grid;
+  gap: 18px;
+}
+
+.bookingFormGrid {
+  display: grid;
+  gap: 14px;
+}
+
+.bookingField,
+.bookingSelectorGroup {
+  display: grid;
+  gap: 8px;
+}
+
+.bookingField span,
+.bookingSelectorGroup legend {
+  color: #12201b;
+  font-size: 0.86rem;
+  font-weight: 900;
+}
+
+.bookingField input,
+.bookingField textarea {
+  width: 100%;
+  border: 1px solid #d9e2dc;
+  border-radius: 14px;
+  background: #fff;
+  color: #12201b;
+  font: inherit;
+  padding: 12px 14px;
+}
+
+.bookingField textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.bookingSelectorGroup {
+  min-width: 0;
+  margin: 0;
+  border: 1px solid #d9e2dc;
+  border-radius: 18px;
+  padding: 14px;
+}
+
+.bookingOption,
+.bookingCheckboxOption {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  border-radius: 14px;
+  padding: 10px;
+}
+
+.bookingOptionSelected,
+.bookingCheckboxOption:has(input:checked) {
+  background: #e6f5f2;
+}
+
+.bookingOption span {
+  display: grid;
+  gap: 4px;
+}
+
+.bookingOption small,
+.bookingCheckboxOption small {
+  color: #5d6a64;
+  font-weight: 800;
+}
+
+.bookingChipGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bookingServiceChip {
+  border: 1px solid #d9e2dc;
+  border-radius: 999px;
+  background: #fff;
+  color: #12201b;
+  cursor: pointer;
+  font: inherit;
+  padding: 9px 12px;
+  font-weight: 900;
+}
+
+.bookingServiceChip span {
+  margin-left: 6px;
+  color: #087f7a;
+}
+
+.bookingServiceChipSelected {
+  border-color: #087f7a;
+  background: #e6f5f2;
+}
+
+.bookingPriceCalculator,
+.bookingActionGrid {
+  display: grid;
+  gap: 10px;
+}
+
+.bookingPriceCalculator {
+  border-radius: 16px;
+  background: #f4f7f2;
+  padding: 14px;
+}
+
+.bookingPriceCalculator span {
+  color: #12201b;
+  font-weight: 900;
+}
+
+.bookingActionGrid button,
+.adminBookingCard a {
+  border: 0;
+  border-radius: 999px;
+  background: #087f7a;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  padding: 12px 14px;
+  text-align: center;
+  font-weight: 900;
+}
+
+.bookingActionGrid button:nth-child(n + 2) {
+  background: #07100e;
+}
+
+.bookingSummaryCard,
+.propertyAvailabilityCard,
+.bookingCommissionCard {
+  border: 1px solid rgba(23, 32, 28, 0.1);
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 20px 60px rgba(23, 32, 28, 0.08);
+  padding: 18px;
+}
+
+.bookingSummaryCard h3,
+.propertyAvailabilityCard h3 {
+  margin: 0;
+  color: #12201b;
+  font-size: 1.4rem;
+}
+
+.bookingSummaryCard dl {
+  display: grid;
+  gap: 10px;
+}
+
+.bookingSummaryCard dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.bookingSummaryCard dt {
+  color: #5d6a64;
+  font-weight: 800;
+}
+
+.bookingSummaryCard dd {
+  margin: 0;
+  color: #12201b;
+  font-weight: 900;
+}
+
+.bookingSummaryTotal {
+  border-top: 1px solid #d9e2dc;
+  padding-top: 12px;
+  font-size: 1.1rem;
+}
+
+.bookingCommissionCard {
+  display: grid;
+  gap: 12px;
+  background: #07100e;
+  color: #fff;
+}
+
+.bookingCommissionCard > span {
+  color: #91dcd2;
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.bookingCommissionCard strong {
+  color: #fff;
+  font-size: 2rem;
+}
+
+.bookingCommissionCard small,
+.bookingCommissionGrid p {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.adminBookingManagement,
+.partnerDashboardDemo {
+  display: grid;
+  gap: 18px;
+}
+
+.adminBookingTabs,
+.adminBookingGrid,
+.bookingSourceGrid {
+  display: grid;
+  gap: 10px;
+}
+
+.adminBookingTabs span,
+.bookingSourceGrid span {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(238, 247, 243, 0.82);
+  padding: 9px 12px;
+  font-weight: 900;
+}
+
+.adminBookingCard {
+  display: grid;
+  gap: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.07);
+  padding: 16px;
+}
+
+.adminBookingCard span {
+  color: #91dcd2;
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.adminBookingCard h3 {
+  margin: 6px 0;
+  color: #fff;
+  font-size: 1.35rem;
+}
+
+.adminBookingCard p {
+  margin: 0;
+  color: rgba(238, 247, 243, 0.68);
+}
+
+.adminBookingCard dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.adminBookingCard dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.adminBookingCard dt {
+  color: rgba(238, 247, 243, 0.56);
+  font-weight: 800;
+}
+
+.adminBookingCard dd {
+  margin: 0;
+  color: #fff;
+  font-weight: 900;
+  text-align: right;
+}
+
+.bookingStatusBadge {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 6px 10px;
+}
+
+.bookingStatus-new,
+.bookingStatus-pending {
+  background: rgba(213, 168, 75, 0.15);
+  color: #f3d38a;
+}
+
+.bookingStatus-confirmed,
+.bookingStatus-completed {
+  background: rgba(78, 209, 138, 0.13);
+  color: #a7efc6;
+}
+
+.bookingStatus-cancelled {
+  background: rgba(240, 130, 98, 0.14);
+  color: #ffb39e;
+}
+
 @media (min-width: 760px) {
   .adminHeader {
     grid-template-columns: minmax(0, 1fr) 360px;
@@ -1657,6 +2067,22 @@ body {
 
   .adminPropertyActionGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .bookingWidgetGrid {
+    grid-template-columns: minmax(0, 1fr) 340px;
+    align-items: start;
+  }
+
+  .bookingFormGrid,
+  .bookingActionGrid,
+  .adminBookingGrid,
+  .bookingSourceGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .adminBookingTabs {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 
   .adminPropertyTitleRow {

@@ -1,4 +1,4 @@
-import BookingInquiryForm from "@/components/BookingInquiryForm";
+import { BookingWidget } from "@/components/booking/BookingWidget";
 import ExperienceCard from "@/components/cards/ExperienceCard";
 import TestimonialCard from "@/components/cards/TestimonialCard";
 import PropertyAmenities from "@/components/property/PropertyAmenities";
@@ -38,6 +38,12 @@ export default function PropertyPage({
   const guestReviews = testimonials.filter((testimonial) =>
     guesthouse.testimonialIds.includes(testimonial.id)
   );
+  const bookingRooms = guesthouse.rooms.map((room) => ({
+    id: room.name.toLowerCase().replaceAll(" ", "-"),
+    name: room.name,
+    nightlyRate: Number(room.price.replace(/[^0-9]/g, "")) || 0,
+    capacity: room.capacity
+  }));
 
   return (
     <main className="min-h-screen bg-white pb-24 text-slate-900 lg:pb-0">
@@ -49,6 +55,8 @@ export default function PropertyPage({
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge>{guesthouse.rating} guest rating</Badge>
+                <Badge>Verified Partner</Badge>
+                <Badge>Verified Membership</Badge>
                 <span className="inline-flex rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700">
                   {guesthouse.distanceToBeach}
                 </span>
@@ -137,29 +145,38 @@ export default function PropertyPage({
               </section>
 
               <section className="mt-16">
-                <SectionTitle eyebrow="Booking" title="Send a Stay Request" />
-                <div className="mt-8 grid gap-6 xl:grid-cols-[1fr_320px]">
-                  <BookingInquiryForm guesthouse={guesthouse} />
-                  <aside className="rounded-3xl border border-slate-200 bg-slate-950 p-6 text-white">
-                    <p className="text-sm font-semibold uppercase tracking-widest text-cyan-200">
-                      Direct Booking
-                    </p>
-                    <h3 className="mt-3 text-2xl font-bold">
-                      Confirm availability fast
-                    </h3>
-                    <p className="mt-4 leading-7 text-slate-300">
-                      Ask for live room availability, transfer timing, breakfast
-                      details, and the best direct rate before you arrive.
-                    </p>
-                    <a
-                      href={bookingLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-green-500 px-6 py-4 font-semibold text-white transition hover:bg-green-600"
-                    >
-                      Book Now
-                    </a>
-                  </aside>
+                <BookingWidget propertyName={guesthouse.name} whatsapp={guesthouse.whatsapp} rooms={bookingRooms} />
+              </section>
+
+              <section className="mt-16">
+                <SectionTitle eyebrow="Policies" title="Stay policies" />
+                <div className="mt-8 grid gap-5 md:grid-cols-3">
+                  {[
+                    ["Check-in", "From 14:00. Early check-in can be requested."],
+                    ["Check-out", "By 12:00. Late check-out depends on availability."],
+                    ["Booking", "No payment is collected online. Confirm details through WhatsApp."]
+                  ].map(([title, text]) => (
+                    <article key={title} className="rounded-3xl border bg-white p-6 shadow-sm">
+                      <h3 className="text-2xl font-bold">{title}</h3>
+                      <p className="mt-3 leading-7 text-slate-600">{text}</p>
+                    </article>
+                  ))}
+                </div>
+              </section>
+
+              <section className="mt-16">
+                <SectionTitle eyebrow="Transfers" title="Arrival support" />
+                <div className="mt-8 grid gap-5 md:grid-cols-3">
+                  {[
+                    ["Airport Transfer", "Coordinate airport arrival support and speedboat guidance."],
+                    ["Speedboat Transfer", "Public and private options can be requested with your booking."],
+                    ["Ferry Transfer", "Budget-friendly ferry guidance for flexible travelers."]
+                  ].map(([title, text]) => (
+                    <article key={title} className="rounded-3xl border bg-white p-6 shadow-sm">
+                      <h3 className="text-2xl font-bold">{title}</h3>
+                      <p className="mt-3 leading-7 text-slate-600">{text}</p>
+                    </article>
+                  ))}
                 </div>
               </section>
 

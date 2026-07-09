@@ -23,6 +23,10 @@ Exit criteria:
 
 Goal: Turn the site into a stronger booking and discovery platform.
 
+Current:
+- EPIC-017 Booking & Inquiry Engine Foundation is IN PROGRESS.
+- Frontend/demo booking widgets, live estimates, commission preparation, admin booking management, and partner dashboard demos are now scaffolded for future Supabase/PostgreSQL integration.
+
 Planned:
 - Add missing property and room images.
 - Add more guesthouses to `data/guesthouses.ts`.

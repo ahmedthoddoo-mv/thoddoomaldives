@@ -66,6 +66,8 @@ export type AdminContentSection = {
 
 export const adminSidebarItems = [
   { label: "Overview", href: "/admin#overview" },
+  { label: "Bookings", href: "/admin/bookings" },
+  { label: "Partner Dashboard", href: "/admin/property-dashboard" },
   { label: "Properties", href: "/admin/properties" },
   { label: "Guesthouses", href: "/admin/guesthouses" },
   { label: "Restaurants", href: "/admin/restaurants" },
@@ -78,6 +80,7 @@ export const adminSidebarItems = [
 
 export const adminQuickActions = [
   { label: "Add Property", href: "/admin/properties", variant: "primary" as const },
+  { label: "New Booking", href: "/admin/bookings", variant: "primary" as const },
   { label: "Add Guesthouse", href: "/admin/guesthouses", variant: "primary" as const },
   { label: "Add Restaurant", href: "/admin/restaurants" },
   { label: "Add Excursion", href: "/admin/experiences" },
