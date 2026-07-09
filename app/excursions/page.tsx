@@ -32,33 +32,24 @@ export default function ExcursionsPage() {
   });
 
   return (
-    <main className="min-h-screen bg-white text-slate-900">
-      {/* Hero */}
+    <main className="platformPage">
       <section
-        className="relative flex min-h-[70vh] items-center bg-cover bg-center px-6 text-white md:px-12"
+        className="platformHero"
         style={{ backgroundImage: "url('/images/homepage/hero-4.jpg')" }}
       >
-        <div className="absolute inset-0 bg-black/55" />
-
-        <div className="relative z-10 max-w-4xl">
-          <p className="mb-4 text-sm font-semibold uppercase tracking-[0.3em]">
-            Thoddoo Excursions
-          </p>
-
-          <h1 className="text-5xl font-bold leading-tight md:text-7xl">
-            Unforgettable Island Adventures
-          </h1>
-
-          <p className="mt-6 max-w-2xl text-lg text-white/90">
+        <div className="platformHeroInner">
+          <p className="eyebrow">Thoddoo Excursions</p>
+          <h1>Unforgettable Island Adventures</h1>
+          <p>
             Snorkel with turtles, cruise to pristine sandbanks, fish at sunset,
             and explore the real Maldives — all arranged with trusted local
             guides on Thoddoo Island.
           </p>
 
-          <div className="mt-8 flex flex-wrap gap-4">
+          <div className="platformButtonRow">
             <a
               href="#excursions"
-              className="rounded-full bg-white px-6 py-3 font-semibold text-slate-900"
+              className="platformButton"
             >
               Browse Excursions
             </a>
@@ -67,7 +58,7 @@ export default function ExcursionsPage() {
               href={generalBookingLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded-full border border-white px-6 py-3 font-semibold text-white"
+              className="platformButtonSecondary"
             >
               Book on WhatsApp
             </a>
@@ -75,76 +66,65 @@ export default function ExcursionsPage() {
         </div>
       </section>
 
-      {/* Featured Excursion */}
-      <section className="mx-auto max-w-7xl px-6 py-20">
-        <p className="text-sm font-semibold uppercase tracking-widest text-cyan-700">
-          Featured Experience
-        </p>
+      <section className="platformSection">
+        <div className="platformContainer">
+          <div className="platformSectionHeader">
+            <p className="eyebrow">Featured Experience</p>
+            <h2>{featuredExperience.title}</h2>
+          </div>
 
-        <h2 className="mt-3 text-4xl font-bold">
-          {featuredExperience.title}
-        </h2>
+          <div className="platformCard md:grid md:grid-cols-2">
+            <div
+              className="min-h-[360px] bg-cover bg-center"
+              style={{
+                backgroundImage: `url('${featuredExperience.image ?? "/images/hero-thoddoo.jpg"}')`,
+              }}
+              role="img"
+              aria-label={featuredExperience.title}
+            />
 
-        <div className="mt-8 overflow-hidden rounded-3xl bg-white shadow-sm md:grid md:grid-cols-2">
-          <div
-            className="min-h-[360px] bg-cover bg-center"
-            style={{
-              backgroundImage: `url('${featuredExperience.image ?? "/images/hero-thoddoo.jpg"}')`,
-            }}
-            role="img"
-            aria-label={featuredExperience.title}
-          />
+            <div className="platformCardBody">
+              <div className="text-5xl">{featuredExperience.icon}</div>
 
-          <div className="p-6 md:p-10">
-            <div className="text-5xl">{featuredExperience.icon}</div>
+              <p>{featuredExperience.description}</p>
 
-            <p className="mt-4 text-slate-600">
-              {featuredExperience.description}
-            </p>
+              <div className="platformPillRow mt-6">
+                <span className="platformPill">{featuredExperience.duration}</span>
+                <span className="platformPill">{featuredExperience.price}</span>
+              </div>
 
-            <div className="mt-6 grid gap-3 text-sm text-slate-700 md:grid-cols-2">
-              <p>⏱ {featuredExperience.duration}</p>
-              <p className="font-semibold text-cyan-700">
-                💰 {featuredExperience.price}
-              </p>
+              <ul className="mt-6 space-y-2 text-slate-600">
+                {featuredExperience.highlights.slice(0, 4).map((highlight) => (
+                  <li key={highlight}>{highlight}</li>
+                ))}
+              </ul>
+
+              <a
+                href={generateExperienceLink({
+                  experience: featuredExperience.title,
+                })}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="platformButton mt-8"
+              >
+                Book {featuredExperience.title}
+              </a>
             </div>
-
-            <ul className="mt-6 space-y-2 text-slate-600">
-              {featuredExperience.highlights.slice(0, 4).map((highlight) => (
-                <li key={highlight}>✅ {highlight}</li>
-              ))}
-            </ul>
-
-            <a
-              href={generateExperienceLink({
-                experience: featuredExperience.title,
-              })}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-8 inline-block rounded-full bg-slate-900 px-6 py-3 font-semibold text-white"
-            >
-              Book {featuredExperience.title}
-            </a>
           </div>
         </div>
       </section>
 
-      {/* Excursion Grid by Category */}
-      <section id="excursions" className="bg-slate-50 py-20">
-        <div className="mx-auto max-w-7xl px-6">
-          <p className="text-sm font-semibold uppercase tracking-widest text-cyan-700">
-            All Excursions
-          </p>
-
-          <h2 className="mt-3 text-4xl font-bold">
-            Choose Your Thoddoo Adventure
-          </h2>
-
-          <p className="mt-4 max-w-3xl text-slate-600">
-            Every excursion is arranged with local operators who know Thoddoo
-            best. Prices are indicative — send us your dates and group size for
-            a confirmed quote.
-          </p>
+      <section id="excursions" className="platformSection platformSectionMuted">
+        <div className="platformContainer">
+          <div className="platformSectionHeader">
+            <p className="eyebrow">All Excursions</p>
+            <h2>Choose Your Thoddoo Adventure</h2>
+            <p>
+              Every excursion is arranged with local operators who know Thoddoo
+              best. Prices are indicative — send us your dates and group size for
+              a confirmed quote.
+            </p>
+          </div>
 
           <div className="mt-16 space-y-20">
             {categoryOrder.map((category) => {
@@ -173,31 +153,33 @@ export default function ExcursionsPage() {
         </div>
       </section>
 
-      {/* Before You Book */}
-      <section className="py-16">
-        <div className="mx-auto max-w-5xl px-6">
-          <h2 className="text-3xl font-bold">Before You Book</h2>
+      <section className="platformSection">
+        <div className="platformContainer">
+          <div className="platformSectionHeader">
+            <p className="eyebrow">Planning notes</p>
+            <h2>Before You Book</h2>
+          </div>
 
-          <div className="mt-6 rounded-3xl border bg-white p-8 shadow-sm">
-            <ul className="space-y-4 text-slate-700">
+          <div className="platformNotice">
+            <ul>
               <li>
-                ✅ Excursions are subject to weather and sea conditions — we
+                Excursions are subject to weather and sea conditions — we
                 will confirm on the day if needed.
               </li>
               <li>
-                ✅ Advance booking is recommended, especially during peak season
+                Advance booking is recommended, especially during peak season
                 (November–April).
               </li>
               <li>
-                ✅ Most excursions depart from Thoddoo harbour — we will share
+                Most excursions depart from Thoddoo harbour — we will share
                 the exact meeting point after booking.
               </li>
               <li>
-                ✅ Private charters are available for couples, families, and
+                Private charters are available for couples, families, and
                 groups on request.
               </li>
               <li>
-                ✅ Need an airport transfer too?{" "}
+                Need an airport transfer too?{" "}
                 <a href="/transfer" className="font-semibold text-cyan-700">
                   View transfer options
                 </a>
@@ -208,21 +190,16 @@ export default function ExcursionsPage() {
         </div>
       </section>
 
-      {/* Inquiry Form */}
-      <section className="bg-slate-50 py-20">
-        <div className="mx-auto max-w-3xl px-6">
+      <section className="platformSection platformSectionMuted">
+        <div className="platformContainer max-w-3xl">
           <ExcursionInquiryForm />
         </div>
       </section>
 
-      {/* WhatsApp CTA */}
-      <section className="bg-slate-950 py-20 text-white">
-        <div className="mx-auto max-w-4xl px-6 text-center">
-          <h2 className="text-4xl font-bold">
-            Ready to Explore Thoddoo?
-          </h2>
-
-          <p className="mt-5 text-lg text-white/80">
+      <section className="platformCta">
+        <div className="platformContainer">
+          <h2>Ready to Explore Thoddoo?</h2>
+          <p>
             Send us your preferred date, number of guests, and which excursions
             interest you. We will arrange everything and confirm pricing on
             WhatsApp.
@@ -232,7 +209,7 @@ export default function ExcursionsPage() {
             href={generalBookingLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-8 inline-block rounded-full bg-green-500 px-8 py-4 text-lg font-semibold text-white transition hover:bg-green-600"
+            className="platformButton mt-8"
           >
             Book Excursions via WhatsApp
           </a>

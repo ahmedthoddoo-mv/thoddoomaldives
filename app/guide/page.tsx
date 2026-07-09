@@ -38,38 +38,37 @@ export default function GuidePage() {
   ];
 
   return (
-    <main className="min-h-screen bg-white text-slate-900">
+    <main className="platformPage">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLdScript(guideJsonLd) }}
       />
       <section
-        className="relative flex min-h-[60vh] items-center bg-cover bg-center px-6 text-white md:px-12"
+        className="platformHero"
         style={{ backgroundImage: "url('/images/homepage/hero-1.jpg')" }}
       >
-        <div className="absolute inset-0 bg-black/50" />
-        <div className="relative z-10 max-w-3xl">
-          <p className="mb-4 text-sm font-semibold uppercase tracking-[0.3em]">
-            Travel Guide
-          </p>
-          <h1 className="text-5xl font-bold md:text-7xl">
-            Thoddoo Travel Guide
-          </h1>
-          <p className="mt-6 text-lg text-white/90">
+        <div className="platformHeroInner">
+          <p className="eyebrow">Travel Guide</p>
+          <h1>Thoddoo Travel Guide</h1>
+          <p>
             Useful island information before you arrive in Thoddoo.
           </p>
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-6 py-16">
-        <div className="grid gap-6 md:grid-cols-3">
-          {guides.map(([icon, title, desc]) => (
-            <div key={title} className="rounded-3xl border bg-white p-6 shadow-sm">
-              <div className="text-4xl">{icon}</div>
-              <h2 className="mt-4 text-2xl font-bold">{title}</h2>
-              <p className="mt-3 text-slate-600">{desc}</p>
-            </div>
-          ))}
+      <section className="platformSection">
+        <div className="platformContainer">
+          <div className="platformGrid platformGridThree">
+            {guides.map(([icon, title, desc]) => (
+              <article key={title} className="platformCard">
+                <div className="platformCardBody">
+                  <div className="text-4xl">{icon}</div>
+                  <h3 className="mt-4">{title}</h3>
+                  <p>{desc}</p>
+                </div>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
     </main>

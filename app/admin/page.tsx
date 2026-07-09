@@ -8,6 +8,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminSystemStatus } from "@/components/admin/AdminSystemStatus";
 import { DashboardStats } from "@/components/admin/DashboardStats";
+import { adminQuickActions, adminSidebarItems } from "@/data/adminContent";
 
 export const metadata: Metadata = {
   title: "Admin Dashboard",
@@ -63,15 +64,6 @@ const dashboardStats = [
     detail: "Demo lead count",
     tone: "gold" as const
   }
-];
-
-const quickActions = [
-  { label: "Add Guesthouse", href: "#add-guesthouse", variant: "primary" as const },
-  { label: "Add Restaurant", href: "#add-restaurant" },
-  { label: "Add Excursion", href: "#add-excursion" },
-  { label: "Add Transfer Company", href: "#add-transfer" },
-  { label: "Review Applications", href: "#applications", variant: "primary" as const },
-  { label: "Upload Photos", href: "#media" }
 ];
 
 const recentApplications = [
@@ -173,24 +165,15 @@ const roadmapGroups = [
   }
 ];
 
-const sidebarItems = [
-  { label: "Overview", href: "#overview" },
-  { label: "Actions", href: "#actions" },
-  { label: "Applications", href: "#applications" },
-  { label: "Partners", href: "#partners" },
-  { label: "System", href: "#status" },
-  { label: "Roadmap", href: "#roadmap" }
-];
-
 export default function AdminPage() {
   return (
-    <AdminShell sidebar={<AdminSidebar items={sidebarItems} />}>
+    <AdminShell sidebar={<AdminSidebar items={adminSidebarItems} />}>
       <div className="adminContent" id="overview">
         <AdminHeader />
 
         <DashboardStats stats={dashboardStats} />
 
-        <AdminQuickActions actions={quickActions} />
+        <AdminQuickActions actions={adminQuickActions} />
 
         <div className="adminTwoColumn">
           <AdminRecentApplications applications={recentApplications} />

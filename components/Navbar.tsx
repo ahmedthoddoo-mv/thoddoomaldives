@@ -1,10 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+
+  if (pathname.startsWith("/admin")) {
+    return null;
+  }
 
   const links = [
     ["Home", "/"],
@@ -18,13 +24,13 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="absolute top-0 z-40 w-full px-6 py-5 text-white md:px-12">
-      <div className="flex items-center justify-between">
+    <nav className="absolute top-0 z-40 w-full px-4 py-4 text-white md:px-8">
+      <div className="mx-auto flex max-w-7xl items-center justify-between rounded-lg border border-white/15 bg-black/20 px-4 py-3 shadow-lg backdrop-blur md:px-5">
         <Link href="/" className="text-xl font-bold">
           iThoddoo Maldives
         </Link>
 
-        <div className="hidden gap-6 text-sm font-medium md:flex">
+        <div className="hidden gap-5 text-sm font-semibold md:flex">
           {links.map(([label, href]) => (
             <Link key={href} href={href} className="hover:text-cyan-200">
               {label}

@@ -25,6 +25,700 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* EPIC-016.5 platform consistency */
+.platformPage {
+  background: #f7faf8;
+  color: #12201b;
+}
+
+.platformHero {
+  position: relative;
+  display: flex;
+  min-height: 64vh;
+  align-items: end;
+  overflow: hidden;
+  background-position: center;
+  background-size: cover;
+  color: #fff;
+  padding: 120px 20px 52px;
+}
+
+.platformHero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(5, 16, 14, 0.3), rgba(5, 16, 14, 0.86)),
+    radial-gradient(circle at 18% 26%, rgba(8, 127, 122, 0.28), transparent 28rem);
+}
+
+.platformHeroInner {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 1180px);
+  margin: 0 auto;
+}
+
+.platformHero h1 {
+  max-width: 900px;
+  margin: 0;
+  font-size: clamp(2.65rem, 7vw, 6.2rem);
+  line-height: 0.96;
+  letter-spacing: 0;
+}
+
+.platformHero p:not(.eyebrow) {
+  max-width: 680px;
+  margin-top: 22px;
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 1.08rem;
+  line-height: 1.75;
+}
+
+.platformSection {
+  padding: 72px 20px;
+}
+
+.platformSectionMuted {
+  background: #eef5f1;
+}
+
+.platformContainer {
+  width: min(100%, 1180px);
+  margin: 0 auto;
+}
+
+.platformSectionHeader {
+  max-width: 760px;
+  margin-bottom: 34px;
+}
+
+.platformSectionHeader h2,
+.platformCta h2 {
+  margin: 0;
+  color: #12201b;
+  font-size: clamp(2rem, 5vw, 3.8rem);
+  line-height: 1.02;
+  letter-spacing: 0;
+}
+
+.platformSectionHeader p,
+.platformCard p,
+.platformNotice p {
+  color: #5d6a64;
+  line-height: 1.7;
+}
+
+.platformGrid {
+  display: grid;
+  gap: 18px;
+}
+
+.platformCard,
+.platformNotice {
+  border: 1px solid rgba(23, 32, 28, 0.1);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 20px 60px rgba(23, 32, 28, 0.08);
+}
+
+.platformCard {
+  overflow: hidden;
+}
+
+.platformCardBody {
+  padding: 22px;
+}
+
+.platformCard h3 {
+  margin: 0;
+  color: #12201b;
+  font-size: clamp(1.35rem, 3vw, 2rem);
+  line-height: 1.1;
+  letter-spacing: 0;
+}
+
+.platformCardImage {
+  min-height: 260px;
+  background-position: center;
+  background-size: cover;
+}
+
+.platformPillRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.platformPill {
+  display: inline-flex;
+  border-radius: 999px;
+  background: #e6f5f2;
+  color: #045b58;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.platformButtonRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.platformButton,
+.platformButtonSecondary {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 12px 18px;
+  font-weight: 900;
+}
+
+.platformButton {
+  background: #087f7a;
+  color: #fff;
+}
+
+.platformButtonSecondary {
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  color: #fff;
+}
+
+.platformNotice {
+  padding: 22px;
+}
+
+.platformNotice ul {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  color: #43514b;
+  list-style: none;
+}
+
+.platformCta {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(8, 127, 122, 0.24), transparent 26rem),
+    #07100e;
+  color: #fff;
+  padding: 72px 20px;
+  text-align: center;
+}
+
+.platformCta h2 {
+  color: #fff;
+}
+
+.platformCta p {
+  max-width: 720px;
+  margin: 18px auto 0;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.75;
+}
+
+@media (min-width: 760px) {
+  .platformHero {
+    padding: 150px 36px 72px;
+  }
+
+  .platformSection {
+    padding: 92px 36px;
+  }
+
+  .platformGridTwo {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .platformGridThree {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.platformCard.bg-green-600 h3,
+.platformCard.bg-green-600 p {
+  color: #fff;
+}
+
+.sectionHeader {
+  max-width: 780px;
+  margin-bottom: 28px;
+}
+
+.sectionHeader h2 {
+  margin: 0;
+  color: #12201b;
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
+.sectionHeader p:not(.eyebrow) {
+  color: #5d6a64;
+  line-height: 1.7;
+}
+
+.primaryButton,
+.secondaryButton {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 12px 18px;
+  font-weight: 900;
+}
+
+.primaryButton {
+  background: #087f7a;
+  color: #fff;
+}
+
+.secondaryButton {
+  border: 1px solid rgba(255, 255, 255, 0.54);
+  color: #fff;
+}
+
+/* Partner program landing */
+.partnerLanding {
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(8, 127, 122, 0.18), transparent 30rem),
+    linear-gradient(180deg, #07100e 0%, #f7faf8 34rem);
+  color: #12201b;
+}
+
+.partnerLandingHero {
+  position: relative;
+  display: grid;
+  gap: 26px;
+  min-height: 92vh;
+  align-items: end;
+  background:
+    linear-gradient(180deg, rgba(5, 16, 14, 0.1), rgba(5, 16, 14, 0.9)),
+    url("/images/homepage/hero-5.jpg");
+  background-position: center;
+  background-size: cover;
+  color: #fff;
+  padding: 140px 20px 64px;
+}
+
+.partnerLandingHero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 72% 24%, rgba(8, 127, 122, 0.34), transparent 28rem),
+    linear-gradient(90deg, rgba(5, 16, 14, 0.72), transparent);
+}
+
+.partnerHeroContent,
+.partnerHeroGlass {
+  position: relative;
+  z-index: 1;
+  animation: partnerRise 700ms ease both;
+}
+
+.partnerHeroContent {
+  width: min(100%, 850px);
+}
+
+.partnerLandingHero h1 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(3rem, 7vw, 7rem);
+  line-height: 0.95;
+  letter-spacing: 0;
+}
+
+.partnerLandingHero p:not(.eyebrow) {
+  max-width: 720px;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 1.08rem;
+  line-height: 1.75;
+}
+
+.partnerHeroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.partnerPrimaryButton,
+.partnerGhostButton {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 13px 20px;
+  font-weight: 900;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease;
+}
+
+.partnerPrimaryButton {
+  background: linear-gradient(135deg, #087f7a, #0ca497);
+  color: #fff;
+  box-shadow: 0 18px 42px rgba(8, 127, 122, 0.28);
+}
+
+.partnerPrimaryButton:hover,
+.partnerGhostButton:hover {
+  transform: translateY(-2px);
+}
+
+.partnerGhostButton {
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  backdrop-filter: blur(14px);
+}
+
+.partnerHeroGlass,
+.partnerGlassCard,
+.partnerPlanCard,
+.partnerComparison,
+.partnerProcessCard {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.72));
+  box-shadow: 0 24px 80px rgba(7, 16, 14, 0.14);
+  backdrop-filter: blur(18px);
+}
+
+.partnerHeroGlass {
+  display: grid;
+  gap: 12px;
+  max-width: 420px;
+  background: rgba(3, 11, 9, 0.44);
+  padding: 22px;
+  animation-delay: 120ms;
+}
+
+.partnerHeroGlass > span {
+  color: #9ce6db;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.partnerHeroGlass > strong {
+  color: #fff;
+  font-size: 1.45rem;
+}
+
+.partnerHeroGlass p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.6;
+}
+
+.partnerMiniMetrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.partnerMiniMetrics div {
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 14px;
+}
+
+.partnerMiniMetrics strong {
+  display: block;
+  color: #fff;
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.partnerMiniMetrics span {
+  color: rgba(255, 255, 255, 0.68);
+  font-weight: 800;
+}
+
+.partnerLandingSection {
+  padding: 86px 20px;
+}
+
+.partnerLandingContainer {
+  width: min(100%, 1180px);
+  margin: 0 auto;
+}
+
+.partnerStatsSection {
+  margin-top: -56px;
+  padding-top: 0;
+  position: relative;
+  z-index: 2;
+}
+
+.partnerStatsGrid,
+.partnerPlanGrid,
+.partnerWhyGrid,
+.partnerProcessGrid,
+.partnerFaqGrid {
+  display: grid;
+  gap: 18px;
+}
+
+.partnerStatCard,
+.partnerGlassCard,
+.partnerPlanCard,
+.partnerProcessCard {
+  padding: 22px;
+}
+
+.partnerStatCard strong {
+  color: #087f7a;
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.partnerStatCard span {
+  display: block;
+  margin-top: 10px;
+  color: #12201b;
+  font-weight: 900;
+}
+
+.partnerStatCard p,
+.partnerGlassCard p,
+.partnerPlanCard p,
+.partnerProcessCard p,
+.partnerSectionHeader p:not(.eyebrow) {
+  color: #5d6a64;
+  line-height: 1.7;
+}
+
+.partnerSectionHeader {
+  max-width: 780px;
+  margin-bottom: 32px;
+}
+
+.partnerSectionHeader h2,
+.partnerFinalCta h2 {
+  margin: 0;
+  color: #12201b;
+  font-size: clamp(2rem, 5vw, 4rem);
+  line-height: 1.02;
+  letter-spacing: 0;
+}
+
+.partnerGlassCard h3,
+.partnerPlanCard h3,
+.partnerProcessCard h3 {
+  margin: 0;
+  color: #12201b;
+  font-size: clamp(1.3rem, 3vw, 1.75rem);
+  line-height: 1.15;
+}
+
+.partnerPlanCard {
+  position: relative;
+  display: grid;
+  gap: 14px;
+  overflow: hidden;
+}
+
+.partnerPlanCard::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: linear-gradient(90deg, #087f7a, transparent);
+}
+
+.partnerPlanFeatured {
+  border-color: rgba(8, 127, 122, 0.36);
+  box-shadow: 0 24px 70px rgba(8, 127, 122, 0.14);
+}
+
+.partnerPlanBadge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  border-radius: 999px;
+  background: rgba(8, 127, 122, 0.12);
+  color: #045b58;
+  padding: 6px 9px;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.partnerPlanCard > strong {
+  color: #12201b;
+  font-size: 1.35rem;
+}
+
+.partnerPlanCard ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.partnerPlanCard li {
+  color: #43514b;
+  font-weight: 700;
+}
+
+.partnerDarkBand {
+  background:
+    radial-gradient(circle at 10% 0%, rgba(8, 127, 122, 0.22), transparent 26rem),
+    #07100e;
+  color: #fff;
+}
+
+.partnerDarkBand .partnerSectionHeader h2,
+.partnerDarkBand .partnerGlassCard h3 {
+  color: #fff;
+}
+
+.partnerDarkBand .partnerSectionHeader p,
+.partnerDarkBand .partnerGlassCard p {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.partnerDarkBand .partnerGlassCard {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.partnerIcon {
+  display: inline-flex;
+  width: 42px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #087f7a, #b98221);
+  color: #fff;
+  font-weight: 900;
+  margin-bottom: 16px;
+}
+
+.partnerComparison {
+  overflow: hidden;
+}
+
+.partnerComparisonRow {
+  display: grid;
+  gap: 1px;
+  background: #d9e2dc;
+}
+
+.partnerComparisonRow > span {
+  display: grid;
+  gap: 6px;
+  background: #fff;
+  padding: 14px;
+  color: #12201b;
+}
+
+.partnerComparisonHead > span {
+  background: #07100e;
+  color: #fff;
+  font-weight: 900;
+}
+
+.partnerComparisonRow small {
+  color: #5d6a64;
+  line-height: 1.45;
+}
+
+.partnerCategoriesSection {
+  background: #eef5f1;
+}
+
+.partnerCategoryCloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.partnerCategoryCloud span {
+  display: inline-flex;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  color: #12201b;
+  box-shadow: 0 14px 36px rgba(23, 32, 28, 0.08);
+  padding: 12px 15px;
+  font-weight: 900;
+}
+
+.partnerProcessCard span {
+  color: #087f7a;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.partnerFinalCta {
+  background:
+    radial-gradient(circle at 75% 0%, rgba(8, 127, 122, 0.26), transparent 28rem),
+    #07100e;
+  color: #fff;
+  padding: 92px 20px;
+  text-align: center;
+}
+
+.partnerFinalCta h2 {
+  color: #fff;
+}
+
+.partnerFinalCta p:not(.eyebrow) {
+  max-width: 680px;
+  margin: 18px auto 28px;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.75;
+}
+
+@keyframes partnerRise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (min-width: 760px) {
+  .partnerLandingHero {
+    grid-template-columns: minmax(0, 1fr) 380px;
+    padding: 150px 48px 76px;
+  }
+
+  .partnerStatsGrid,
+  .partnerPlanGrid,
+  .partnerWhyGrid,
+  .partnerFaqGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .partnerProcessGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .partnerComparisonRow {
+    grid-template-columns: minmax(240px, 1.5fr) repeat(3, minmax(120px, 0.7fr));
+  }
+}
+
 /* EPIC-016 admin dashboard polish */
 .adminShell {
   min-height: 100vh;
@@ -41,7 +735,52 @@ body {
 }
 
 .adminSidebar {
-  display: none;
+  display: grid;
+  gap: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(3, 11, 9, 0.72);
+  padding: 14px 16px;
+  backdrop-filter: blur(18px);
+}
+
+.adminBrandMark {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #ffffff;
+  font-weight: 900;
+}
+
+.adminBrandMark span {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #087f7a, #b98221);
+}
+
+.adminSidebar nav {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.adminSidebar nav a {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(238, 247, 243, 0.78);
+  padding: 9px 12px;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.adminSidebar nav a:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
 }
 
 .adminMainSurface {
@@ -379,6 +1118,235 @@ body {
   font-weight: 800;
 }
 
+.adminContentManager {
+  display: grid;
+  gap: 18px;
+}
+
+.adminContentHero {
+  display: grid;
+  gap: 22px;
+  align-items: end;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg, rgba(8, 127, 122, 0.22), rgba(255, 255, 255, 0.055)),
+    rgba(255, 255, 255, 0.055);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.2);
+  padding: 22px;
+  backdrop-filter: blur(18px);
+}
+
+.adminContentHero .inline-flex {
+  margin-bottom: 16px;
+  background: rgba(8, 127, 122, 0.2);
+  color: #9ce6db;
+}
+
+.adminContentHero h1 {
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(2.1rem, 6vw, 4.7rem);
+  line-height: 0.98;
+  letter-spacing: 0;
+}
+
+.adminContentHero p {
+  max-width: 680px;
+  margin: 14px 0 0;
+  color: rgba(238, 247, 243, 0.68);
+  line-height: 1.7;
+}
+
+.adminContentAddButton {
+  display: inline-flex;
+  min-height: 52px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px solid rgba(36, 198, 184, 0.7);
+  border-radius: 14px;
+  background: linear-gradient(135deg, #087f7a, #0ca497);
+  color: #fff;
+  padding: 14px 18px;
+  font-weight: 900;
+}
+
+.adminContentAddButton span {
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.adminContentToolbar {
+  display: grid;
+  gap: 14px;
+}
+
+.adminSearchField {
+  display: grid;
+  gap: 8px;
+}
+
+.adminSearchField span {
+  color: #91dcd2;
+  font-size: 0.74rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.adminSearchField input {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  font: inherit;
+  padding: 13px 14px;
+}
+
+.adminSearchField input::placeholder {
+  color: rgba(238, 247, 243, 0.42);
+}
+
+.adminSearchField input:focus {
+  outline: 3px solid rgba(36, 198, 184, 0.18);
+  border-color: rgba(36, 198, 184, 0.7);
+}
+
+.adminFilterGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.adminFilterGroup button {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(238, 247, 243, 0.78);
+  cursor: pointer;
+  font: inherit;
+  padding: 9px 12px;
+  font-size: 0.86rem;
+  font-weight: 900;
+}
+
+.adminFilterGroup .adminFilterActive {
+  border-color: rgba(36, 198, 184, 0.7);
+  background: rgba(36, 198, 184, 0.14);
+  color: #9ce6db;
+}
+
+.adminContentList {
+  display: grid;
+  gap: 10px;
+}
+
+.adminContentListHeader {
+  display: none;
+}
+
+.adminContentRow {
+  display: grid;
+  gap: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.07);
+  padding: 14px;
+}
+
+.adminContentRow strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #ffffff;
+}
+
+.adminContentRow p {
+  margin: 0;
+  color: rgba(238, 247, 243, 0.62);
+  line-height: 1.55;
+}
+
+.adminContentRow > span,
+.adminContentRow time {
+  color: rgba(238, 247, 243, 0.72);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.adminContentStatus {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.adminContentStatusHealthy {
+  background: rgba(78, 209, 138, 0.13);
+  color: #a7efc6;
+}
+
+.adminContentStatusReview {
+  background: rgba(240, 130, 98, 0.14);
+  color: #ffb39e;
+}
+
+.adminContentStatusDraft {
+  background: rgba(213, 168, 75, 0.15);
+  color: #f3d38a;
+}
+
+.adminContentStatusMuted {
+  background: rgba(238, 247, 243, 0.1);
+  color: rgba(238, 247, 243, 0.68);
+}
+
+.adminContentActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.adminContentActions button {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #eef7f3;
+  cursor: pointer;
+  font: inherit;
+  padding: 8px 11px;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.adminContentActions button:last-child {
+  color: #ffb39e;
+}
+
+.adminEmptyState {
+  border: 1px dashed rgba(255, 255, 255, 0.22);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.045);
+  padding: 18px;
+}
+
+.adminEmptyState strong {
+  color: #ffffff;
+}
+
+.adminEmptyState p {
+  margin: 8px 0 0;
+  color: rgba(238, 247, 243, 0.64);
+  line-height: 1.6;
+}
+
 @media (min-width: 760px) {
   .adminHeader {
     grid-template-columns: minmax(0, 1fr) 360px;
@@ -432,6 +1400,38 @@ body {
   .adminRoadmapPanel {
     padding: 22px;
   }
+
+  .adminContentHero {
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: 28px;
+  }
+
+  .adminContentToolbar {
+    grid-template-columns: minmax(260px, 0.9fr) minmax(0, 1.1fr);
+    align-items: end;
+  }
+
+  .adminFilterGroup {
+    justify-content: end;
+  }
+
+  .adminContentListHeader,
+  .adminContentRow {
+    display: grid;
+    grid-template-columns: minmax(220px, 1.4fr) minmax(120px, 0.8fr) minmax(108px, 0.7fr) minmax(130px, 0.8fr) minmax(100px, 0.65fr) minmax(130px, 0.75fr);
+    align-items: center;
+  }
+
+  .adminContentListHeader {
+    padding: 0 14px;
+  }
+
+  .adminContentListHeader span {
+    color: rgba(238, 247, 243, 0.48);
+    font-size: 0.72rem;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
 }
 
 @media (min-width: 1120px) {
@@ -452,31 +1452,16 @@ body {
     backdrop-filter: blur(18px);
   }
 
-  .adminBrandMark {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    color: #ffffff;
-    font-weight: 900;
-  }
-
-  .adminBrandMark span {
-    display: inline-flex;
-    width: 42px;
-    height: 42px;
-    align-items: center;
-    justify-content: center;
-    border-radius: 14px;
-    background: linear-gradient(135deg, #087f7a, #b98221);
-  }
-
   .adminSidebar nav {
     display: grid;
     gap: 8px;
+    overflow: visible;
+    padding-bottom: 0;
   }
 
   .adminSidebar nav a {
     border-radius: 12px;
+    background: transparent;
     color: rgba(238, 247, 243, 0.7);
     padding: 12px 14px;
     font-weight: 800;
