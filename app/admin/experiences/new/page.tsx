@@ -1,23 +1,22 @@
 import type { Metadata } from "next";
-import { AdminMediaLibrary } from "@/components/admin/AdminMediaLibrary";
+import { AdminCmsForm } from "@/components/admin/AdminCmsForm";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { adminSidebarItems } from "@/data/adminContent";
-import { mediaAssets } from "@/data/adminCms";
+import { getAdminCmsSection } from "@/data/adminCms";
 
 export const metadata: Metadata = {
-  title: "Admin Media",
-  robots: {
-    index: false,
-    follow: false
-  }
+  title: "Add Experience",
+  robots: { index: false, follow: false }
 };
 
-export default function AdminMediaPage() {
+export default function NewExperiencePage() {
+  const section = getAdminCmsSection("experiences");
+
   return (
     <AdminShell sidebar={<AdminSidebar items={adminSidebarItems} />}>
       <div className="adminContent">
-        <AdminMediaLibrary assets={mediaAssets} />
+        <AdminCmsForm mode="new" section={section} />
       </div>
     </AdminShell>
   );

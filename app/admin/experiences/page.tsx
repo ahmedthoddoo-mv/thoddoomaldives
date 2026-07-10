@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { AdminContentPage } from "@/components/admin/AdminContentPage";
-import { adminContentSections } from "@/data/adminContent";
+import { AdminCmsPage } from "@/components/admin/AdminCmsPage";
+import { getAdminCmsSection } from "@/data/adminCms";
 
 export const metadata: Metadata = {
   title: "Admin Experiences",
@@ -11,5 +11,5 @@ export const metadata: Metadata = {
 };
 
 export default function AdminExperiencesPage() {
-  return <AdminContentPage section={adminContentSections.experiences} />;
+  return <AdminCmsPage section={getAdminCmsSection("experiences")} />;
 }

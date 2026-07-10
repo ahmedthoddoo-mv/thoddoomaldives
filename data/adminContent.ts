@@ -23,22 +23,31 @@ export type AdminPropertySeoFields = {
 export type AdminManagedProperty = {
   id: string;
   name: string;
+  slug: string;
+  island: string;
+  address: string;
   logo: string;
   coverImage: string;
   gallery: string[];
   description: string;
+  shortDescription: string;
+  fullDescription: string;
   roomTypes: AdminPropertyRoomType[];
   amenities: string[];
+  policies: string[];
   checkIn: string;
   checkOut: string;
   whatsapp: string;
   email: string;
   website: string;
   googleMaps: string;
+  googleMapsLink: string;
   gpsLocation: string;
   membershipPlan: "Free" | "Verified" | "Premium";
   verificationStatus: "Draft" | "Pending" | "Verified" | "Suspended";
+  isPublished: boolean;
   isFeatured: boolean;
+  isArchived: boolean;
   seo: AdminPropertySeoFields;
   updated: string;
 };
@@ -65,26 +74,28 @@ export type AdminContentSection = {
 };
 
 export const adminSidebarItems = [
-  { label: "Overview", href: "/admin#overview" },
+  { label: "Dashboard", href: "/admin#overview" },
   { label: "Bookings", href: "/admin/bookings" },
-  { label: "Partner Dashboard", href: "/admin/property-dashboard" },
-  { label: "Properties", href: "/admin/properties" },
+  { label: "CRM", href: "/admin/crm" },
   { label: "Guesthouses", href: "/admin/guesthouses" },
   { label: "Restaurants", href: "/admin/restaurants" },
   { label: "Experiences", href: "/admin/experiences" },
   { label: "Transfers", href: "/admin/transfers" },
+  { label: "Partners", href: "/admin/properties" },
   { label: "Media", href: "/admin/media" },
-  { label: "System", href: "/admin#status" },
+  { label: "Reports", href: "/admin/property-dashboard" },
+  { label: "Settings", href: "/admin#status" },
   { label: "Roadmap", href: "/admin#roadmap" }
 ];
 
 export const adminQuickActions = [
-  { label: "Add Property", href: "/admin/properties", variant: "primary" as const },
+  { label: "Add Property", href: "/admin/properties/new", variant: "primary" as const },
   { label: "New Booking", href: "/admin/bookings", variant: "primary" as const },
-  { label: "Add Guesthouse", href: "/admin/guesthouses", variant: "primary" as const },
-  { label: "Add Restaurant", href: "/admin/restaurants" },
-  { label: "Add Excursion", href: "/admin/experiences" },
-  { label: "Add Transfer Company", href: "/admin/transfers" },
+  { label: "Open CRM", href: "/admin/crm", variant: "primary" as const },
+  { label: "Add Guesthouse", href: "/admin/guesthouses/new", variant: "primary" as const },
+  { label: "Add Restaurant", href: "/admin/restaurants/new" },
+  { label: "Add Excursion", href: "/admin/experiences/new" },
+  { label: "Add Transfer Company", href: "/admin/transfers/new" },
   { label: "Review Applications", href: "/admin#applications", variant: "primary" as const },
   { label: "Upload Photos", href: "/admin/media" }
 ];
@@ -102,26 +113,36 @@ export const adminManagedProperties: AdminManagedProperty[] = [
   {
     id: "property-thoddoo-sun-sky",
     name: "Thoddoo Sun Sky Inn",
+    slug: "thoddoo-sun-sky-inn",
+    island: "Thoddoo",
+    address: "Central Thoddoo, Alif Alif Atoll, Maldives",
     logo: "TS",
     coverImage: "/images/hero-thoddoo.jpg",
     gallery: ["/images/hero-thoddoo.jpg", "/images/homepage/hero-1.jpg", "/images/homepage/hero-4.jpg"],
     description:
       "Verified guesthouse profile with room content, beach access notes, direct WhatsApp booking, and structured SEO fields.",
+    shortDescription: "Verified guesthouse profile with breakfast, beach access notes, and direct WhatsApp booking.",
+    fullDescription:
+      "Thoddoo Sun Sky Inn is a verified partner property prepared for travelers who want a simple local stay with clear room details, useful amenities, WhatsApp booking support, and SEO-ready content for future public publishing.",
     roomTypes: [
       { name: "Deluxe Double", price: "From $85/night", capacity: "2 guests" },
       { name: "Family Room", price: "From $130/night", capacity: "4 guests" }
     ],
     amenities: ["Breakfast", "Wi-Fi", "Airport transfer help", "Beach towels", "Bicycles"],
+    policies: ["Free cancellation until 7 days before arrival", "Passport details required at check-in", "No alcohol on local island"],
     checkIn: "14:00",
     checkOut: "12:00",
     whatsapp: "+960 914 2538",
     email: "stay@thoddoosunsky.example",
     website: "https://thoddoosunsky.example",
     googleMaps: "Central Thoddoo, Alif Alif Atoll",
+    googleMapsLink: "https://maps.google.com/?q=Thoddoo+Sun+Sky+Inn",
     gpsLocation: "4.4376, 72.9596",
     membershipPlan: "Verified",
     verificationStatus: "Verified",
+    isPublished: true,
     isFeatured: true,
+    isArchived: false,
     seo: {
       title: "Thoddoo Sun Sky Inn | Verified Guesthouse",
       description: "Book Thoddoo Sun Sky Inn with local support, breakfast, beach access, and WhatsApp booking.",
@@ -132,26 +153,36 @@ export const adminManagedProperties: AdminManagedProperty[] = [
   {
     id: "property-palm-garden",
     name: "Palm Garden Thoddoo",
+    slug: "palm-garden-thoddoo",
+    island: "Thoddoo",
+    address: "Palm Garden Road, Thoddoo, Maldives",
     logo: "PG",
     coverImage: "/images/homepage/hero-2.jpg",
     gallery: ["/images/homepage/hero-2.jpg", "/images/homepage/hero-3.jpg"],
     description:
       "Growth partner applicant with room inventory, amenities, and content review pending before verification.",
+    shortDescription: "Growth partner applicant with room inventory and content review pending before verification.",
+    fullDescription:
+      "Palm Garden Thoddoo is a demo property record showing how admins can prepare guesthouse content, gallery paths, contact details, and verification notes before a future database workflow publishes it live.",
     roomTypes: [
       { name: "Garden Room", price: "From $72/night", capacity: "2 guests" },
       { name: "Triple Room", price: "From $105/night", capacity: "3 guests" }
     ],
     amenities: ["Garden", "Breakfast", "Wi-Fi", "Laundry support"],
+    policies: ["Breakfast included on selected rates", "Check transfer timing before arrival", "Quiet hours after 22:00"],
     checkIn: "13:00",
     checkOut: "11:00",
     whatsapp: "+960 700 1020",
     email: "hello@palmgarden.example",
     website: "https://palmgarden.example",
     googleMaps: "Palm Garden Road, Thoddoo",
+    googleMapsLink: "https://maps.google.com/?q=Palm+Garden+Thoddoo",
     gpsLocation: "4.4380, 72.9611",
     membershipPlan: "Free",
     verificationStatus: "Pending",
+    isPublished: false,
     isFeatured: false,
+    isArchived: false,
     seo: {
       title: "Palm Garden Thoddoo Guesthouse",
       description: "Palm Garden Thoddoo guesthouse profile prepared for review and future verification.",
@@ -162,26 +193,36 @@ export const adminManagedProperties: AdminManagedProperty[] = [
   {
     id: "property-coral-wave",
     name: "Coral Wave Residence",
+    slug: "coral-wave-residence",
+    island: "Thoddoo",
+    address: "Beach Route, Thoddoo, Maldives",
     logo: "CW",
     coverImage: "/images/homepage/hero-5.jpg",
     gallery: ["/images/homepage/hero-5.jpg", "/images/homepage/hero-6.jpg"],
     description:
       "Premium-ready property mock record for future analytics, featured placement, and rich media workflows.",
+    shortDescription: "Premium-ready property record for featured placement and rich media workflows.",
+    fullDescription:
+      "Coral Wave Residence is a premium demo profile used to validate suspension, featured placement, gallery management, SEO fields, room pricing, and future analytics connection points inside the admin CMS.",
     roomTypes: [
       { name: "Premium Suite", price: "From $165/night", capacity: "2 guests" },
       { name: "Two Bedroom Suite", price: "From $240/night", capacity: "5 guests" }
     ],
     amenities: ["Premium breakfast", "Private balcony", "Concierge support", "Professional photography"],
+    policies: ["Deposit may be requested for peak dates", "Guest transfer support available", "Property is currently hidden from public recommendations"],
     checkIn: "15:00",
     checkOut: "12:00",
     whatsapp: "+960 700 2040",
     email: "reservations@coralwave.example",
     website: "https://coralwave.example",
     googleMaps: "Beach Route, Thoddoo",
+    googleMapsLink: "https://maps.google.com/?q=Coral+Wave+Residence+Thoddoo",
     gpsLocation: "4.4392, 72.9584",
     membershipPlan: "Premium",
     verificationStatus: "Suspended",
+    isPublished: false,
     isFeatured: false,
+    isArchived: false,
     seo: {
       title: "Coral Wave Residence | Premium Thoddoo Stay",
       description: "Premium residence demo profile with suite inventory, gallery assets, and future analytics readiness.",
@@ -190,6 +231,10 @@ export const adminManagedProperties: AdminManagedProperty[] = [
     updated: "Jul 5, 2026"
   }
 ];
+
+export function getAdminManagedPropertyById(id: string) {
+  return adminManagedProperties.find((property) => property.id === id);
+}
 
 export const adminContentSections: Record<AdminContentSection["slug"], AdminContentSection> = {
   guesthouses: {

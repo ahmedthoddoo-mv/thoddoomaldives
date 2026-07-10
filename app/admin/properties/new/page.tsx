@@ -1,23 +1,22 @@
 import type { Metadata } from "next";
-import { AdminMediaLibrary } from "@/components/admin/AdminMediaLibrary";
+import { AdminPropertyForm } from "@/components/admin/AdminPropertyForm";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { adminSidebarItems } from "@/data/adminContent";
-import { mediaAssets } from "@/data/adminCms";
 
 export const metadata: Metadata = {
-  title: "Admin Media",
+  title: "Add Admin Property",
   robots: {
     index: false,
     follow: false
   }
 };
 
-export default function AdminMediaPage() {
+export default function NewAdminPropertyPage() {
   return (
     <AdminShell sidebar={<AdminSidebar items={adminSidebarItems} />}>
       <div className="adminContent">
-        <AdminMediaLibrary assets={mediaAssets} />
+        <AdminPropertyForm mode="new" />
       </div>
     </AdminShell>
   );
