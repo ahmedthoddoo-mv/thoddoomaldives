@@ -1,3 +1,5 @@
+import type { PlatformEntityReference } from "@/types/platform";
+
 export type PublicationStatus = "Draft" | "Published" | "Archived";
 export type VerificationStatus = "Unverified" | "Pending" | "Verified";
 export type ContentAction = "preview" | "publish" | "unpublish" | "verify" | "feature" | "archive" | "delete";
@@ -179,6 +181,7 @@ export type MediaAsset = {
   updatedDate: string;
   usageCount: number;
   usedBy: string[];
+  usedByEntities?: PlatformEntityReference[];
   isHero: boolean;
   archived: boolean;
   source: string;
@@ -507,6 +510,11 @@ export const mediaAssets: MediaAsset[] = [
     updatedDate: "Jul 10, 2026",
     usageCount: 5,
     usedBy: ["/", "/partners", "/admin", "Homepage hero carousel", "Partner preview cards"],
+    usedByEntities: [
+      { entityType: "property", entityId: "property-thoddoo-sun-sky", usage: "Hero image" },
+      { entityType: "partner", entityId: "partner-thoddoo-sun-sky", usage: "Partner portal cover" },
+      { entityType: "media", entityId: "media-hero-thoddoo", usage: "Media library hero asset" }
+    ],
     isHero: true,
     archived: false,
     source: "iThoddoo Maldives content archive",
@@ -528,6 +536,11 @@ export const mediaAssets: MediaAsset[] = [
     updatedDate: "Jul 10, 2026",
     usageCount: 4,
     usedBy: ["/stay", "/admin/guesthouses", "/admin/properties", "Guesthouse CMS preview"],
+    usedByEntities: [
+      { entityType: "property", entityId: "property-thoddoo-sun-sky", usage: "Gallery image" },
+      { entityType: "room", entityId: "room-deluxe", usage: "Room photo" },
+      { entityType: "partner", entityId: "partner-thoddoo-sun-sky", usage: "Partner gallery" }
+    ],
     isHero: false,
     archived: false,
     source: "Partner media demo set",
@@ -549,6 +562,10 @@ export const mediaAssets: MediaAsset[] = [
     updatedDate: "Jul 10, 2026",
     usageCount: 3,
     usedBy: ["/stay", "/admin/properties", "Partner onboarding preview"],
+    usedByEntities: [
+      { entityType: "property", entityId: "property-thoddoo-sun-sky", usage: "Gallery image" },
+      { entityType: "room", entityId: "room-family", usage: "Room photo" }
+    ],
     isHero: false,
     archived: false,
     source: "Local partner demo media",
@@ -570,6 +587,10 @@ export const mediaAssets: MediaAsset[] = [
     updatedDate: "Jul 10, 2026",
     usageCount: 4,
     usedBy: ["/restaurants", "/admin/restaurants", "Restaurant CMS hero", "Media picker"],
+    usedByEntities: [
+      { entityType: "restaurant", entityId: "restaurant-island-bites", usage: "Restaurant hero" },
+      { entityType: "media", entityId: "media-restaurant-food", usage: "Food gallery asset" }
+    ],
     isHero: false,
     archived: false,
     source: "Restaurant demo gallery",
@@ -591,6 +612,10 @@ export const mediaAssets: MediaAsset[] = [
     updatedDate: "Jul 10, 2026",
     usageCount: 2,
     usedBy: ["/stay/thoddoo-sun-sky-inn", "/admin/guesthouses/stay-thoddoo-sun-sky/edit"],
+    usedByEntities: [
+      { entityType: "property", entityId: "property-thoddoo-sun-sky", usage: "Room gallery" },
+      { entityType: "room", entityId: "room-deluxe", usage: "Room detail image" }
+    ],
     isHero: false,
     archived: false,
     source: "Room inventory demo media",
@@ -612,6 +637,10 @@ export const mediaAssets: MediaAsset[] = [
     updatedDate: "Jul 10, 2026",
     usageCount: 3,
     usedBy: ["/experiences", "/excursions", "/admin/experiences"],
+    usedByEntities: [
+      { entityType: "experience", entityId: "turtle-snorkeling", usage: "Experience card" },
+      { entityType: "experience", entityId: "sandbank-escape", usage: "Related experience media" }
+    ],
     isHero: false,
     archived: false,
     source: "Excursion demo media",
@@ -633,6 +662,11 @@ export const mediaAssets: MediaAsset[] = [
     updatedDate: "Jul 10, 2026",
     usageCount: 4,
     usedBy: ["/transfer", "/admin/transfers", "/admin/bookings", "Transfer CMS hero"],
+    usedByEntities: [
+      { entityType: "transfer", entityId: "public-speedboat", usage: "Transfer card" },
+      { entityType: "transfer", entityId: "private-speedboat", usage: "Transfer option media" },
+      { entityType: "booking", entityId: "BK-1008", usage: "Selected transfer preview" }
+    ],
     isHero: false,
     archived: false,
     source: "Transfer operator demo media",

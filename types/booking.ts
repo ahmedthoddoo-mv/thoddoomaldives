@@ -64,8 +64,11 @@ export type BookingService = {
 export type Booking = {
   id: string;
   guest: Guest;
+  guestRecordId?: string;
   propertyId: string;
   propertyName: string;
+  partnerId?: string;
+  crmRecordId?: string;
   arrival: string;
   departure: string;
   roomType: string;

@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { AdminImagePicker } from "@/components/admin/AdminImagePicker";
+import { mediaAssets } from "@/data/adminCms";
 import { partnerProfile } from "@/data/partnerPortal";
 
 export function PartnerProfileEditor() {
@@ -77,6 +79,13 @@ export function PartnerProfileEditor() {
               onChange={(event) => updateField("languages", event.target.value.split(",").map((item) => item.trim()).filter(Boolean))}
             />
           </label>
+        </div>
+        <div className="partnerPortalMediaPicker">
+          <AdminImagePicker
+            assets={mediaAssets}
+            onSelectPath={(path) => updateField("coverImage", path)}
+            selectedPaths={[profile.coverImage]}
+          />
         </div>
       </section>
 

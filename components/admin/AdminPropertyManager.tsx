@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Badge from "@/components/ui/Badge";
 import type { AdminManagedProperty, AdminPropertyAction } from "@/data/adminContent";
+import { platformLinkedProperties } from "@/data/platformIntegration";
 
 type AdminPropertyManagerProps = {
   actions: AdminPropertyAction[];
@@ -260,6 +261,30 @@ export function AdminPropertyManager({ actions, properties }: AdminPropertyManag
               </div>
 
               <div className="adminPropertyDetailGrid">
+                {(() => {
+                  const linkedProperty = platformLinkedProperties.find((item) => item.relationship.propertyId === property.id);
+
+                  return linkedProperty ? (
+                    <>
+                      <div>
+                        <span>Partner</span>
+                        <strong>{linkedProperty.crmPartner?.business ?? property.name}</strong>
+                      </div>
+                      <div>
+                        <span>Bookings</span>
+                        <strong>{linkedProperty.bookings.length} linked</strong>
+                      </div>
+                      <div>
+                        <span>Media</span>
+                        <strong>{linkedProperty.media.length} assets</strong>
+                      </div>
+                      <div>
+                        <span>Analytics</span>
+                        <strong>{linkedProperty.analytics.length} metrics</strong>
+                      </div>
+                    </>
+                  ) : null;
+                })()}
                 <div>
                   <span>Check-in</span>
                   <strong>{property.checkIn}</strong>

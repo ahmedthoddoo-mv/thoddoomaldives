@@ -15,9 +15,12 @@ export function BookingCard({ booking }: { booking: Booking }) {
       <dl>
         <div><dt>Arrival</dt><dd>{booking.arrival}</dd></div>
         <div><dt>Departure</dt><dd>{booking.departure}</dd></div>
-        <div><dt>Guests</dt><dd>{booking.guest.adults} adults · {booking.guest.children} children</dd></div>
+        <div><dt>Guests</dt><dd>{booking.guest.adults} adults | {booking.guest.children} children</dd></div>
         <div><dt>Estimated value</dt><dd>${booking.estimatedValue}</dd></div>
         <div><dt>Commission</dt><dd>${booking.commission.companyRevenue}</dd></div>
+        <div><dt>CRM</dt><dd>{booking.crmRecordId ?? "unlinked"}</dd></div>
+        <div><dt>Partner</dt><dd>{booking.partnerId ?? "unlinked"}</dd></div>
+        <div><dt>Guest record</dt><dd>{booking.guestRecordId ?? "demo guest"}</dd></div>
       </dl>
       <a href={`https://wa.me/${booking.guest.whatsapp?.replace(/\D/g, "")}?text=${whatsappMessage}`} target="_blank" rel="noreferrer">
         WhatsApp

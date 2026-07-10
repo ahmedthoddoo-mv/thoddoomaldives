@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { AdminQuickActions } from "@/components/admin/AdminQuickActions";
+import { AdminPlatformIntegrationPanel } from "@/components/admin/AdminPlatformIntegrationPanel";
 import { AdminRecentApplications } from "@/components/admin/AdminRecentApplications";
 import { AdminRecentPartners } from "@/components/admin/AdminRecentPartners";
 import { AdminRoadmapPanel } from "@/components/admin/AdminRoadmapPanel";
@@ -9,6 +10,7 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminSystemStatus } from "@/components/admin/AdminSystemStatus";
 import { DashboardStats } from "@/components/admin/DashboardStats";
 import { adminQuickActions, adminSidebarItems } from "@/data/adminContent";
+import { calculateAdminMetrics } from "@/lib/platform/metrics";
 
 export const metadata: Metadata = {
   title: "Admin Dashboard",
@@ -18,23 +20,25 @@ export const metadata: Metadata = {
   }
 };
 
+const adminMetrics = calculateAdminMetrics();
+
 const dashboardStats = [
   {
     label: "Pending Partner Applications",
-    value: "12",
-    detail: "4 need review today",
+    value: String(adminMetrics.pendingApplications),
+    detail: "CRM records needing approval",
     tone: "coral" as const
   },
   {
     label: "Verified Partners",
-    value: "28",
-    detail: "Across 7 business categories",
+    value: String(adminMetrics.recentPartners - adminMetrics.pendingApplications),
+    detail: "Derived from CRM verification",
     tone: "green" as const
   },
   {
     label: "Guesthouses",
-    value: "14",
-    detail: "9 verified, 5 pending"
+    value: String(adminMetrics.publishedProperties),
+    detail: "Published property records"
   },
   {
     label: "Restaurants",
@@ -55,13 +59,13 @@ const dashboardStats = [
   },
   {
     label: "Website Pages",
-    value: "19",
-    detail: "Static pages generated"
+    value: "63",
+    detail: "Static pages generated in build"
   },
   {
-    label: "Today's WhatsApp Leads",
-    value: "23",
-    detail: "Demo lead count",
+    label: "Open CRM Tasks",
+    value: String(adminMetrics.openTasks),
+    detail: "Calls, photos, pricing, responses",
     tone: "gold" as const
   }
 ];
@@ -153,15 +157,15 @@ const roadmapGroups = [
   },
   {
     title: "Completed",
-    items: ["Homepage", "SEO", "Partner Program", "Onboarding"]
+    items: ["Homepage", "SEO", "Partner Program", "Onboarding", "Booking Engine", "Admin CMS", "Media Library", "Partner Portal", "CRM"]
   },
   {
     title: "In Progress",
-    items: ["Admin Dashboard"]
+    items: ["Platform Integration"]
   },
   {
     title: "Upcoming",
-    items: ["Booking Engine", "AI Concierge", "Analytics", "Mobile App"]
+    items: ["Database Schema", "Authentication", "AI Concierge", "Analytics", "Mobile App"]
   }
 ];
 
@@ -174,6 +178,8 @@ export default function AdminPage() {
         <DashboardStats stats={dashboardStats} />
 
         <AdminQuickActions actions={adminQuickActions} />
+
+        <AdminPlatformIntegrationPanel />
 
         <div className="adminTwoColumn">
           <AdminRecentApplications applications={recentApplications} />

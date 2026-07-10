@@ -2,9 +2,16 @@
 
 import { useState } from "react";
 import { partnerGallery } from "@/data/partnerPortal";
+import { getMediaForEntity } from "@/lib/platform/selectors";
 
 export function PartnerGalleryManager() {
-  const [images, setImages] = useState(partnerGallery);
+  const linkedImages = getMediaForEntity("partner", "partner-thoddoo-sun-sky").map((asset) => ({
+    id: asset.id,
+    path: asset.path,
+    caption: asset.caption,
+    isHero: asset.isHero
+  }));
+  const [images, setImages] = useState(linkedImages.length > 0 ? linkedImages : partnerGallery);
   const [notice, setNotice] = useState("Gallery demo state ready.");
 
   function markHero(id: string) {

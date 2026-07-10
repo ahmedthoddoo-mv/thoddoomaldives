@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Badge from "@/components/ui/Badge";
 import { AdminCrmStatusBadge } from "@/components/admin/AdminCrmStatusBadge";
 import { crmFilterOptions, crmPartners, type CrmPartner } from "@/data/adminCrm";
+import { platformCrmRelationships } from "@/data/platformIntegration";
 
 type CrmFilter = (typeof crmFilterOptions)[number];
 
@@ -65,6 +66,9 @@ export function AdminCrmPartners() {
   }, [activeFilter, query]);
 
   const selectedPartner = crmPartners.find((partner) => partner.id === selectedPartnerId) ?? filteredPartners[0] ?? crmPartners[0];
+  const selectedRelationship = selectedPartner
+    ? platformCrmRelationships.find((relationship) => relationship.partner.id === selectedPartner.id)
+    : undefined;
 
   return (
     <div className="adminCrmStack">
@@ -118,6 +122,10 @@ export function AdminCrmPartners() {
             <span>Next follow-up: {selectedPartner.nextFollowUp}</span>
             <span>Lead source: {selectedPartner.leadSource}</span>
             <span>GPS: {selectedPartner.gps}</span>
+            <span>Property: {selectedRelationship?.property?.name ?? "Not linked yet"}</span>
+            <span>Bookings: {selectedRelationship?.bookings.length ?? 0}</span>
+            <span>Tasks: {selectedRelationship?.tasks.length ?? 0}</span>
+            <span>Media: {selectedRelationship?.media.length ?? 0}</span>
           </div>
         </section>
       ) : null}

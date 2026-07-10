@@ -1,13 +1,21 @@
 import { PartnerStatCard } from "@/components/partner-portal/PartnerStatCard";
 import {
   partnerAnalyticsMetrics,
-  partnerBookings,
   partnerChartData,
   partnerProfile,
   partnerStats
 } from "@/data/partnerPortal";
+import { calculatePartnerMetrics } from "@/lib/platform/metrics";
+import { getBookingsForPartner, getMembershipForPartner, getMediaForEntity, getRoomsForProperty } from "@/lib/platform/selectors";
 
 export function PartnerDashboard() {
+  const selectedPartnerId = "partner-thoddoo-sun-sky";
+  const partnerMetrics = calculatePartnerMetrics(selectedPartnerId);
+  const partnerBookings = getBookingsForPartner(selectedPartnerId);
+  const partnerMedia = getMediaForEntity("partner", selectedPartnerId);
+  const partnerMembership = getMembershipForPartner(selectedPartnerId);
+  const propertyRooms = getRoomsForProperty("property-thoddoo-sun-sky");
+
   return (
     <div className="partnerPortalStack">
       <section className="partnerPortalStatsGrid" aria-label="Partner dashboard statistics">
@@ -26,11 +34,11 @@ export function PartnerDashboard() {
             {partnerBookings.slice(0, 3).map((booking) => (
               <article key={booking.id}>
                 <div>
-                  <strong>{booking.guest}</strong>
-                  <p>{booking.summary}</p>
+                  <strong>{booking.guest.name}</strong>
+                  <p>{booking.propertyName} | CRM: {booking.crmRecordId}</p>
                 </div>
                 <span>{booking.status}</span>
-                <small>{booking.dates}</small>
+                <small>{booking.arrival} to {booking.departure}</small>
               </article>
             ))}
           </div>
@@ -54,10 +62,30 @@ export function PartnerDashboard() {
 
       <section className="partnerPortalPanel">
         <div className="partnerPortalSectionHeader">
-          <p className="eyebrow">Growth</p>
-          <h2>Partner Snapshot</h2>
+          <p className="eyebrow">Integrated relationship</p>
+          <h2>Property, Booking, Media, Membership</h2>
         </div>
         <div className="partnerPortalSnapshotGrid">
+          <div>
+            <span>Property</span>
+            <strong>Thoddoo Sun Sky Inn</strong>
+            <small>{propertyRooms.length} rooms connected</small>
+          </div>
+          <div>
+            <span>Bookings</span>
+            <strong>{partnerMetrics.bookingCount}</strong>
+            <small>${partnerMetrics.demoCommission} demo commission</small>
+          </div>
+          <div>
+            <span>Gallery</span>
+            <strong>{partnerMedia.length}</strong>
+            <small>Media Library assets</small>
+          </div>
+          <div>
+            <span>Membership</span>
+            <strong>{partnerMembership?.name ?? partnerProfile.membershipPlan}</strong>
+            <small>{partnerProfile.renewalStatus}</small>
+          </div>
           {partnerAnalyticsMetrics.slice(0, 4).map((metric) => (
             <div key={metric.label}>
               <span>{metric.label}</span>
