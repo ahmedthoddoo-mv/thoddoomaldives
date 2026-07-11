@@ -237,9 +237,99 @@ create table if not exists public.partner_media (
   primary key (partner_id, media_asset_id, usage)
 );
 
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'partners_status_check') then
+    alter table public.partners add constraint partners_status_check
+      check (status in ('new_lead', 'contacted', 'pending', 'verified', 'suspended', 'archived'));
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'partners_verification_status_check') then
+    alter table public.partners add constraint partners_verification_status_check
+      check (verification_status in ('unverified', 'pending', 'verified', 'rejected', 'suspended'));
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'partners_priority_check') then
+    alter table public.partners add constraint partners_priority_check
+      check (priority in ('low', 'medium', 'high', 'urgent'));
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'properties_publication_status_check') then
+    alter table public.properties add constraint properties_publication_status_check
+      check (publication_status in ('draft', 'pending', 'published', 'archived'));
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'properties_verification_status_check') then
+    alter table public.properties add constraint properties_verification_status_check
+      check (verification_status in ('draft', 'pending', 'verified', 'rejected', 'suspended'));
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'rooms_property_name_unique') then
+    alter table public.rooms add constraint rooms_property_name_unique unique (property_id, name);
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'rooms_price_non_negative_check') then
+    alter table public.rooms add constraint rooms_price_non_negative_check
+      check (price_per_night >= 0 and adults >= 0 and children >= 0);
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'bookings_date_order_check') then
+    alter table public.bookings add constraint bookings_date_order_check
+      check (check_out > check_in);
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'bookings_status_check') then
+    alter table public.bookings add constraint bookings_status_check
+      check (booking_status in ('draft', 'new', 'pending', 'confirmed', 'cancelled', 'completed', 'rejected'));
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'bookings_payment_status_check') then
+    alter table public.bookings add constraint bookings_payment_status_check
+      check (payment_status in ('demo_only', 'unpaid', 'pending', 'paid', 'refunded', 'failed'));
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'bookings_amounts_non_negative_check') then
+    alter table public.bookings add constraint bookings_amounts_non_negative_check
+      check (booking_total >= 0 and commission_percent >= 0 and company_revenue >= 0 and partner_revenue >= 0);
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'media_assets_rights_status_check') then
+    alter table public.media_assets add constraint media_assets_rights_status_check
+      check (rights_status in ('internal_demo_asset', 'needs_confirmation', 'permission_confirmed'));
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'restaurants_publication_status_check') then
+    alter table public.restaurants add constraint restaurants_publication_status_check
+      check (publication_status in ('draft', 'pending', 'published', 'archived'));
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'experiences_publication_status_check') then
+    alter table public.experiences add constraint experiences_publication_status_check
+      check (publication_status in ('draft', 'pending', 'published', 'archived'));
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'transfers_publication_status_check') then
+    alter table public.transfers add constraint transfers_publication_status_check
+      check (publication_status in ('draft', 'pending', 'published', 'archived'));
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'crm_tasks_status_check') then
+    alter table public.crm_tasks add constraint crm_tasks_status_check
+      check (status in ('open', 'in_progress', 'waiting_response', 'completed', 'cancelled'));
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'crm_tasks_priority_check') then
+    alter table public.crm_tasks add constraint crm_tasks_priority_check
+      check (priority in ('low', 'medium', 'high', 'urgent'));
+  end if;
+end $$;
+
 create index if not exists partners_category_idx on public.partners(category);
+create index if not exists partners_slug_idx on public.partners(slug);
 create index if not exists partners_verification_status_idx on public.partners(verification_status);
+create index if not exists partners_status_idx on public.partners(status);
 create index if not exists properties_partner_id_idx on public.properties(partner_id);
+create index if not exists properties_slug_idx on public.properties(slug);
 create index if not exists properties_publication_status_idx on public.properties(publication_status);
 create index if not exists properties_featured_idx on public.properties(featured);
 create index if not exists rooms_property_id_idx on public.rooms(property_id);
@@ -247,11 +337,30 @@ create index if not exists bookings_property_id_idx on public.bookings(property_
 create index if not exists bookings_partner_id_idx on public.bookings(partner_id);
 create index if not exists bookings_guest_id_idx on public.bookings(guest_id);
 create index if not exists bookings_status_idx on public.bookings(booking_status);
+create index if not exists bookings_check_in_idx on public.bookings(check_in);
+create index if not exists media_assets_path_idx on public.media_assets(path);
+create index if not exists restaurants_slug_idx on public.restaurants(slug);
 create index if not exists restaurants_publication_status_idx on public.restaurants(publication_status);
+create index if not exists experiences_slug_idx on public.experiences(slug);
 create index if not exists experiences_publication_status_idx on public.experiences(publication_status);
+create index if not exists transfers_slug_idx on public.transfers(slug);
 create index if not exists transfers_publication_status_idx on public.transfers(publication_status);
 create index if not exists crm_tasks_partner_id_idx on public.crm_tasks(partner_id);
+create index if not exists crm_tasks_status_idx on public.crm_tasks(status);
 create index if not exists crm_notes_partner_id_idx on public.crm_notes(partner_id);
+
+drop trigger if exists membership_plans_set_updated_at on public.membership_plans;
+drop trigger if exists partners_set_updated_at on public.partners;
+drop trigger if exists properties_set_updated_at on public.properties;
+drop trigger if exists rooms_set_updated_at on public.rooms;
+drop trigger if exists guests_set_updated_at on public.guests;
+drop trigger if exists bookings_set_updated_at on public.bookings;
+drop trigger if exists media_assets_set_updated_at on public.media_assets;
+drop trigger if exists restaurants_set_updated_at on public.restaurants;
+drop trigger if exists experiences_set_updated_at on public.experiences;
+drop trigger if exists transfers_set_updated_at on public.transfers;
+drop trigger if exists crm_tasks_set_updated_at on public.crm_tasks;
+drop trigger if exists crm_notes_set_updated_at on public.crm_notes;
 
 create trigger membership_plans_set_updated_at before update on public.membership_plans for each row execute function public.set_updated_at();
 create trigger partners_set_updated_at before update on public.partners for each row execute function public.set_updated_at();

@@ -1,162 +1,102 @@
 # Supabase Setup for Project Atlas
 
-This document prepares iThoddoo Maldives for permanent data storage. The app still defaults to mock data until Supabase is configured and `NEXT_PUBLIC_DATA_MODE=supabase` is set.
+Project Atlas is prepared for Supabase, but the application still defaults to mock data. Ahmed should only switch to Supabase mode after the project, keys, migrations, and seed data are confirmed.
 
-## 1. Create a Supabase Project
+No secrets belong in Git. Keep real keys in `.env.local` locally and in protected deployment environment variables.
 
-1. Sign in at https://supabase.com.
-2. Create a new project.
-3. Choose a strong database password and save it securely.
-4. Open Project Settings, then API.
-5. Copy the project URL, anon public key, and service role key.
+## Ahmed's Manual Steps
 
-## 2. Environment Variables
+Follow these steps in order.
 
-Create or update `.env.local` locally. Do not commit `.env.local`.
+1. Create a Supabase project
+   - Go to https://supabase.com and sign in.
+   - Create a new project for iThoddoo Maldives.
+   - Choose a strong database password.
+   - Save the password securely outside the codebase.
+
+2. Copy the Supabase values
+   - Open the Supabase project dashboard.
+   - Go to Project Settings, then API.
+   - Copy the Project URL.
+   - Copy the anon public key.
+   - Copy the service role key.
+   - Never paste the service role key into client-side code.
+
+3. Create `.env.local`
+   - In the project root, create or edit `.env.local`.
+   - Use this shape:
 
 ```bash
-NEXT_PUBLIC_DATA_MODE=mock
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-public-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+NEXT_PUBLIC_DATA_MODE=mock
 NEXT_PUBLIC_ADMIN_DEMO_PASSWORD=your-demo-admin-password
 ```
 
-Security notes:
-- `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` can be used by browser code.
-- `SUPABASE_SERVICE_ROLE_KEY` must never be imported by client components.
-- Service role access should only be used in server-only code after real authentication is added.
-- Keep the existing admin demo gate until EPIC-030 replaces it with real auth.
-
-## 3. Run Migrations
-
-Install the Supabase CLI if needed:
+4. Log in to Supabase CLI
 
 ```bash
-npm install -g supabase
+npx supabase login
 ```
 
-Then log in and link the project:
+or:
 
 ```bash
-supabase login
-supabase link --project-ref your-project-ref
+npm run supabase:login
+```
+
+5. Link the project
+   - Find the project ref in Supabase Project Settings.
+   - It looks like a short random string.
+
+```bash
+npx supabase link --project-ref your-project-ref
+```
+
+or:
+
+```bash
 npm run supabase:link -- --project-ref your-project-ref
-npm run supabase:push
 ```
 
-The migration file is:
-
-```text
-supabase/migrations/202607110001_project_atlas_foundation.sql
-```
-
-It creates:
-- `partners`
-- `properties`
-- `rooms`
-- `bookings`
-- `guests`
-- `media_assets`
-- `restaurants`
-- `experiences`
-- `transfers`
-- `crm_tasks`
-- `crm_notes`
-- `membership_plans`
-- `property_experiences`
-- `property_transfers`
-- `property_media`
-- `partner_media`
-
-## 4. Seed Demo Data
-
-After migrations, seed the database:
-
-```bash
-npm run supabase:reset-and-seed
-```
-
-or run the SQL from:
-
-```text
-supabase/seed.sql
-```
-
-The seed is designed to be idempotent where practical and includes demo partners, membership plans, properties, rooms, bookings, experiences, restaurants, transfers, media assets, property media links, CRM tasks, and CRM notes. Image paths use existing project assets such as `/images/hero-thoddoo.jpg`.
-
-## 5. Switch Data Mode
-
-Mock mode is the default:
-
-```bash
-NEXT_PUBLIC_DATA_MODE=mock
-```
-
-To test Supabase adapters:
-
-```bash
-NEXT_PUBLIC_DATA_MODE=supabase
-```
-
-In Supabase mode, the published property read pilot is active:
-- `/stay` reads published properties from Supabase.
-- `/stay/[slug]` reads a single published Supabase property.
-- Draft, archived, or suspended properties are not shown publicly.
-- If Supabase is not configured or a read fails, the app safely falls back to mock data.
-
-Return to mock mode by setting:
-
-```bash
-NEXT_PUBLIC_DATA_MODE=mock
-```
-
-## 6. Row Level Security
-
-Initial RLS policies:
-- Public can read published properties.
-- Public can read active rooms for published properties.
-- Public can read published restaurants, experiences, and transfers.
-- Public can read media only when linked to published properties.
-- Public cannot write data.
-- Partner write access is intentionally not added in this epic.
-
-Future partner ownership policies should use authenticated users and partner ownership mapping, for example:
-
-```sql
--- Future example only:
--- partner_id = auth.uid() mapped through a partner_users table
-```
-
-## 7. Rollback Strategy
-
-Before production data exists:
-
-```bash
-supabase db reset
-```
-
-After production data exists:
-1. Do not reset the database.
-2. Create a new migration that reverses the specific change.
-3. Back up data before destructive schema changes.
-4. Keep `NEXT_PUBLIC_DATA_MODE=mock` if Supabase is unstable.
-
-## 8. Verification Commands
-
-Check CLI/project status:
-
-```bash
-npm run supabase:status
-```
-
-Check applied migrations:
+6. Review migrations before pushing
 
 ```bash
 npm run supabase:migrations
 ```
 
-Verify tables in Supabase SQL editor:
+Migration file:
+
+```text
+supabase/migrations/202607110001_project_atlas_foundation.sql
+```
+
+7. Push the database schema
+
+```bash
+npm run supabase:push
+```
+
+8. Seed demo data
+
+For local Supabase development:
+
+```bash
+npm run supabase:seed
+```
+
+For hosted Supabase, open the SQL Editor and run:
+
+```text
+supabase/seed.sql
+```
+
+Use the SQL Editor for hosted seed data so the remote database is not reset by mistake.
+
+9. Verify tables
+
+Run this in Supabase SQL Editor:
 
 ```sql
 select table_name
@@ -165,63 +105,217 @@ where table_schema = 'public'
 order by table_name;
 ```
 
-Verify published properties:
+Expected core tables:
+- `membership_plans`
+- `partners`
+- `properties`
+- `rooms`
+- `guests`
+- `bookings`
+- `media_assets`
+- `restaurants`
+- `experiences`
+- `transfers`
+- `crm_tasks`
+- `crm_notes`
 
-```sql
-select id, name, slug, publication_status
-from public.properties
-where publication_status = 'published';
+10. Test mock mode
+
+Keep this in `.env.local`:
+
+```bash
+NEXT_PUBLIC_DATA_MODE=mock
 ```
 
-## 9. Admin Health Check
+Then run:
 
-The Admin Dashboard system status includes:
-- Data mode
+```bash
+npm run build
+```
+
+11. Test Supabase mode
+
+After migrations and seed data are confirmed, change:
+
+```bash
+NEXT_PUBLIC_DATA_MODE=supabase
+```
+
+Then run:
+
+```bash
+npm run build
+```
+
+Check:
+- `/stay`
+- `/stay/thoddoo-sun-sky-inn`
+- `/admin`
+
+12. Configure Cloudflare
+
+In Cloudflare deployment settings, add:
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_DATA_MODE`
+- `NEXT_PUBLIC_ADMIN_DEMO_PASSWORD`
+
+Add `SUPABASE_SERVICE_ROLE_KEY` only as a protected server-side secret. Never expose it in browser code.
+
+13. Roll back to mock mode
+
+If Supabase is unstable, set:
+
+```bash
+NEXT_PUBLIC_DATA_MODE=mock
+```
+
+Redeploy. The website will use mock repositories again.
+
+## Environment Template
+
+`.env.example` intentionally contains placeholders only:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+NEXT_PUBLIC_DATA_MODE=mock
+```
+
+`.env.local` is ignored by Git through `.env*`.
+
+## Migration Summary
+
+The foundation migration creates:
+- Membership plans
+- Partners
+- Properties
+- Rooms
+- Guests
+- Bookings
+- Media assets
+- Restaurants
+- Experiences
+- Transfers
+- CRM tasks
+- CRM notes
+- Property/media relationship tables
+- Property/experience relationship tables
+- Property/transfer relationship tables
+- Partner/media relationship tables
+
+The migration also adds:
+- Foreign keys
+- Unique slugs
+- Unique room names per property
+- Publication status checks
+- Verification status checks
+- Booking status checks
+- Payment status checks
+- Timestamp columns
+- Updated-at triggers
+- Public read indexes
+- CRM and booking indexes
+- Row Level Security
+
+## RLS Policy Summary
+
+Public anonymous users can read:
+- Active membership plans
+- Published properties
+- Active rooms for published properties
+- Published restaurants
+- Published experiences
+- Published transfers
+- Media assets linked to published properties
+
+Anonymous users cannot:
+- Insert records
+- Update records
+- Delete records
+- Read guests
+- Read bookings
+- Read CRM tasks
+- Read CRM notes
+
+Service role access:
+- Supabase service role bypasses RLS.
+- Use service role only from server-side code.
+- Do not create public write policies.
+
+## Seed Summary
+
+`supabase/seed.sql` includes:
+- 3 membership plans
+- 3 partners
+- 3 properties
+- 6 rooms
+- 5 experiences
+- 3 restaurants
+- 3 transfers
+- 5 media assets
+- 3 guests
+- 3 bookings
+- CRM tasks
+- CRM notes
+
+Image paths use existing local project assets, including:
+- `/images/hero-thoddoo.jpg`
+- `/images/homepage/hero-1.jpg`
+- `/images/homepage/hero-2.jpg`
+- `/images/homepage/hero-3.jpg`
+- `/images/homepage/hero-4.jpg`
+- `/images/homepage/hero-5.jpg`
+- `/images/homepage/hero-6.jpg`
+
+## Repository Provider
+
+The repository provider lives at:
+
+```text
+lib/repositories/provider.ts
+```
+
+Behavior:
+- Mock mode is the default.
+- Supabase mode is used only when `NEXT_PUBLIC_DATA_MODE=supabase` and public Supabase variables are configured.
+- If variables are missing, the provider falls back to mock mode.
+
+Current read-only Supabase pilot:
+- `/stay`
+- `/stay/[slug]`
+
+Both routes keep mock fallback.
+
+## Admin Health Check
+
+The Admin Dashboard shows:
+- Current data mode
 - Supabase configured yes/no
-- Database reachable/demo status
+- Database reachable yes/no
 - Migration version
 
-The health check never displays keys. When `SUPABASE_SERVICE_ROLE_KEY` is available, it uses server-only service-role access to check admin tables. Without service role, it falls back to anon reads and may report protected tables as inaccessible.
+It never displays Supabase keys.
 
-## 10. Caching and Rendering
+## Useful Commands
 
-The property read pilot runs through server-side data loading in the App Router. Public property reads use the anon key and RLS. The current implementation is compatible with static builds and mock fallback; when moving more pages to Supabase, add explicit revalidation rules per route based on freshness needs.
+```bash
+npm run supabase:login
+npm run supabase:link -- --project-ref your-project-ref
+npm run supabase:migrations
+npm run supabase:push
+npm run supabase:seed
+npm run supabase:status
+npm run build
+```
 
-## 11. Troubleshooting
+## Remaining Production Work
 
-Missing environment variables:
-- Keep `NEXT_PUBLIC_DATA_MODE=mock`.
-- Confirm `.env.local` has `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-
-Migration not applied:
-- Run `npm run supabase:migrations`.
-- Run `npm run supabase:push`.
-- Check the Admin Dashboard database status.
-
-Empty database:
-- Run `npm run supabase:reset-and-seed`.
-- Confirm `public.properties` contains a published row.
-
-Duplicate slugs:
-- Property slugs must be unique.
-- Use the Admin property import preview panel before manual imports.
-
-Cloudflare environment setup:
-- Add `NEXT_PUBLIC_DATA_MODE`.
-- Add `NEXT_PUBLIC_SUPABASE_URL`.
-- Add `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-- Add `SUPABASE_SERVICE_ROLE_KEY` only as a protected server-side secret.
-- Do not expose the service role key to browser/client code.
-
-## 12. Manual Checklist for Ahmed
-
-1. Create the Supabase project.
-2. Copy the URL and keys into `.env.local`.
-3. Install the Supabase CLI if needed.
-4. Run `supabase login`.
-5. Run `npm run supabase:link -- --project-ref your-project-ref`.
-6. Run `npm run supabase:push`.
-7. Seed demo data with `npm run supabase:reset-and-seed` or SQL editor.
-8. Keep `NEXT_PUBLIC_DATA_MODE=mock` until ready to test adapters.
-9. Switch to `NEXT_PUBLIC_DATA_MODE=supabase` only for controlled testing.
-10. Confirm `/admin` still requires the demo password gate.
+Before production launch:
+- Replace the temporary admin demo gate with real authentication.
+- Add authenticated admin and partner policies.
+- Move write actions behind server-side authorization.
+- Add backup and migration rollback procedures.
+- Regenerate Supabase TypeScript types from the live database.
+- Add monitoring for failed Supabase reads.

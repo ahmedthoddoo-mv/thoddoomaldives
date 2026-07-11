@@ -7,9 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "supabase:login": "supabase login",
     "supabase:link": "supabase link",
     "supabase:migrations": "supabase migration list",
     "supabase:push": "supabase db push",
+    "supabase:seed": "supabase db reset",
     "supabase:reset-and-seed": "supabase db reset",
     "supabase:status": "supabase status"
   },
