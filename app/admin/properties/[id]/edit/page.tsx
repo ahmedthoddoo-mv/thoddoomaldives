@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { AdminPropertyForm } from "@/components/admin/AdminPropertyForm";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
@@ -32,14 +31,10 @@ export default async function EditAdminPropertyPage({ params }: EditAdminPropert
   const { id } = await params;
   const property = PropertyRepository.findById(id);
 
-  if (!property) {
-    notFound();
-  }
-
   return (
     <AdminShell sidebar={<AdminSidebar items={adminSidebarItems} />}>
       <div className="adminContent">
-        <AdminPropertyForm mode="edit" property={property} />
+        <AdminPropertyForm mode="edit" property={property} propertyId={id} />
       </div>
     </AdminShell>
   );

@@ -1,9 +1,15 @@
+"use client";
+
+import { useMemo } from "react";
 import { getBookingsForPartner } from "@/lib/platform/selectors";
+import { useBookingWorkflow } from "@/lib/bookings/bookingWorkflowStore";
 
 const bookingTabs = ["Upcoming", "Pending", "Completed", "Cancelled"] as const;
 
 export function PartnerBookingsView() {
-  const bookings = getBookingsForPartner("partner-thoddoo-sun-sky");
+  const selectedPartnerId = "partner-thoddoo-sun-sky";
+  const initialBookings = useMemo(() => getBookingsForPartner(selectedPartnerId), [selectedPartnerId]);
+  const bookings = useBookingWorkflow(initialBookings).filter((booking) => booking.partnerId === selectedPartnerId);
 
   return (
     <div className="partnerPortalStack">
@@ -34,7 +40,7 @@ export function PartnerBookingsView() {
                 <article key={booking.id}>
                   <div>
                     <strong>{booking.guest.name}</strong>
-                    <p>{booking.guestRecord.partySize} guests | CRM {booking.crmRecordId}</p>
+                    <p>{booking.guest.adults + booking.guest.children} guests | CRM {booking.crmRecordId}</p>
                     <small>
                       {booking.id} | {booking.roomType} | {booking.source} | Commission ${booking.commission.companyRevenue}
                     </small>

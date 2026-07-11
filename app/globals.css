@@ -94,6 +94,290 @@
   }
 }
 
+.applicationStatusBadge {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  padding: 6px 10px;
+  color: #f8fafc;
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.applicationStatusBadge-neutral {
+  background: rgba(148, 163, 184, 0.18);
+}
+
+.applicationStatusBadge-gold {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fde68a;
+}
+
+.applicationStatusBadge-teal {
+  background: rgba(20, 184, 166, 0.18);
+  color: #99f6e4;
+}
+
+.applicationStatusBadge-coral,
+.applicationStatusBadge-red {
+  background: rgba(248, 113, 113, 0.18);
+  color: #fecaca;
+}
+
+.applicationStatusBadge-green {
+  background: rgba(34, 197, 94, 0.18);
+  color: #bbf7d0;
+}
+
+.applicationFilterBar {
+  display: grid;
+  gap: 12px;
+}
+
+.applicationFilterBar input,
+.applicationFilterBar select,
+.applicationDecisionPanel input,
+.applicationDecisionPanel textarea,
+.partnerPortalPanel textarea {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.72);
+  color: #f8fafc;
+  padding: 12px 14px;
+  font: inherit;
+}
+
+.applicationQueueGrid,
+.applicationStatsGrid,
+.applicationMessageGrid {
+  display: grid;
+  gap: 14px;
+}
+
+.applicationSummaryCard,
+.applicationMessageGrid article,
+.applicationStatsGrid article {
+  display: grid;
+  gap: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.72);
+  color: #f8fafc;
+  padding: 18px;
+  text-decoration: none;
+  box-shadow: 0 20px 50px rgba(2, 6, 23, 0.18);
+}
+
+.applicationSummaryCard > div:first-child {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.applicationSummaryCard > div:first-child > span,
+.applicationStatsGrid span {
+  color: rgba(226, 232, 240, 0.68);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.applicationSummaryCard strong,
+.applicationStatsGrid strong {
+  font-size: 1.1rem;
+}
+
+.applicationSummaryCard p {
+  margin: 0;
+  color: rgba(226, 232, 240, 0.72);
+  line-height: 1.6;
+}
+
+.applicationSummaryCard dl,
+.applicationDetailGrid,
+.partnerApplicationHero dl {
+  display: grid;
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.applicationSummaryCard dl div,
+.applicationDetailGrid div,
+.partnerApplicationHero dl div {
+  display: grid;
+  gap: 4px;
+  background: rgba(15, 23, 42, 0.55);
+  padding: 12px;
+}
+
+.applicationSummaryCard dt,
+.applicationDetailGrid dt,
+.partnerApplicationHero dt {
+  color: rgba(226, 232, 240, 0.62);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.applicationSummaryCard dd,
+.applicationDetailGrid dd,
+.partnerApplicationHero dd {
+  margin: 0;
+  color: #f8fafc;
+  overflow-wrap: anywhere;
+}
+
+.applicationHeroMetric {
+  display: grid;
+  min-width: 160px;
+  justify-items: start;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.66);
+  padding: 18px;
+}
+
+.applicationHeroMetric span {
+  font-size: 2.2rem;
+  font-weight: 900;
+}
+
+.applicationHeroMetric strong {
+  color: rgba(226, 232, 240, 0.74);
+}
+
+.applicationTimeline {
+  display: grid;
+  gap: 14px;
+}
+
+.applicationTimeline article {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 12px;
+}
+
+.applicationTimeline article > span {
+  width: 10px;
+  height: 10px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: #2dd4bf;
+  box-shadow: 0 0 0 6px rgba(45, 212, 191, 0.1);
+}
+
+.applicationTimeline strong {
+  color: #f8fafc;
+}
+
+.applicationTimeline p,
+.applicationTimeline small,
+.mutedText {
+  margin: 4px 0 0;
+  color: rgba(226, 232, 240, 0.68);
+  line-height: 1.6;
+}
+
+.requestedChangesList {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.requestedChangesList li {
+  border-radius: 8px;
+  background: rgba(245, 158, 11, 0.14);
+  color: #fde68a;
+  padding: 10px 12px;
+}
+
+.applicationDecisionPanel {
+  align-content: start;
+}
+
+.applicationDecisionPanel label {
+  display: grid;
+  gap: 8px;
+  color: rgba(226, 232, 240, 0.72);
+  font-weight: 800;
+}
+
+.applicationDecisionActions,
+.applicationChangeOptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.applicationDecisionActions button {
+  min-height: 42px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  background: rgba(45, 212, 191, 0.14);
+  color: #f8fafc;
+  padding: 10px 12px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.applicationChangeOptions label {
+  display: inline-flex;
+  width: auto;
+  grid-auto-flow: column;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.58);
+  padding: 8px 10px;
+  font-size: 0.82rem;
+}
+
+.applicationChangeOptions input {
+  width: auto;
+}
+
+.applicationMessageGrid pre {
+  overflow: auto;
+  margin: 0;
+  white-space: pre-wrap;
+  color: rgba(226, 232, 240, 0.72);
+  font-family: Arial, Helvetica, sans-serif;
+  line-height: 1.6;
+}
+
+.partnerApplicationHero {
+  display: grid;
+  gap: 18px;
+}
+
+@media (min-width: 760px) {
+  .applicationFilterBar {
+    grid-template-columns: minmax(260px, 1.5fr) repeat(4, minmax(150px, 1fr));
+  }
+
+  .applicationQueueGrid,
+  .applicationStatsGrid,
+  .applicationMessageGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .applicationDetailGrid,
+  .partnerApplicationHero dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (min-width: 1180px) {
   .adminPlatformFeedGrid {
     grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -1965,6 +2249,54 @@ body {
   font-size: 1.3rem;
 }
 
+.adminImportPreviewList {
+  display: grid;
+  gap: 10px;
+}
+
+.adminImportPreviewList article {
+  display: grid;
+  gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.07);
+  padding: 14px;
+}
+
+.adminImportPreviewList article > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.adminImportPreviewList strong {
+  color: #fff;
+}
+
+.adminImportPreviewList span {
+  border-radius: 999px;
+  background: rgba(36, 198, 184, 0.13);
+  color: #9ce6db;
+  padding: 6px 9px;
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.adminImportPreviewList p,
+.adminImportPreviewList small,
+.adminImportPreviewList li {
+  margin: 0;
+  color: rgba(238, 247, 243, 0.64);
+  font-weight: 800;
+}
+
+.adminImportPreviewList ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
 .adminRoadmapGroup {
   min-height: 156px;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -2554,6 +2886,56 @@ body {
 
 .adminPropertyEditorNotice span {
   color: rgba(238, 247, 243, 0.62);
+}
+
+.adminPropertyValidationNotice {
+  border-color: rgba(255, 143, 123, 0.34);
+  background: rgba(255, 143, 123, 0.09);
+}
+
+.adminPropertyValidationList {
+  display: grid;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: #ffb6a8;
+  font-weight: 800;
+}
+
+.adminPropertyResetButton,
+.adminPropertyActionLink {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #eef7f3;
+  cursor: pointer;
+  font: inherit;
+  padding: 10px 13px;
+  font-size: 0.84rem;
+  font-weight: 900;
+}
+
+.adminPropertyPublishPanel {
+  display: grid;
+  gap: 14px;
+}
+
+.adminPropertyPublishPanel h2,
+.adminPropertyPublishPanel p {
+  margin: 0;
+}
+
+.adminPropertyPublishPanel h2 {
+  color: #fff;
+}
+
+.adminPropertyPublishPanel p {
+  color: rgba(238, 247, 243, 0.66);
+  line-height: 1.6;
 }
 
 .adminPropertyEditorGrid {
@@ -3203,6 +3585,7 @@ body {
 }
 
 .bookingField input,
+.bookingField select,
 .bookingField textarea {
   width: 100%;
   border: 1px solid #d9e2dc;
@@ -3216,6 +3599,68 @@ body {
 .bookingField textarea {
   min-height: 110px;
   resize: vertical;
+}
+
+.bookingValidationPanel,
+.bookingSuccessPanel,
+.bookingEmailPreviewPanel {
+  display: grid;
+  gap: 10px;
+  border-radius: 16px;
+  padding: 14px;
+}
+
+.bookingValidationPanel {
+  border: 1px solid rgba(190, 78, 58, 0.22);
+  background: #fff1ed;
+  color: #8d2f20;
+}
+
+.bookingSuccessPanel {
+  border: 1px solid rgba(8, 127, 122, 0.18);
+  background: #e6f5f2;
+  color: #0b5f59;
+}
+
+.bookingValidationPanel ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.bookingSuccessPanel p {
+  margin: 0;
+  color: #315d55;
+  line-height: 1.55;
+}
+
+.bookingEmailPreviewPanel {
+  border: 1px solid rgba(23, 32, 28, 0.1);
+  background: #f4f7f2;
+}
+
+.bookingEmailPreviewPanel h3 {
+  margin: 0;
+  color: #12201b;
+}
+
+.bookingEmailPreviewPanel details {
+  border-radius: 12px;
+  background: #fff;
+  padding: 10px 12px;
+}
+
+.bookingEmailPreviewPanel summary {
+  cursor: pointer;
+  color: #12201b;
+  font-weight: 900;
+}
+
+.bookingEmailPreviewPanel pre {
+  overflow-x: auto;
+  white-space: pre-wrap;
+  color: #5d6a64;
+  font: inherit;
+  line-height: 1.55;
 }
 
 .bookingSelectorGroup {
@@ -3307,6 +3752,42 @@ body {
   padding: 12px 14px;
   text-align: center;
   font-weight: 900;
+}
+
+.adminBookingActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.adminBookingActions button {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #eef7f3;
+  cursor: pointer;
+  font: inherit;
+  padding: 9px 11px;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.adminBookingDetailPanel .bookingEmailPreviewPanel {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.adminBookingDetailPanel .bookingEmailPreviewPanel h3,
+.adminBookingDetailPanel .bookingEmailPreviewPanel summary {
+  color: #fff;
+}
+
+.adminBookingDetailPanel .bookingEmailPreviewPanel details {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.adminBookingDetailPanel .bookingEmailPreviewPanel pre {
+  color: rgba(238, 247, 243, 0.68);
 }
 
 .bookingActionGrid button:nth-child(n + 2) {
@@ -3461,6 +3942,7 @@ body {
 }
 
 .bookingStatus-new,
+.bookingStatus-draft,
 .bookingStatus-pending {
   background: rgba(213, 168, 75, 0.15);
   color: #f3d38a;

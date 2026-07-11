@@ -1,4 +1,4 @@
-export type BookingStatus = "new" | "pending" | "confirmed" | "cancelled" | "completed";
+export type BookingStatus = "draft" | "new" | "pending" | "confirmed" | "cancelled" | "completed";
 
 export type PaymentStatus = "demo-only" | "unpaid" | "deposit-requested" | "paid";
 

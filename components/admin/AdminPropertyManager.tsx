@@ -4,6 +4,16 @@ import { useMemo, useState } from "react";
 import Badge from "@/components/ui/Badge";
 import type { AdminManagedProperty, AdminPropertyAction } from "@/data/adminContent";
 import { platformLinkedProperties } from "@/data/platformIntegration";
+import {
+  archiveAdminProperty,
+  featureAdminProperty,
+  publishAdminProperty,
+  resetDemoProperties,
+  suspendAdminProperty,
+  unpublishAdminProperty,
+  useAdminProperties,
+  verifyAdminProperty
+} from "@/lib/properties/propertyStore";
 
 type AdminPropertyManagerProps = {
   actions: AdminPropertyAction[];
@@ -91,7 +101,8 @@ function searchableText(property: AdminManagedProperty) {
 }
 
 export function AdminPropertyManager({ actions, properties }: AdminPropertyManagerProps) {
-  const [items, setItems] = useState(properties);
+  const storedItems = useAdminProperties();
+  const items = storedItems.length > 0 ? storedItems : properties;
   const [query, setQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<PropertyFilter>("All");
   const [previewPropertyId, setPreviewPropertyId] = useState(properties[0]?.id ?? "");
@@ -109,33 +120,43 @@ export function AdminPropertyManager({ actions, properties }: AdminPropertyManag
 
   const previewProperty = items.find((property) => property.id === previewPropertyId) ?? filteredProperties[0] ?? items[0];
 
-  function updateProperty(id: string, updater: (property: AdminManagedProperty) => AdminManagedProperty) {
-    setItems((current) => current.map((property) => (property.id === id ? updater(property) : property)));
-  }
-
   function handlePublishToggle(id: string) {
-    updateProperty(id, (property) => ({ ...property, isPublished: !property.isPublished, updated: "Just now" }));
+    const property = items.find((item) => item.id === id);
+
+    if (property?.isPublished) {
+      unpublishAdminProperty(id);
+      return;
+    }
+
+    publishAdminProperty(id);
   }
 
   function handleVerify(id: string) {
-    updateProperty(id, (property) => ({ ...property, verificationStatus: "Verified", updated: "Just now" }));
+    verifyAdminProperty(id);
   }
 
   function handleFeatureToggle(id: string) {
-    updateProperty(id, (property) => ({ ...property, isFeatured: !property.isFeatured, updated: "Just now" }));
+    const property = items.find((item) => item.id === id);
+    featureAdminProperty(id, !property?.isFeatured);
   }
 
   function handleSuspend(id: string) {
-    updateProperty(id, (property) => ({
-      ...property,
-      verificationStatus: property.verificationStatus === "Suspended" ? "Pending" : "Suspended",
-      isPublished: false,
-      updated: "Just now"
-    }));
+    const property = items.find((item) => item.id === id);
+    if (!property) {
+      return;
+    }
+
+    if (property.verificationStatus === "Suspended") {
+      verifyAdminProperty(id);
+      return;
+    }
+
+    suspendAdminProperty(id);
   }
 
   function handleArchive(id: string) {
-    updateProperty(id, (property) => ({ ...property, isArchived: !property.isArchived, isPublished: false, updated: "Just now" }));
+    const property = items.find((item) => item.id === id);
+    archiveAdminProperty(id, !property?.isArchived);
   }
 
   return (
@@ -146,13 +167,20 @@ export function AdminPropertyManager({ actions, properties }: AdminPropertyManag
           <h1>Partner Property Management</h1>
           <p>
             Add, edit, preview, publish, verify, feature, suspend, and archive demo property records from a
-            database-ready admin model. Changes are local-state only until a backend is connected.
+            database-ready admin model. Demo storage only: saved records live in this browser until reset or a production database replaces it.
           </p>
         </div>
         <a className="adminContentAddButton" href="/admin/properties/new">
           <span aria-hidden="true">+</span>
           Add Property
         </a>
+      </section>
+
+      <section className="adminPanel adminPropertyEditorNotice">
+        <strong>Demo storage only. Data is saved in this browser and will be replaced by the production database later.</strong>
+        <button className="adminPropertyResetButton" onClick={resetDemoProperties} type="button">
+          Reset demo property data
+        </button>
       </section>
 
       <section className="adminPanel">
@@ -341,6 +369,9 @@ export function AdminPropertyManager({ actions, properties }: AdminPropertyManag
                 <button onClick={() => setPreviewPropertyId(property.id)} type="button">
                   Preview
                 </button>
+                <a href={`/stay/${property.slug}?preview=admin`} target="_blank" rel="noopener noreferrer">
+                  Open Preview
+                </a>
                 <button onClick={() => handlePublishToggle(property.id)} type="button">
                   {property.isPublished ? "Unpublish" : "Publish"}
                 </button>

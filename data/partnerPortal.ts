@@ -272,6 +272,7 @@ export const partnerMembershipPlans: PartnerMembershipPlan[] = [
 
 export const partnerNavigation = [
   { label: "Dashboard", href: "/partner/dashboard" },
+  { label: "Application", href: "/partner/application" },
   { label: "Profile", href: "/partner/profile" },
   { label: "Bookings", href: "/partner/bookings" },
   { label: "Calendar", href: "/partner/calendar" },

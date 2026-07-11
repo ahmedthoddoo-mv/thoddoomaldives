@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { membershipPlans } from "@/data/membershipPlans";
+import { PartnerApplicationRepository } from "@/lib/applications/partnerApplicationRepository";
 import type {
   PartnerOnboardingApplication,
   PartnerOnboardingFieldName
@@ -172,6 +173,7 @@ function FieldLabel({
 export function PartnerOnboardingForm({ categories }: PartnerOnboardingFormProps) {
   const [application, setApplication] = useState<PartnerOnboardingApplication>(initialApplication);
   const [isReviewing, setIsReviewing] = useState(false);
+  const [submissionId, setSubmissionId] = useState("");
   const dynamicFieldGroup = getDynamicFieldGroup(application.businessType);
   const selectedPlan = membershipPlans.find((plan) => plan.tier === application.membershipInterest) ?? membershipPlans[1];
   const selectedCategory = categories.find((category) => category.id === application.businessType);
@@ -193,6 +195,12 @@ export function PartnerOnboardingForm({ categories }: PartnerOnboardingFormProps
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsReviewing(true);
+  }
+
+  function handleFinalSubmission() {
+    const savedApplication = PartnerApplicationRepository.createFromOnboarding(application);
+    setSubmissionId(savedApplication.id);
+    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
   }
 
   if (isReviewing) {
@@ -230,8 +238,8 @@ export function PartnerOnboardingForm({ categories }: PartnerOnboardingFormProps
           <p className="eyebrow">Review application</p>
           <h2>Check the details before sending</h2>
           <p>
-            This first version does not save anything to a database. It prepares a formatted WhatsApp message for the
-            iThoddoo Maldives team.
+            This demo saves the application in this browser review queue and prepares a formatted WhatsApp message for
+            the iThoddoo Maldives team. Production storage will replace this later.
           </p>
         </div>
 
@@ -253,10 +261,16 @@ export function PartnerOnboardingForm({ categories }: PartnerOnboardingFormProps
           <button className="secondaryAction" type="button" onClick={() => setIsReviewing(false)}>
             Edit application
           </button>
-          <a className="primaryButton" href={whatsappUrl} target="_blank" rel="noreferrer">
-            Send Application via WhatsApp
-          </a>
+          <button className="primaryButton" type="button" onClick={handleFinalSubmission}>
+            Submit to Review Queue & WhatsApp
+          </button>
         </div>
+
+        {submissionId ? (
+          <p className="propertySaveStatus propertySaveStatusSuccess">
+            Application saved to the demo admin review queue: {submissionId}
+          </p>
+        ) : null}
       </section>
     );
   }

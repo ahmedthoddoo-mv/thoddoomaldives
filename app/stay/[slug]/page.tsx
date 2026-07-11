@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import PropertyPage from "@/components/property/PropertyPage";
+import { Suspense } from "react";
+import { StayPropertyDetailClient } from "@/components/property/StayPropertyDetailClient";
+import { getPublishedStayPropertyBySlug } from "@/lib/properties/propertyReads";
 import { PropertyRepository } from "@/lib/repositories";
 import {
   SITE_NAME,
@@ -28,7 +29,7 @@ export async function generateMetadata({
   params,
 }: GuesthousePageProps): Promise<Metadata> {
   const { slug } = await params;
-  const guesthouse = PropertyRepository.findPublicBySlug(slug);
+  const guesthouse = (await getPublishedStayPropertyBySlug(slug)).data;
 
   if (!guesthouse) {
     return {
@@ -46,33 +47,29 @@ export async function generateMetadata({
 
 export default async function GuesthousePage({ params }: GuesthousePageProps) {
   const { slug } = await params;
-  const guesthouse = PropertyRepository.findPublicBySlug(slug);
-
-  if (!guesthouse) {
-    notFound();
-  }
+  const guesthouse = (await getPublishedStayPropertyBySlug(slug)).data;
 
   const propertyImages =
-    guesthouse.gallery.length > 0 ? guesthouse.gallery : [guesthouse.heroImage];
+    guesthouse && guesthouse.gallery.length > 0 ? guesthouse.gallery : [guesthouse?.heroImage ?? "/images/hero-thoddoo.jpg"];
   const propertyJsonLd = {
     "@context": "https://schema.org",
     "@type": "LodgingBusiness",
-    name: guesthouse.name,
-    url: `${SITE_URL}/stay/${guesthouse.slug}`,
+    name: guesthouse?.name ?? "iThoddoo Maldives Stay",
+    url: `${SITE_URL}/stay/${guesthouse?.slug ?? slug}`,
     image: propertyImages.map((image) => absoluteUrl(image)),
-    description: guesthouse.description,
-    telephone: `+${guesthouse.whatsapp}`,
+    description: guesthouse?.description ?? "Thoddoo Maldives stay preview.",
+    telephone: guesthouse ? `+${guesthouse.whatsapp}` : undefined,
     address: {
       "@type": "PostalAddress",
       addressLocality: "Thoddoo",
       addressCountry: "MV",
     },
-    amenityFeature: guesthouse.amenities.map((amenity) => ({
+    amenityFeature: (guesthouse?.amenities ?? []).map((amenity) => ({
       "@type": "LocationFeatureSpecification",
       name: amenity,
       value: true,
     })),
-    priceRange: guesthouse.priceFrom,
+    priceRange: guesthouse?.priceFrom ?? "Price on request",
     provider: {
       "@type": "Organization",
       name: SITE_NAME,
@@ -86,7 +83,9 @@ export default async function GuesthousePage({ params }: GuesthousePageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLdScript(propertyJsonLd) }}
       />
-      <PropertyPage guesthouse={guesthouse} />
+      <Suspense fallback={null}>
+        <StayPropertyDetailClient initialGuesthouse={guesthouse} slug={slug} />
+      </Suspense>
     </>
   );
 }

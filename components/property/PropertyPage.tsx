@@ -1,3 +1,5 @@
+"use client";
+
 import { BookingWidget } from "@/components/booking/BookingWidget";
 import ExperienceCard from "@/components/cards/ExperienceCard";
 import TestimonialCard from "@/components/cards/TestimonialCard";
@@ -146,7 +148,15 @@ export default function PropertyPage({
               </section>
 
               <section className="mt-16">
-                <BookingWidget propertyName={guesthouse.name} whatsapp={guesthouse.whatsapp} rooms={bookingRooms} />
+                <BookingWidget
+                  crmRecordId="crm-thoddoo-sun-sky"
+                  partnerId="partner-thoddoo-sun-sky"
+                  propertyId={guesthouse.id}
+                  propertyName={guesthouse.name}
+                  propertySlug={guesthouse.slug}
+                  rooms={bookingRooms}
+                  whatsapp={guesthouse.whatsapp}
+                />
               </section>
 
               <section className="mt-16">

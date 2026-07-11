@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { PropertyRepository } from "@/lib/repositories";
+import { StayDirectoryClient } from "@/components/property/StayDirectoryClient";
+import { getPublishedStayProperties } from "@/lib/properties/propertyReads";
 import { createPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = createPageMetadata({
@@ -11,8 +11,8 @@ export const metadata: Metadata = createPageMetadata({
   image: "/images/hero-thoddoo.jpg",
 });
 
-export default function StayPage() {
-  const guesthouses = PropertyRepository.findPublicAll();
+export default async function StayPage() {
+  const stayProperties = await getPublishedStayProperties();
 
   return (
     <main className="platformPage">
@@ -43,26 +43,7 @@ export default function StayPage() {
             </p>
           </div>
 
-          <div className="platformGrid platformGridTwo">
-            {guesthouses.map((guesthouse) => (
-              <Link key={guesthouse.id} href={`/stay/${guesthouse.slug}`} className="platformCard">
-                <div
-                  className="platformCardImage"
-                  style={{ backgroundImage: `url('${guesthouse.heroImage}')` }}
-                />
-                <div className="platformCardBody">
-                  <div className="platformPillRow">
-                    <span className="platformPill">{guesthouse.distanceToBeach}</span>
-                    <span className="platformPill">Rating {guesthouse.rating}</span>
-                  </div>
-
-                  <h3>{guesthouse.name}</h3>
-                  <p>{guesthouse.tagline}</p>
-                  <p className="font-semibold text-slate-900">View rooms and amenities</p>
-                </div>
-              </Link>
-            ))}
-          </div>
+          <StayDirectoryClient initialGuesthouses={stayProperties.data} />
         </div>
       </section>
     </main>

@@ -1,6 +1,7 @@
 import type { BookingStatus } from "@/types/booking";
 
 const statusLabels: Record<BookingStatus, string> = {
+  draft: "Draft",
   new: "New",
   pending: "Pending",
   confirmed: "Confirmed",

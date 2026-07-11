@@ -1,7 +1,15 @@
 import { BookingStatusBadge } from "@/components/booking/BookingStatusBadge";
 import type { Booking } from "@/types/booking";
 
-export function BookingCard({ booking }: { booking: Booking }) {
+type BookingCardProps = {
+  booking: Booking;
+  onApprove?: () => void;
+  onReject?: () => void;
+  onComplete?: () => void;
+  onSelect?: () => void;
+};
+
+export function BookingCard({ booking, onApprove, onReject, onComplete, onSelect }: BookingCardProps) {
   const whatsappMessage = encodeURIComponent(`Hi, I am checking booking ${booking.id} for ${booking.propertyName}.`);
 
   return (
@@ -25,6 +33,12 @@ export function BookingCard({ booking }: { booking: Booking }) {
       <a href={`https://wa.me/${booking.guest.whatsapp?.replace(/\D/g, "")}?text=${whatsappMessage}`} target="_blank" rel="noreferrer">
         WhatsApp
       </a>
+      <div className="adminBookingActions">
+        <button onClick={onSelect} type="button">View Details</button>
+        <button onClick={onApprove} type="button">Approve</button>
+        <button onClick={onReject} type="button">Reject</button>
+        <button onClick={onComplete} type="button">Complete</button>
+      </div>
     </article>
   );
 }

@@ -1,12 +1,19 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { PropertyPublishPanel } from "@/components/admin/PropertyPublishPanel";
+import { PropertySaveStatus } from "@/components/admin/PropertySaveStatus";
 import Badge from "@/components/ui/Badge";
 import type { AdminManagedProperty } from "@/data/adminContent";
+import { createPropertySlug, normalizePropertySlug } from "@/lib/properties/propertySlug";
+import { createAdminProperty, saveAdminProperty, useAdminProperties } from "@/lib/properties/propertyStore";
+import { validatePropertyForSave } from "@/lib/properties/propertyValidation";
 
 type AdminPropertyFormProps = {
   mode: "new" | "edit";
   property?: AdminManagedProperty;
+  propertyId?: string;
 };
 
 type PropertyFormState = {
@@ -107,16 +114,91 @@ function listFromText(value: string) {
 }
 
 function formatSlug(value: string) {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
+  return normalizePropertySlug(value);
 }
 
-export function AdminPropertyForm({ mode, property }: AdminPropertyFormProps) {
-  const [form, setForm] = useState<PropertyFormState>(() => stateFromProperty(property));
-  const [notice, setNotice] = useState("Local demo editor. Changes are stored in this page state only.");
+function createPropertyId(slug: string, existingProperties: AdminManagedProperty[], currentId?: string) {
+  const baseId = `property-${slug}`;
+  if (currentId) {
+    return currentId;
+  }
+
+  if (!existingProperties.some((property) => property.id === baseId)) {
+    return baseId;
+  }
+
+  return `${baseId}-${Date.now()}`;
+}
+
+function createPropertyFromState({
+  form,
+  existingProperties,
+  currentProperty
+}: {
+  form: PropertyFormState;
+  existingProperties: AdminManagedProperty[];
+  currentProperty?: AdminManagedProperty;
+}): AdminManagedProperty {
+  const gallery = listFromText(form.gallery);
+  const roomTypes = listFromText(form.roomTypes).map((line) => {
+    const [name = "Room type", price = "Price pending", capacity = "Capacity pending"] = line.split("|").map((part) => part.trim());
+    return { name, price, capacity };
+  });
+  const slug = createPropertySlug(form.slug || form.name);
+  const name = form.name.trim();
+  const heroImage = form.coverImage.trim() || gallery[0] || "/images/hero-thoddoo.jpg";
+
+  return {
+    id: createPropertyId(slug, existingProperties, currentProperty?.id),
+    name,
+    slug,
+    island: form.island.trim(),
+    address: form.address.trim(),
+    logo: currentProperty?.logo || name.split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("") || "IT",
+    coverImage: heroImage,
+    gallery: gallery.length > 0 ? gallery : [heroImage],
+    description: form.shortDescription.trim(),
+    shortDescription: form.shortDescription.trim(),
+    fullDescription: form.fullDescription.trim() || form.shortDescription.trim(),
+    roomTypes,
+    amenities: listFromText(form.amenities),
+    policies: listFromText(form.policies),
+    checkIn: form.checkIn.trim(),
+    checkOut: form.checkOut.trim(),
+    whatsapp: form.whatsapp.trim(),
+    email: form.email.trim(),
+    website: form.website.trim(),
+    googleMaps: form.googleMaps.trim(),
+    googleMapsLink: form.googleMapsLink.trim(),
+    gpsLocation: form.gpsLocation.trim(),
+    membershipPlan: form.membershipPlan,
+    verificationStatus: form.verificationStatus,
+    isPublished: form.isPublished,
+    isFeatured: form.isFeatured,
+    isArchived: currentProperty?.isArchived ?? false,
+    seo: {
+      title: form.seoTitle.trim() || `${name || "Property"} | iThoddoo Maldives`,
+      description: form.seoDescription.trim() || form.shortDescription.trim(),
+      slug
+    },
+    updated: "Just now"
+  };
+}
+
+export function AdminPropertyForm({ mode, property, propertyId }: AdminPropertyFormProps) {
+  const router = useRouter();
+  const allProperties = useAdminProperties();
+  const storedProperty = propertyId ? allProperties.find((item) => item.id === propertyId) : undefined;
+  const activeProperty = storedProperty ?? property;
+  const [form, setForm] = useState<PropertyFormState>(() => stateFromProperty(activeProperty));
+  const [notice, setNotice] = useState("Ready to save property changes.");
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (mode === "edit" && activeProperty) {
+      setForm(stateFromProperty(activeProperty));
+    }
+  }, [activeProperty, mode]);
 
   const preview = useMemo(() => {
     const gallery = listFromText(form.gallery);
@@ -148,8 +230,49 @@ export function AdminPropertyForm({ mode, property }: AdminPropertyFormProps) {
     }));
   }
 
-  function handleDemoSave(action: string) {
-    setNotice(`${action} saved in local demo state. Connect this action to your future database mutation.`);
+  function saveWithStatus({
+    status,
+    publish,
+    verify
+  }: {
+    status: AdminManagedProperty["verificationStatus"];
+    publish: boolean;
+    verify?: boolean;
+  }) {
+    const nextForm = {
+      ...form,
+      slug: createPropertySlug(form.slug || form.name),
+      verificationStatus: verify ? "Verified" : status,
+      isPublished: publish
+    };
+    const nextProperty = createPropertyFromState({
+      form: nextForm,
+      existingProperties: allProperties,
+      currentProperty: activeProperty
+    });
+    const validation = validatePropertyForSave({
+      property: nextProperty,
+      existingProperties: allProperties
+    });
+
+    setForm(nextForm);
+    setValidationErrors(validation.errors);
+
+    if (!validation.valid) {
+      setNotice("Property could not be saved. Please fix the highlighted requirements.");
+      return;
+    }
+
+    const savedProperty = mode === "new" ? createAdminProperty(nextProperty) : saveAdminProperty(nextProperty);
+    setNotice(`${savedProperty.name} saved to browser demo storage.`);
+    setValidationErrors([]);
+
+    if (mode === "new") {
+      router.push(`/admin/properties/${savedProperty.id}/edit`);
+      return;
+    }
+
+    router.refresh();
   }
 
   return (
@@ -168,10 +291,7 @@ export function AdminPropertyForm({ mode, property }: AdminPropertyFormProps) {
         </a>
       </section>
 
-      <section className="adminPanel adminPropertyEditorNotice">
-        <strong>{notice}</strong>
-        <span>No backend, database, API, login, or payments are used on this flow.</span>
-      </section>
+      <PropertySaveStatus message={notice} errors={validationErrors} />
 
       <div className="adminPropertyEditorGrid">
         <form className="adminPropertyForm" onSubmit={(event) => event.preventDefault()}>
@@ -306,23 +426,23 @@ export function AdminPropertyForm({ mode, property }: AdminPropertyFormProps) {
             </div>
           </section>
 
-          <div className="adminPropertyEditorActions">
-            <button onClick={() => handleDemoSave(mode === "new" ? "New property draft" : "Property edits")} type="button">
-              {mode === "new" ? "Create demo property" : "Save demo edits"}
-            </button>
-            <button onClick={() => updateField("isPublished", !form.isPublished)} type="button">
-              {form.isPublished ? "Unpublish" : "Publish"}
-            </button>
-            <button onClick={() => updateField("verificationStatus", "Verified")} type="button">
-              Mark verified
-            </button>
-            <button onClick={() => updateField("isFeatured", !form.isFeatured)} type="button">
-              {form.isFeatured ? "Remove featured" : "Mark featured"}
-            </button>
-            <button onClick={() => handleDemoSave("Archive/delete demo action")} type="button">
-              Archive/delete demo
-            </button>
-          </div>
+          <PropertyPublishPanel
+            isFeatured={form.isFeatured}
+            isPublished={form.isPublished}
+            onArchive={() => {
+              const nextProperty = createPropertyFromState({ form, existingProperties: allProperties, currentProperty: activeProperty });
+              saveAdminProperty({ ...nextProperty, isArchived: true, isPublished: false });
+              setNotice(`${nextProperty.name || "Property"} archived in browser demo storage.`);
+              router.push("/admin/properties");
+            }}
+            onPublish={() => saveWithStatus({ status: "Verified", publish: true, verify: true })}
+            onSaveDraft={() => saveWithStatus({ status: "Draft", publish: false })}
+            onSubmitForReview={() => saveWithStatus({ status: "Pending", publish: false })}
+            onToggleFeatured={() => updateField("isFeatured", !form.isFeatured)}
+            onVerify={() => updateField("verificationStatus", "Verified")}
+            slug={preview.slug}
+            verificationStatus={form.verificationStatus}
+          />
         </form>
 
         <aside className="adminPropertyEditorPreview" aria-label="Property preview">

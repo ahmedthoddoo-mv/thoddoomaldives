@@ -75,6 +75,7 @@ export type AdminContentSection = {
 
 export const adminSidebarItems = [
   { label: "Dashboard", href: "/admin#overview" },
+  { label: "Applications", href: "/admin/applications" },
   { label: "Bookings", href: "/admin/bookings" },
   { label: "CRM", href: "/admin/crm" },
   { label: "Guesthouses", href: "/admin/guesthouses" },
@@ -90,13 +91,13 @@ export const adminSidebarItems = [
 
 export const adminQuickActions = [
   { label: "Add Property", href: "/admin/properties/new", variant: "primary" as const },
+  { label: "Review Applications", href: "/admin/applications", variant: "primary" as const },
   { label: "New Booking", href: "/admin/bookings", variant: "primary" as const },
   { label: "Open CRM", href: "/admin/crm", variant: "primary" as const },
   { label: "Add Guesthouse", href: "/admin/guesthouses/new", variant: "primary" as const },
   { label: "Add Restaurant", href: "/admin/restaurants/new" },
   { label: "Add Excursion", href: "/admin/experiences/new" },
   { label: "Add Transfer Company", href: "/admin/transfers/new" },
-  { label: "Review Applications", href: "/admin#applications", variant: "primary" as const },
   { label: "Upload Photos", href: "/admin/media" }
 ];
 

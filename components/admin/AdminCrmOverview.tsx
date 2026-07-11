@@ -1,4 +1,6 @@
 import Badge from "@/components/ui/Badge";
+import { AdminCrmApplicationTimeline } from "@/components/admin/AdminCrmApplicationTimeline";
+import { AdminCrmBookingTimeline } from "@/components/admin/AdminCrmBookingTimeline";
 import { AdminCrmPartners } from "@/components/admin/AdminCrmPartners";
 import { AdminCrmStatusBadge } from "@/components/admin/AdminCrmStatusBadge";
 import { CRMRepository } from "@/lib/repositories";
@@ -45,6 +47,10 @@ export function AdminCrmOverview() {
           ))}
         </div>
       </section>
+
+      <AdminCrmBookingTimeline />
+
+      <AdminCrmApplicationTimeline />
 
       <AdminCrmPartners />
     </div>

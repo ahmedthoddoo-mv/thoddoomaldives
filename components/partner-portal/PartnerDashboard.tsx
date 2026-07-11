@@ -1,3 +1,6 @@
+"use client";
+
+import { useMemo } from "react";
 import { PartnerStatCard } from "@/components/partner-portal/PartnerStatCard";
 import {
   partnerAnalyticsMetrics,
@@ -7,18 +10,31 @@ import {
 } from "@/data/partnerPortal";
 import { calculatePartnerMetrics } from "@/lib/platform/metrics";
 import { getBookingsForPartner, getMembershipForPartner, getMediaForEntity, getRoomsForProperty } from "@/lib/platform/selectors";
+import { calculateBookingAnalytics } from "@/lib/bookings/bookingAnalytics";
+import { useBookingWorkflow } from "@/lib/bookings/bookingWorkflowStore";
 
 export function PartnerDashboard() {
   const selectedPartnerId = "partner-thoddoo-sun-sky";
   const partnerMetrics = calculatePartnerMetrics(selectedPartnerId);
-  const partnerBookings = getBookingsForPartner(selectedPartnerId);
+  const initialPartnerBookings = useMemo(() => getBookingsForPartner(selectedPartnerId), [selectedPartnerId]);
+  const partnerBookings = useBookingWorkflow(initialPartnerBookings).filter((booking) => booking.partnerId === selectedPartnerId);
+  const bookingAnalytics = calculateBookingAnalytics(partnerBookings);
   const partnerMedia = getMediaForEntity("partner", selectedPartnerId);
   const partnerMembership = getMembershipForPartner(selectedPartnerId);
   const propertyRooms = getRoomsForProperty("property-thoddoo-sun-sky");
+  const liveStats = [
+    { label: "Booking Requests", value: String(bookingAnalytics.bookingRequests), detail: "Live browser demo queue", tone: "teal" as const },
+    { label: "Pending Requests", value: String(partnerBookings.filter((booking) => booking.status === "pending" || booking.status === "new").length), detail: "Awaiting partner/admin review", tone: "gold" as const },
+    { label: "Cancelled", value: String(partnerBookings.filter((booking) => booking.status === "cancelled").length), detail: "Cancelled demo records", tone: "coral" as const },
+    { label: "Revenue Demo", value: `$${bookingAnalytics.revenueDemo}`, detail: `Commission $${bookingAnalytics.commissionDemo}`, tone: "green" as const }
+  ];
 
   return (
     <div className="partnerPortalStack">
       <section className="partnerPortalStatsGrid" aria-label="Partner dashboard statistics">
+        {liveStats.map((stat) => (
+          <PartnerStatCard key={stat.label} stat={stat} />
+        ))}
         {partnerStats.map((stat) => (
           <PartnerStatCard key={stat.label} stat={stat} />
         ))}
@@ -73,8 +89,8 @@ export function PartnerDashboard() {
           </div>
           <div>
             <span>Bookings</span>
-            <strong>{partnerMetrics.bookingCount}</strong>
-            <small>${partnerMetrics.demoCommission} demo commission</small>
+            <strong>{partnerBookings.length || partnerMetrics.bookingCount}</strong>
+            <small>${bookingAnalytics.commissionDemo || partnerMetrics.demoCommission} demo commission</small>
           </div>
           <div>
             <span>Gallery</span>

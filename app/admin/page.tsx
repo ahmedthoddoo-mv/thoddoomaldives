@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AdminHeader } from "@/components/admin/AdminHeader";
+import { AdminApplicationStats } from "@/components/admin/AdminApplicationStats";
 import { AdminQuickActions } from "@/components/admin/AdminQuickActions";
 import { AdminPlatformIntegrationPanel } from "@/components/admin/AdminPlatformIntegrationPanel";
 import { AdminRecentApplications } from "@/components/admin/AdminRecentApplications";
@@ -11,6 +12,7 @@ import { AdminSystemStatus } from "@/components/admin/AdminSystemStatus";
 import { DashboardStats } from "@/components/admin/DashboardStats";
 import { adminQuickActions, adminSidebarItems } from "@/data/adminContent";
 import { calculateAdminMetrics } from "@/lib/platform/metrics";
+import { getSupabaseHealthCheck } from "@/lib/supabase/health";
 
 export const metadata: Metadata = {
   title: "Admin Dashboard",
@@ -122,34 +124,6 @@ const recentPartners = [
   }
 ];
 
-const systemStatuses = [
-  {
-    title: "SEO",
-    value: "Healthy",
-    description: "Metadata and structured content are ready for demo review."
-  },
-  {
-    title: "Sitemap",
-    value: "Healthy",
-    description: "Static sitemap route is available and build verified."
-  },
-  {
-    title: "Robots",
-    value: "Healthy",
-    description: "Crawler rules are configured for the public website."
-  },
-  {
-    title: "Partner Program",
-    value: "Healthy",
-    description: "Plans, onboarding, and partner examples are connected."
-  },
-  {
-    title: "Website",
-    value: "Healthy",
-    description: "Public pages are available as static demo surfaces."
-  }
-];
-
 const roadmapGroups = [
   {
     title: "Current Project",
@@ -169,7 +143,51 @@ const roadmapGroups = [
   }
 ];
 
-export default function AdminPage() {
+export default async function AdminPage() {
+  const supabaseHealth = await getSupabaseHealthCheck();
+  const systemStatuses = [
+    {
+      title: "SEO",
+      value: "Healthy",
+      description: "Metadata and structured content are ready for demo review."
+    },
+    {
+      title: "Sitemap",
+      value: "Healthy",
+      description: "Static sitemap route is available and build verified."
+    },
+    {
+      title: "Robots",
+      value: "Healthy",
+      description: "Crawler rules are configured for the public website."
+    },
+    {
+      title: "Partner Program",
+      value: "Healthy",
+      description: "Plans, onboarding, and partner examples are connected."
+    },
+    {
+      title: "Website",
+      value: "Healthy",
+      description: "Public pages are available as static demo surfaces."
+    },
+    {
+      title: "Data Mode",
+      value: supabaseHealth.dataMode === "supabase" ? "Supabase" : "Mock",
+      description: "Controlled by NEXT_PUBLIC_DATA_MODE with mock as the safe default."
+    },
+    {
+      title: "Supabase",
+      value: supabaseHealth.configured ? "Configured" : "Not configured",
+      description: "Public URL and anon key presence only. No secrets are shown."
+    },
+    {
+      title: "Database",
+      value: supabaseHealth.reachable ? "Reachable" : "Demo status",
+      description: `${supabaseHealth.message} Migration version ${supabaseHealth.migrationVersion}.`
+    }
+  ];
+
   return (
     <AdminShell sidebar={<AdminSidebar items={adminSidebarItems} />}>
       <div className="adminContent" id="overview">
@@ -178,6 +196,8 @@ export default function AdminPage() {
         <DashboardStats stats={dashboardStats} />
 
         <AdminQuickActions actions={adminQuickActions} />
+
+        <AdminApplicationStats />
 
         <AdminPlatformIntegrationPanel />
 
