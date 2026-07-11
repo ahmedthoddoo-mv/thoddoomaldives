@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { TransferRepository } from "@/lib/repositories";
 import { createPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = createPageMetadata({
@@ -10,59 +11,7 @@ export const metadata: Metadata = createPageMetadata({
 });
 
 export default function TransferPage() {
-  const options = [
-    {
-      title: "Public Speedboat",
-      icon: "🚤",
-      duration: "Around 1 hour 15 minutes",
-      price: "From USD 35 per person",
-      details: [
-        "Most popular transfer option",
-        "Departure from Malé / Velana Airport",
-        "Fast and comfortable",
-        "Advance booking recommended",
-      ],
-    },
-    {
-      title: "Private Speedboat",
-      icon: "🛥️",
-      duration: "Around 1 hour",
-      price: "Price on request",
-      details: [
-        "Private charter",
-        "Flexible departure time",
-        "Airport pickup available",
-        "Perfect for families and groups",
-      ],
-    },
-    {
-      title: "Public Ferry",
-      icon: "⛴️",
-      duration: "Around 4–5 hours",
-      price: "Budget Friendly",
-      details: [
-        "Lowest cost option",
-        "Limited operating days",
-        "Longer journey",
-        "Good for flexible travellers",
-      ],
-    },
-    {
-      title: "Seaplane Transfer",
-      icon: "✈️",
-      duration: "Approximately 15 minutes",
-      price: "USD 90 per person (one way)*",
-      details: [
-        "Fastest way to reach Thoddoo",
-        "Departure from Malé Seaplane Terminal",
-        "Approximate departure: 3:45 PM",
-        "Approximate return: 4:30 PM",
-        "Currently operates on selected days",
-        "Subject to weather and airline schedule",
-        "Advance booking required",
-      ],
-    },
-  ];
+  const options = TransferRepository.findAll();
 
   return (
     <main className="platformPage">
@@ -91,16 +40,19 @@ export default function TransferPage() {
 
           <div className="platformGrid platformGridTwo">
             {options.map((option) => (
-              <article key={option.title} className="platformCard">
+              <article key={option.id} className="platformCard">
+                <div
+                  className="platformCardImage"
+                  style={{ backgroundImage: `url('${option.image}')` }}
+                />
                 <div className="platformCardBody">
-                  <div className="text-4xl">{option.icon}</div>
                   <h3 className="mt-4">{option.title}</h3>
 
                   <p><strong>Duration:</strong> {option.duration}</p>
                   <p className="font-semibold text-cyan-700">{option.price}</p>
 
                   <ul className="mt-6 space-y-3 text-slate-600">
-                    {option.details.map((detail) => (
+                    {option.highlights.map((detail) => (
                       <li key={detail}>{detail}</li>
                     ))}
                   </ul>

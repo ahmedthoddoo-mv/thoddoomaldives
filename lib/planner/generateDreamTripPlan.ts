@@ -1,7 +1,9 @@
-import { experiences } from "@/data/experiences";
-import { guesthouses } from "@/data/guesthouses";
-import { restaurants } from "@/data/restaurants";
-import { transfers } from "@/data/transfers";
+import {
+  ExperienceRepository,
+  PropertyRepository,
+  RestaurantRepository,
+  TransferRepository
+} from "@/lib/repositories";
 import type { TripPlan, TripPlanRecommendation } from "@/types/trip-plan";
 import type { TripRequest } from "@/types/trip-request";
 
@@ -63,6 +65,11 @@ function buildPackingChecklist(tripRequest: TripRequest) {
 }
 
 export function generateDreamTripPlan(tripRequest: TripRequest): TripPlan {
+  const guesthouses = PropertyRepository.findPublicAll();
+  const experiences = ExperienceRepository.findAll();
+  const restaurants = RestaurantRepository.findAll();
+  const transfers = TransferRepository.findAll();
+
   const recommendedGuesthouses = guesthouses.slice(0, 1).map((guesthouse) =>
     toRecommendation({
       title: guesthouse.name,

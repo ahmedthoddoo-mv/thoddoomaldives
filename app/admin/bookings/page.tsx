@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { AdminBookingManagement } from "@/components/booking/AdminBookingManagement";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
-import { adminBookings } from "@/data/bookings";
 import { adminSidebarItems } from "@/data/adminContent";
+import { BookingRepository } from "@/lib/repositories";
 
 export const metadata: Metadata = {
   title: "Admin Bookings",
@@ -11,10 +11,12 @@ export const metadata: Metadata = {
 };
 
 export default function AdminBookingsPage() {
+  const bookings = BookingRepository.findAll();
+
   return (
     <AdminShell sidebar={<AdminSidebar items={adminSidebarItems} />}>
       <div className="adminContent">
-        <AdminBookingManagement bookings={adminBookings} />
+        <AdminBookingManagement bookings={bookings} />
       </div>
     </AdminShell>
   );

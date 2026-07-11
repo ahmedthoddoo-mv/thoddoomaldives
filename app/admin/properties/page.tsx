@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { AdminPropertyManager } from "@/components/admin/AdminPropertyManager";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
-import { adminManagedProperties, adminPropertyActions, adminSidebarItems } from "@/data/adminContent";
+import { adminPropertyActions, adminSidebarItems } from "@/data/adminContent";
+import { PropertyRepository } from "@/lib/repositories";
 
 export const metadata: Metadata = {
   title: "Admin Properties",
@@ -13,10 +14,12 @@ export const metadata: Metadata = {
 };
 
 export default function AdminPropertiesPage() {
+  const properties = PropertyRepository.findAll();
+
   return (
     <AdminShell sidebar={<AdminSidebar items={adminSidebarItems} />}>
       <div className="adminContent">
-        <AdminPropertyManager actions={adminPropertyActions} properties={adminManagedProperties} />
+        <AdminPropertyManager actions={adminPropertyActions} properties={properties} />
       </div>
     </AdminShell>
   );

@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { AdminPropertyForm } from "@/components/admin/AdminPropertyForm";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
-import { adminManagedProperties, adminSidebarItems, getAdminManagedPropertyById } from "@/data/adminContent";
+import { adminSidebarItems } from "@/data/adminContent";
+import { PropertyRepository } from "@/lib/repositories";
 
 type EditAdminPropertyPageProps = {
   params: Promise<{
@@ -20,6 +21,8 @@ export const metadata: Metadata = {
 };
 
 export function generateStaticParams() {
+  const adminManagedProperties = PropertyRepository.findAll();
+
   return adminManagedProperties.map((property) => ({
     id: property.id
   }));
@@ -27,7 +30,7 @@ export function generateStaticParams() {
 
 export default async function EditAdminPropertyPage({ params }: EditAdminPropertyPageProps) {
   const { id } = await params;
-  const property = getAdminManagedPropertyById(id);
+  const property = PropertyRepository.findById(id);
 
   if (!property) {
     notFound();

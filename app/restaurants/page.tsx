@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { RestaurantRepository } from "@/lib/repositories";
 import { createPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = createPageMetadata({
@@ -10,28 +11,7 @@ export const metadata: Metadata = createPageMetadata({
 });
 
 export default function RestaurantsPage() {
-  const restaurants = [
-    {
-      name: "Local Cafés",
-      description:
-        "Enjoy authentic Maldivian breakfasts, curries, fresh seafood and tropical fruit juices.",
-    },
-    {
-      name: "Beach Restaurants",
-      description:
-        "Relax near the beach while enjoying grilled seafood, burgers, pizzas and refreshing drinks.",
-    },
-    {
-      name: "Coffee & Snacks",
-      description:
-        "Perfect for coffee lovers, desserts, smoothies and quick meals after exploring the island.",
-    },
-    {
-      name: "Fresh Seafood",
-      description:
-        "Taste locally caught tuna, reef fish and traditional Maldivian dishes prepared fresh every day.",
-    },
-  ];
+  const restaurants = RestaurantRepository.findAll();
 
   return (
     <main className="platformPage">
@@ -58,10 +38,18 @@ export default function RestaurantsPage() {
 
           <div className="platformGrid platformGridTwo">
             {restaurants.map((restaurant) => (
-              <article key={restaurant.name} className="platformCard">
+              <article key={restaurant.id} className="platformCard">
+                <div
+                  className="platformCardImage"
+                  style={{ backgroundImage: `url('${restaurant.image}')` }}
+                />
                 <div className="platformCardBody">
                   <h3>{restaurant.name}</h3>
                   <p>{restaurant.description}</p>
+                  <div className="platformPillRow mt-6">
+                    <span className="platformPill">{restaurant.priceRange}</span>
+                    <span className="platformPill">{restaurant.location}</span>
+                  </div>
                 </div>
               </article>
             ))}

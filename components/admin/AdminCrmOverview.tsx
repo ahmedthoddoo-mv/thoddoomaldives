@@ -1,9 +1,12 @@
 import Badge from "@/components/ui/Badge";
 import { AdminCrmPartners } from "@/components/admin/AdminCrmPartners";
 import { AdminCrmStatusBadge } from "@/components/admin/AdminCrmStatusBadge";
-import { crmSummaryStats, crmTasks } from "@/data/adminCrm";
+import { CRMRepository } from "@/lib/repositories";
 
 export function AdminCrmOverview() {
+  const crmSummaryStats = CRMRepository.findSummaryStats();
+  const crmTasks = CRMRepository.findTasks();
+
   return (
     <div className="adminCrmStack">
       <section className="adminContentHero">

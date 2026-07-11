@@ -7,7 +7,7 @@ import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Container from "@/components/ui/Container";
 import SectionTitle from "@/components/ui/SectionTitle";
-import { guesthouses } from "@/data/guesthouses";
+import { PropertyRepository } from "@/lib/repositories";
 import {
   SITE_NAME,
   SITE_URL,
@@ -157,6 +157,7 @@ function HeroBackground({ media }: { media: HeroMedia }) {
 }
 
 export default function Home() {
+  const guesthouses = PropertyRepository.findPublicAll();
   const websiteJsonLd = {
     "@context": "https://schema.org",
     "@type": "WebSite",

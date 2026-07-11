@@ -3,8 +3,9 @@
 import { useMemo, useState } from "react";
 import Badge from "@/components/ui/Badge";
 import { AdminCrmStatusBadge } from "@/components/admin/AdminCrmStatusBadge";
-import { crmFilterOptions, crmPartners, type CrmPartner } from "@/data/adminCrm";
+import { crmFilterOptions, type CrmPartner } from "@/data/adminCrm";
 import { platformCrmRelationships } from "@/data/platformIntegration";
+import { CRMRepository } from "@/lib/repositories";
 
 type CrmFilter = (typeof crmFilterOptions)[number];
 
@@ -52,6 +53,7 @@ function matchesFilter(partner: CrmPartner, filter: CrmFilter) {
 }
 
 export function AdminCrmPartners() {
+  const crmPartners = CRMRepository.findAll();
   const [query, setQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<CrmFilter>("All");
   const [selectedPartnerId, setSelectedPartnerId] = useState(crmPartners[0]?.id ?? "");

@@ -9,8 +9,8 @@ import StickyBookingCard from "@/components/property/StickyBookingCard";
 import Badge from "@/components/ui/Badge";
 import Container from "@/components/ui/Container";
 import SectionTitle from "@/components/ui/SectionTitle";
-import { experiences } from "@/data/experiences";
 import { testimonials } from "@/data/testimonials";
+import { ExperienceRepository } from "@/lib/repositories";
 import { generateGuesthouseLink } from "@/lib/whatsapp";
 import type { Guesthouse } from "@/types/guesthouse";
 
@@ -32,6 +32,7 @@ export default function PropertyPage({
     phone: guesthouse.whatsapp,
     guesthouse: guesthouse.name,
   });
+  const experiences = ExperienceRepository.findAll();
   const relatedExperiences = experiences.filter((experience) =>
     guesthouse.relatedExperienceSlugs.includes(experience.slug)
   );

@@ -1,6 +1,7 @@
-import { partnerDashboardStats } from "@/data/bookings";
+import { BookingRepository } from "@/lib/repositories";
 
 export function PartnerDashboardDemo() {
+  const partnerDashboardStats = BookingRepository.getPartnerDashboardStats();
   const statCards = [
     ["Today's inquiries", String(partnerDashboardStats.todaysInquiries)],
     ["Pending bookings", String(partnerDashboardStats.pendingBookings)],

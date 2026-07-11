@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { guesthouses } from "@/data/guesthouses";
+import { PropertyRepository } from "@/lib/repositories";
 import { createPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = createPageMetadata({
@@ -12,6 +12,8 @@ export const metadata: Metadata = createPageMetadata({
 });
 
 export default function StayPage() {
+  const guesthouses = PropertyRepository.findPublicAll();
+
   return (
     <main className="platformPage">
       <section

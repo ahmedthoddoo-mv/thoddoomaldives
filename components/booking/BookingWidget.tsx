@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { bookingOptionalServices } from "@/data/bookings";
+import { BookingRepository } from "@/lib/repositories";
 import { buildBookingWhatsAppMessage } from "@/lib/booking";
 import type { BookingDraft, BookingService, Room } from "@/types/booking";
 import { BookingCalendar } from "@/components/booking/BookingCalendar";
@@ -23,6 +23,7 @@ const transferAndMealTypes = new Set<BookingService["type"]>(["transfer", "meal"
 const experienceTypes = new Set<BookingService["type"]>(["experience", "rental", "custom"]);
 
 export function BookingWidget({ propertyName, whatsapp, rooms }: BookingWidgetProps) {
+  const bookingOptionalServices = BookingRepository.findOptionalServices();
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [adults, setAdults] = useState(2);

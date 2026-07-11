@@ -1,23 +1,24 @@
-import { crmNotes, crmPartners, crmTasks } from "@/data/adminCrm";
-import { adminManagedProperties } from "@/data/adminContent";
-import { adminBookings } from "@/data/bookings";
-import { mediaAssets } from "@/data/adminCms";
-import { experiences } from "@/data/experiences";
-import { guesthouses } from "@/data/guesthouses";
 import { partnerMembershipPlans, partnerProfile, partnerRooms } from "@/data/partnerPortal";
-import { restaurants } from "@/data/restaurants";
-import { transfers } from "@/data/transfers";
+import {
+  BookingRepository,
+  CRMRepository,
+  ExperienceRepository,
+  MediaRepository,
+  PropertyRepository,
+  RestaurantRepository,
+  TransferRepository
+} from "@/lib/repositories";
 
 export function listPlatformPartners() {
-  return crmPartners;
+  return CRMRepository.findAll();
 }
 
 export function listPlatformProperties() {
-  return adminManagedProperties;
+  return PropertyRepository.findAll();
 }
 
 export function listPublicGuesthouses() {
-  return guesthouses;
+  return PropertyRepository.findPublicAll();
 }
 
 export function listPlatformRooms() {
@@ -25,31 +26,31 @@ export function listPlatformRooms() {
 }
 
 export function listPlatformBookings() {
-  return adminBookings;
+  return BookingRepository.findAll();
 }
 
 export function listPlatformMediaAssets() {
-  return mediaAssets;
+  return MediaRepository.findAll();
 }
 
 export function listPlatformExperiences() {
-  return experiences;
+  return ExperienceRepository.findAll();
 }
 
 export function listPlatformTransfers() {
-  return transfers;
+  return TransferRepository.findAll();
 }
 
 export function listPlatformRestaurants() {
-  return restaurants;
+  return RestaurantRepository.findAll();
 }
 
 export function listPlatformCrmTasks() {
-  return crmTasks;
+  return CRMRepository.findTasks();
 }
 
 export function listPlatformCrmNotes() {
-  return crmNotes;
+  return CRMRepository.findNotes();
 }
 
 export function listPlatformMembershipPlans() {

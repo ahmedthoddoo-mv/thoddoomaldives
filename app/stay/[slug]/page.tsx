@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import PropertyPage from "@/components/property/PropertyPage";
-import { getGuesthouseBySlug, guesthouses } from "@/data/guesthouses";
+import { PropertyRepository } from "@/lib/repositories";
 import {
   SITE_NAME,
   SITE_URL,
@@ -17,6 +17,8 @@ type GuesthousePageProps = {
 };
 
 export function generateStaticParams() {
+  const guesthouses = PropertyRepository.findPublicAll();
+
   return guesthouses.map((guesthouse) => ({
     slug: guesthouse.slug,
   }));
@@ -26,7 +28,7 @@ export async function generateMetadata({
   params,
 }: GuesthousePageProps): Promise<Metadata> {
   const { slug } = await params;
-  const guesthouse = getGuesthouseBySlug(slug);
+  const guesthouse = PropertyRepository.findPublicBySlug(slug);
 
   if (!guesthouse) {
     return {
@@ -44,7 +46,7 @@ export async function generateMetadata({
 
 export default async function GuesthousePage({ params }: GuesthousePageProps) {
   const { slug } = await params;
-  const guesthouse = getGuesthouseBySlug(slug);
+  const guesthouse = PropertyRepository.findPublicBySlug(slug);
 
   if (!guesthouse) {
     notFound();

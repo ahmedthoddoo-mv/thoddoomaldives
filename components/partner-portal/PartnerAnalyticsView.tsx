@@ -1,6 +1,10 @@
-import { partnerAnalyticsMetrics, partnerChartData, partnerTopCountries } from "@/data/partnerPortal";
+import { AnalyticsRepository } from "@/lib/repositories";
 
 export function PartnerAnalyticsView() {
+  const partnerAnalyticsMetrics = AnalyticsRepository.findAll();
+  const partnerChartData = AnalyticsRepository.findChartData();
+  const partnerTopCountries = AnalyticsRepository.findTopCountries();
+
   return (
     <div className="partnerPortalStack">
       <section className="partnerPortalStatsGrid">

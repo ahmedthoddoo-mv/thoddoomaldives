@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { guesthouses } from "@/data/guesthouses";
+import { PropertyRepository } from "@/lib/repositories";
 import { SITE_URL } from "@/lib/seo";
 
 const staticRoutes = [
@@ -17,6 +17,7 @@ const staticRoutes = [
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date();
+  const guesthouses = PropertyRepository.findPublicAll();
 
   return [
     ...staticRoutes.map((route) => ({

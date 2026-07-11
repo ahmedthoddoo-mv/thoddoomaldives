@@ -4,7 +4,7 @@ import { AdminMediaDetail } from "@/components/admin/AdminMediaDetail";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { adminSidebarItems } from "@/data/adminContent";
-import { getMediaAssetById, mediaAssets } from "@/data/adminCms";
+import { MediaRepository } from "@/lib/repositories";
 
 type AdminMediaDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -19,12 +19,14 @@ export const metadata: Metadata = {
 };
 
 export function generateStaticParams() {
+  const mediaAssets = MediaRepository.findAll();
+
   return mediaAssets.map((asset) => ({ id: asset.id }));
 }
 
 export default async function AdminMediaDetailPage({ params }: AdminMediaDetailPageProps) {
   const { id } = await params;
-  const asset = getMediaAssetById(id);
+  const asset = MediaRepository.findById(id);
 
   if (!asset) {
     notFound();

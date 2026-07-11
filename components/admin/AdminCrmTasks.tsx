@@ -3,11 +3,13 @@
 import { useMemo, useState } from "react";
 import Badge from "@/components/ui/Badge";
 import { AdminCrmStatusBadge } from "@/components/admin/AdminCrmStatusBadge";
-import { crmTasks, type CrmTaskStatus } from "@/data/adminCrm";
+import type { CrmTaskStatus } from "@/data/adminCrm";
+import { CRMRepository } from "@/lib/repositories";
 
 const taskColumns: CrmTaskStatus[] = ["Open", "In Progress", "Waiting Response", "Completed"];
 
 export function AdminCrmTasks() {
+  const crmTasks = CRMRepository.findTasks();
   const [query, setQuery] = useState("");
 
   const filteredTasks = useMemo(() => {

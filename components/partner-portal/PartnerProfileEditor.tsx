@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { AdminImagePicker } from "@/components/admin/AdminImagePicker";
-import { mediaAssets } from "@/data/adminCms";
 import { partnerProfile } from "@/data/partnerPortal";
+import { MediaRepository } from "@/lib/repositories";
 
 export function PartnerProfileEditor() {
   const [profile, setProfile] = useState(partnerProfile);
+  const mediaAssets = MediaRepository.findAll();
 
   function updateField<Field extends keyof typeof partnerProfile>(field: Field, value: (typeof partnerProfile)[Field]) {
     setProfile((current) => ({ ...current, [field]: value }));

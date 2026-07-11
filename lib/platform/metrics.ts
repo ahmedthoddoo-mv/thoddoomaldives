@@ -1,9 +1,7 @@
-import { crmPartners, crmTasks } from "@/data/adminCrm";
-import { mediaAssets } from "@/data/adminCms";
-import { adminManagedProperties } from "@/data/adminContent";
 import { integratedBookings } from "@/data/platformIntegration";
-import { partnerAnalyticsMetrics, partnerProfile } from "@/data/partnerPortal";
 import { getBookingsForPartner, getMediaForEntity, getRoomsForProperty } from "@/lib/platform/selectors";
+import { AnalyticsRepository, CRMRepository, MediaRepository, PropertyRepository } from "@/lib/repositories";
+import { partnerProfile } from "@/data/partnerPortal";
 
 export function calculatePartnerMetrics(partnerId = "partner-thoddoo-sun-sky") {
   const bookings = getBookingsForPartner(partnerId);
@@ -24,11 +22,16 @@ export function calculatePartnerMetrics(partnerId = "partner-thoddoo-sun-sky") {
     profileCompletion: partnerProfile.profileCompletion,
     mediaCount: getMediaForEntity("partner", partnerId).length,
     roomCount: getRoomsForProperty(relationshipPropertyId).length,
-    analytics: partnerAnalyticsMetrics
+    analytics: AnalyticsRepository.findAll()
   };
 }
 
 export function calculateAdminMetrics() {
+  const crmPartners = CRMRepository.findAll();
+  const crmTasks = CRMRepository.findTasks();
+  const mediaAssets = MediaRepository.findAll();
+  const adminManagedProperties = PropertyRepository.findAll();
+
   return {
     totalBookings: integratedBookings.length,
     pendingApplications: crmPartners.filter((partner) => partner.verification !== "Verified").length,

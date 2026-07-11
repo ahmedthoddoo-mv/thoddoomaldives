@@ -1,0 +1,10 @@
+export { AnalyticsRepository } from "@/lib/repositories/AnalyticsRepository";
+export { BookingRepository } from "@/lib/repositories/BookingRepository";
+export { CRMRepository } from "@/lib/repositories/CRMRepository";
+export { ExperienceRepository } from "@/lib/repositories/ExperienceRepository";
+export { MediaRepository } from "@/lib/repositories/MediaRepository";
+export { PartnerRepository } from "@/lib/repositories/PartnerRepository";
+export { PropertyRepository } from "@/lib/repositories/PropertyRepository";
+export { RestaurantRepository } from "@/lib/repositories/RestaurantRepository";
+export { TransferRepository } from "@/lib/repositories/TransferRepository";
+export type { Repository, SearchableRecord } from "@/lib/repositories/types";
