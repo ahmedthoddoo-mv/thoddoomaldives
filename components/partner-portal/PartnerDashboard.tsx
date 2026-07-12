@@ -12,16 +12,34 @@ import { calculatePartnerMetrics } from "@/lib/platform/metrics";
 import { getBookingsForPartner, getMembershipForPartner, getMediaForEntity, getRoomsForProperty } from "@/lib/platform/selectors";
 import { calculateBookingAnalytics } from "@/lib/bookings/bookingAnalytics";
 import { useBookingWorkflow } from "@/lib/bookings/bookingWorkflowStore";
+import type { AdminManagedProperty } from "@/data/adminContent";
+import type { Booking } from "@/types/booking";
 
-export function PartnerDashboard() {
-  const selectedPartnerId = "partner-thoddoo-sun-sky";
+type PartnerDashboardProps = {
+  initialPartnerBookings?: Booking[];
+  initialPropertyRooms?: AdminManagedProperty["roomTypes"];
+  membershipName?: string;
+  propertyName?: string;
+  selectedPartnerId?: string;
+};
+
+export function PartnerDashboard({
+  initialPartnerBookings: repositoryBookings,
+  initialPropertyRooms,
+  membershipName,
+  propertyName = "Thoddoo Sun Sky Inn",
+  selectedPartnerId = "partner-thoddoo-sun-sky"
+}: PartnerDashboardProps) {
   const partnerMetrics = calculatePartnerMetrics(selectedPartnerId);
-  const initialPartnerBookings = useMemo(() => getBookingsForPartner(selectedPartnerId), [selectedPartnerId]);
+  const initialPartnerBookings = useMemo(
+    () => (repositoryBookings && repositoryBookings.length > 0 ? repositoryBookings : getBookingsForPartner(selectedPartnerId)),
+    [repositoryBookings, selectedPartnerId]
+  );
   const partnerBookings = useBookingWorkflow(initialPartnerBookings).filter((booking) => booking.partnerId === selectedPartnerId);
   const bookingAnalytics = calculateBookingAnalytics(partnerBookings);
   const partnerMedia = getMediaForEntity("partner", selectedPartnerId);
   const partnerMembership = getMembershipForPartner(selectedPartnerId);
-  const propertyRooms = getRoomsForProperty("property-thoddoo-sun-sky");
+  const propertyRooms = initialPropertyRooms ?? getRoomsForProperty("property-thoddoo-sun-sky");
   const liveStats = [
     { label: "Booking Requests", value: String(bookingAnalytics.bookingRequests), detail: "Live browser demo queue", tone: "teal" as const },
     { label: "Pending Requests", value: String(partnerBookings.filter((booking) => booking.status === "pending" || booking.status === "new").length), detail: "Awaiting partner/admin review", tone: "gold" as const },
@@ -84,7 +102,7 @@ export function PartnerDashboard() {
         <div className="partnerPortalSnapshotGrid">
           <div>
             <span>Property</span>
-            <strong>Thoddoo Sun Sky Inn</strong>
+            <strong>{propertyName}</strong>
             <small>{propertyRooms.length} rooms connected</small>
           </div>
           <div>
@@ -99,7 +117,7 @@ export function PartnerDashboard() {
           </div>
           <div>
             <span>Membership</span>
-            <strong>{partnerMembership?.name ?? partnerProfile.membershipPlan}</strong>
+            <strong>{membershipName ?? partnerMembership?.name ?? partnerProfile.membershipPlan}</strong>
             <small>{partnerProfile.renewalStatus}</small>
           </div>
           {partnerAnalyticsMetrics.slice(0, 4).map((metric) => (

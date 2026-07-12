@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { RestaurantRepository } from "@/lib/repositories";
+import { getLiveRestaurants } from "@/lib/repositories/liveReads";
 import { createPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = createPageMetadata({
@@ -10,8 +10,9 @@ export const metadata: Metadata = createPageMetadata({
   image: "/images/homepage/hero-6.jpg",
 });
 
-export default function RestaurantsPage() {
-  const restaurants = RestaurantRepository.findAll();
+export default async function RestaurantsPage() {
+  const restaurantRead = await getLiveRestaurants();
+  const restaurants = restaurantRead.data;
 
   return (
     <main className="platformPage">
@@ -34,6 +35,7 @@ export default function RestaurantsPage() {
           <div className="platformSectionHeader">
             <p className="eyebrow">Dining guide</p>
             <h2>Where to Eat</h2>
+            {restaurantRead.error ? <p>{restaurantRead.error}</p> : null}
           </div>
 
           <div className="platformGrid platformGridTwo">

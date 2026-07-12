@@ -2,13 +2,14 @@ import type { Metadata } from "next";
 import ExperienceCard from "@/components/ExperienceCard";
 import ExcursionInquiryForm from "@/components/ExcursionInquiryForm";
 import {
-  experiences,
   experienceCategories,
-  featuredExperience,
   type ExperienceCategory,
+  type Experience as DisplayExperience
 } from "@/lib/experiences";
+import { getLiveExperiences } from "@/lib/repositories/liveReads";
 import { createPageMetadata } from "@/lib/seo";
 import { generateExperienceLink } from "@/lib/whatsapp";
+import type { Experience } from "@/types/experience";
 
 export const metadata: Metadata = createPageMetadata({
   title: "Thoddoo Excursions & Island Experiences",
@@ -26,7 +27,44 @@ const categoryOrder: ExperienceCategory[] = [
   "culture",
 ];
 
-export default function ExcursionsPage() {
+const categoryMap: Record<Experience["category"], ExperienceCategory> = {
+  snorkeling: "snorkeling",
+  sandbank: "island",
+  fishing: "fishing",
+  "water-sports": "water-sports",
+  culture: "culture",
+  cruise: "island"
+};
+
+const categoryIcons: Record<ExperienceCategory, string> = {
+  snorkeling: "🐢",
+  fishing: "🎣",
+  island: "🏝️",
+  "water-sports": "🌊",
+  culture: "🍉"
+};
+
+function toDisplayExperience(experience: Experience): DisplayExperience {
+  const category = categoryMap[experience.category] ?? "island";
+
+  return {
+    slug: experience.slug,
+    title: experience.title,
+    icon: categoryIcons[category],
+    price: experience.price,
+    duration: experience.duration,
+    description: experience.description,
+    highlights: experience.highlights,
+    category,
+    featured: experience.featured,
+    image: experience.image
+  };
+}
+
+export default async function ExcursionsPage() {
+  const experienceRead = await getLiveExperiences();
+  const experiences = experienceRead.data.map(toDisplayExperience);
+  const featuredExperience = experiences.find((experience) => experience.featured) ?? experiences[0];
   const generalBookingLink = generateExperienceLink({
     experience: "Thoddoo Excursion",
   });
@@ -70,47 +108,50 @@ export default function ExcursionsPage() {
         <div className="platformContainer">
           <div className="platformSectionHeader">
             <p className="eyebrow">Featured Experience</p>
-            <h2>{featuredExperience.title}</h2>
+            <h2>{featuredExperience?.title ?? "Thoddoo Experiences"}</h2>
+            {experienceRead.error ? <p>{experienceRead.error}</p> : null}
           </div>
 
-          <div className="platformCard md:grid md:grid-cols-2">
-            <div
-              className="min-h-[360px] bg-cover bg-center"
-              style={{
-                backgroundImage: `url('${featuredExperience.image ?? "/images/hero-thoddoo.jpg"}')`,
-              }}
-              role="img"
-              aria-label={featuredExperience.title}
-            />
+          {featuredExperience ? (
+            <div className="platformCard md:grid md:grid-cols-2">
+              <div
+                className="min-h-[360px] bg-cover bg-center"
+                style={{
+                  backgroundImage: `url('${featuredExperience.image ?? "/images/hero-thoddoo.jpg"}')`,
+                }}
+                role="img"
+                aria-label={featuredExperience.title}
+              />
 
-            <div className="platformCardBody">
-              <div className="text-5xl">{featuredExperience.icon}</div>
+              <div className="platformCardBody">
+                <div className="text-5xl">{featuredExperience.icon}</div>
 
-              <p>{featuredExperience.description}</p>
+                <p>{featuredExperience.description}</p>
 
-              <div className="platformPillRow mt-6">
-                <span className="platformPill">{featuredExperience.duration}</span>
-                <span className="platformPill">{featuredExperience.price}</span>
+                <div className="platformPillRow mt-6">
+                  <span className="platformPill">{featuredExperience.duration}</span>
+                  <span className="platformPill">{featuredExperience.price}</span>
+                </div>
+
+                <ul className="mt-6 space-y-2 text-slate-600">
+                  {featuredExperience.highlights.slice(0, 4).map((highlight) => (
+                    <li key={highlight}>{highlight}</li>
+                  ))}
+                </ul>
+
+                <a
+                  href={generateExperienceLink({
+                    experience: featuredExperience.title,
+                  })}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="platformButton mt-8"
+                >
+                  Book {featuredExperience.title}
+                </a>
               </div>
-
-              <ul className="mt-6 space-y-2 text-slate-600">
-                {featuredExperience.highlights.slice(0, 4).map((highlight) => (
-                  <li key={highlight}>{highlight}</li>
-                ))}
-              </ul>
-
-              <a
-                href={generateExperienceLink({
-                  experience: featuredExperience.title,
-                })}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="platformButton mt-8"
-              >
-                Book {featuredExperience.title}
-              </a>
             </div>
-          </div>
+          ) : null}
         </div>
       </section>
 

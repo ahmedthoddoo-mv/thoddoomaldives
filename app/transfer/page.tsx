@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { TransferRepository } from "@/lib/repositories";
+import { getLiveTransfers } from "@/lib/repositories/liveReads";
 import { createPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = createPageMetadata({
@@ -10,8 +10,9 @@ export const metadata: Metadata = createPageMetadata({
   image: "/images/hero-thoddoo.jpg",
 });
 
-export default function TransferPage() {
-  const options = TransferRepository.findAll();
+export default async function TransferPage() {
+  const transferRead = await getLiveTransfers();
+  const options = transferRead.data;
 
   return (
     <main className="platformPage">
@@ -36,6 +37,7 @@ export default function TransferPage() {
             <p className="eyebrow">Transfer options</p>
             <h2>Choose Your Transfer</h2>
             <p>We can arrange all transfer options before your arrival.</p>
+            {transferRead.error ? <p>{transferRead.error}</p> : null}
           </div>
 
           <div className="platformGrid platformGridTwo">

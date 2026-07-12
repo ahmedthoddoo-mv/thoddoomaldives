@@ -42,7 +42,7 @@ export default function PropertyPage({
     guesthouse.testimonialIds.includes(testimonial.id)
   );
   const bookingRooms = guesthouse.rooms.map((room) => ({
-    id: room.name.toLowerCase().replaceAll(" ", "-"),
+    id: room.id ?? room.name.toLowerCase().replaceAll(" ", "-"),
     name: room.name,
     nightlyRate: Number(room.price.replace(/[^0-9]/g, "")) || 0,
     capacity: room.capacity

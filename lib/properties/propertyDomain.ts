@@ -3,6 +3,7 @@ import type { Guesthouse, Room } from "@/types/guesthouse";
 
 function toPublicRoom(room: AdminManagedProperty["roomTypes"][number], fallbackImage: string): Room {
   return {
+    id: room.id,
     name: room.name,
     price: room.price,
     capacity: room.capacity,

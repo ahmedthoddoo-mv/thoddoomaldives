@@ -5,7 +5,8 @@ export const SupabaseTransferRepository = {
   async findAll() {
     const supabase = createSupabaseServerClient();
     if (!supabase) return [];
-    const { data } = await supabase.from("transfers").select("*").order("created_at", { ascending: false });
+    const { data, error } = await supabase.from("transfers").select("*").order("created_at", { ascending: false });
+    if (error) throw error;
     return (data ?? []).map(mapTransferRowToDomain);
   },
   async findById(id: string) {

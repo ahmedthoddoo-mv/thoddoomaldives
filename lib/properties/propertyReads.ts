@@ -4,9 +4,11 @@ import { SupabasePropertyRepository } from "@/lib/repositories/supabase";
 import { getDataMode } from "@/lib/supabase/status";
 import type { Guesthouse } from "@/types/guesthouse";
 
-type PropertyReadResult<T> = {
+export type PropertyReadSource = "mock" | "supabase" | "fallback";
+
+export type PropertyReadResult<T> = {
   data: T;
-  source: "mock" | "supabase" | "fallback";
+  source: PropertyReadSource;
   error?: string;
 };
 

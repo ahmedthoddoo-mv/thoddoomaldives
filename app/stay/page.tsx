@@ -43,7 +43,11 @@ export default async function StayPage() {
             </p>
           </div>
 
-          <StayDirectoryClient initialGuesthouses={stayProperties.data} />
+          <StayDirectoryClient
+            initialGuesthouses={stayProperties.data}
+            readSource={stayProperties.source}
+            error={stayProperties.error}
+          />
         </div>
       </section>
     </main>

@@ -5,7 +5,8 @@ export const SupabaseExperienceRepository = {
   async findAll() {
     const supabase = createSupabaseServerClient();
     if (!supabase) return [];
-    const { data } = await supabase.from("experiences").select("*").order("created_at", { ascending: false });
+    const { data, error } = await supabase.from("experiences").select("*").order("created_at", { ascending: false });
+    if (error) throw error;
     return (data ?? []).map(mapExperienceRowToDomain);
   },
   async findById(id: string) {

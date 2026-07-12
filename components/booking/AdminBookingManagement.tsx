@@ -1,8 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { updateRealBookingStatus } from "@/app/booking/actions";
 import { BookingCard } from "@/components/booking/BookingCard";
-import type { Booking, BookingStatus } from "@/types/booking";
+import type { Booking, BookingStatus, PaymentStatus } from "@/types/booking";
 import { calculateBookingAnalytics } from "@/lib/bookings/bookingAnalytics";
 import { getBookingEmailPreviews, updateBookingStatus, useBookingWorkflow } from "@/lib/bookings/bookingWorkflowStore";
 
@@ -12,14 +14,17 @@ const bookingTabs: Array<{ label: string; status?: BookingStatus }> = [
   { label: "Pending", status: "pending" },
   { label: "Confirmed", status: "confirmed" },
   { label: "Cancelled", status: "cancelled" },
+  { label: "Rejected", status: "rejected" },
   { label: "Completed", status: "completed" }
 ];
 
 export function AdminBookingManagement({ bookings }: { bookings: Booking[] }) {
+  const router = useRouter();
   const liveBookings = useBookingWorkflow(bookings);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<BookingStatus | "all">("all");
   const [selectedBookingId, setSelectedBookingId] = useState<string>(liveBookings[0]?.id ?? "");
+  const [actionMessage, setActionMessage] = useState("");
   const analytics = calculateBookingAnalytics(liveBookings);
   const emailPreviews = getBookingEmailPreviews();
   const filteredBookings = useMemo(() => {
@@ -51,9 +56,17 @@ export function AdminBookingManagement({ bookings }: { bookings: Booking[] }) {
   const selectedBooking = liveBookings.find((booking) => booking.id === selectedBookingId) ?? filteredBookings[0];
   const selectedEmails = selectedBooking ? emailPreviews.filter((preview) => preview.bookingId === selectedBooking.id) : [];
 
-  function handleStatus(id: string, status: BookingStatus) {
-    updateBookingStatus(id, status);
+  async function handleStatus(id: string, status?: BookingStatus, paymentStatus?: PaymentStatus) {
+    if (status) {
+      updateBookingStatus(id, status);
+    }
     setSelectedBookingId(id);
+    const result = await updateRealBookingStatus({ bookingId: id, actor: "admin", status, paymentStatus });
+    setActionMessage(result.message);
+
+    if (result.ok && result.mode === "supabase") {
+      router.refresh();
+    }
   }
 
   return (
@@ -63,6 +76,7 @@ export function AdminBookingManagement({ bookings }: { bookings: Booking[] }) {
           <span className="inline-flex rounded-full bg-cyan-50 px-4 py-2 text-sm font-semibold text-cyan-700">Booking engine</span>
           <h1>Booking Management</h1>
           <p>Review demo bookings, commission estimates, guest details, status, and WhatsApp follow-up from one admin queue.</p>
+          {actionMessage ? <p className="mutedText">{actionMessage}</p> : null}
         </div>
       </section>
 
@@ -132,8 +146,10 @@ export function AdminBookingManagement({ bookings }: { bookings: Booking[] }) {
               booking={booking}
               key={booking.id}
               onApprove={() => handleStatus(booking.id, "confirmed")}
+              onCancel={() => handleStatus(booking.id, "cancelled")}
               onComplete={() => handleStatus(booking.id, "completed")}
-              onReject={() => handleStatus(booking.id, "cancelled")}
+              onMarkPaid={() => handleStatus(booking.id, undefined, "paid")}
+              onReject={() => handleStatus(booking.id, "rejected")}
               onSelect={() => setSelectedBookingId(booking.id)}
             />
           ))}
@@ -151,7 +167,7 @@ export function AdminBookingManagement({ bookings }: { bookings: Booking[] }) {
         <section className="adminPanel adminBookingDetailPanel">
           <div className="adminSectionHeader">
             <p className="eyebrow">View details</p>
-            <h2>{selectedBooking.id}</h2>
+            <h2>{selectedBooking.reference ?? selectedBooking.id}</h2>
             <p>
               {selectedBooking.guest.name} | {selectedBooking.propertyName} | {selectedBooking.arrival} to {selectedBooking.departure}
             </p>
@@ -161,6 +177,8 @@ export function AdminBookingManagement({ bookings }: { bookings: Booking[] }) {
             <div><span>Property</span><strong>{selectedBooking.propertyName}</strong></div>
             <div><span>Guest</span><strong>{selectedBooking.guest.name}</strong></div>
             <div><span>Date</span><strong>{selectedBooking.arrival}</strong></div>
+            <div><span>Status</span><strong>{selectedBooking.status}</strong></div>
+            <div><span>Payment</span><strong>{selectedBooking.paymentStatus}</strong></div>
             <div><span>Revenue</span><strong>${selectedBooking.estimatedValue}</strong></div>
             <div><span>Commission</span><strong>${selectedBooking.commission.companyRevenue}</strong></div>
           </div>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import PropertyPage from "@/components/property/PropertyPage";
+import type { PropertyReadSource } from "@/lib/properties/propertyReads";
 import {
   adminPropertyToGuesthouse,
   getPublicStayPropertyBySlug,
@@ -14,20 +15,23 @@ import type { Guesthouse } from "@/types/guesthouse";
 type StayPropertyDetailClientProps = {
   slug: string;
   initialGuesthouse?: Guesthouse;
+  readSource: PropertyReadSource;
+  error?: string;
 };
 
-export function StayPropertyDetailClient({ slug, initialGuesthouse }: StayPropertyDetailClientProps) {
+export function StayPropertyDetailClient({ slug, initialGuesthouse, readSource, error }: StayPropertyDetailClientProps) {
   const searchParams = useSearchParams();
   const publicProperties = usePublicStayProperties();
   const adminProperties = useAdminProperties();
   const previewMode = searchParams.get("preview") === "admin";
+  const allowBrowserDemoRead = readSource !== "supabase";
   const previewProperty = previewMode
     ? adminProperties.find((property) => property.slug === slug || property.id === slug)
     : undefined;
   const guesthouse =
     (previewProperty ? adminPropertyToGuesthouse(previewProperty) : undefined) ??
-    publicProperties.find((property) => property.slug === slug) ??
-    getPublicStayPropertyBySlug(slug) ??
+    (allowBrowserDemoRead ? publicProperties.find((property) => property.slug === slug) : undefined) ??
+    (allowBrowserDemoRead ? getPublicStayPropertyBySlug(slug) : undefined) ??
     initialGuesthouse;
 
   if (!guesthouse) {
@@ -54,5 +58,16 @@ export function StayPropertyDetailClient({ slug, initialGuesthouse }: StayProper
     );
   }
 
-  return <PropertyPage guesthouse={guesthouse} />;
+  return (
+    <>
+      {error ? (
+        <div className="platformContainer platformDetailNotice">
+          <div className="platformNotice platformNoticeWarning" role="status">
+            {error}
+          </div>
+        </div>
+      ) : null}
+      <PropertyPage guesthouse={guesthouse} />
+    </>
+  );
 }

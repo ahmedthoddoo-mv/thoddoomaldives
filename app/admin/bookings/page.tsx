@@ -3,20 +3,25 @@ import { AdminBookingManagement } from "@/components/booking/AdminBookingManagem
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { adminSidebarItems } from "@/data/adminContent";
-import { BookingRepository } from "@/lib/repositories";
+import { getLiveBookings } from "@/lib/repositories/liveReads";
 
 export const metadata: Metadata = {
   title: "Admin Bookings",
   robots: { index: false, follow: false }
 };
 
-export default function AdminBookingsPage() {
-  const bookings = BookingRepository.findAll();
+export default async function AdminBookingsPage() {
+  const bookingRead = await getLiveBookings();
 
   return (
     <AdminShell sidebar={<AdminSidebar items={adminSidebarItems} />}>
       <div className="adminContent">
-        <AdminBookingManagement bookings={bookings} />
+        {bookingRead.error ? (
+          <section className="adminPanel">
+            <p className="mutedText">{bookingRead.error}</p>
+          </section>
+        ) : null}
+        <AdminBookingManagement bookings={bookingRead.data} />
       </div>
     </AdminShell>
   );

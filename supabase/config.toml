@@ -1,0 +1,8 @@
+# Project Atlas local Supabase CLI configuration.
+# Do not store remote project refs, database passwords, or API keys in this file.
+
+project_id = "project-atlas"
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]

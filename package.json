@@ -11,6 +11,7 @@
     "supabase:link": "supabase link",
     "supabase:migrations": "supabase migration list",
     "supabase:push": "supabase db push",
+    "supabase:push:seed": "supabase db push --include-seed",
     "supabase:seed": "supabase db reset",
     "supabase:reset-and-seed": "supabase db reset",
     "supabase:status": "supabase status"

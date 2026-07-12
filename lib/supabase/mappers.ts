@@ -25,18 +25,44 @@ function normalizeVerificationStatus(status: string): AdminManagedProperty["veri
 
 export function mapRoomRowToDomain(room: Tables<"rooms">): AdminManagedProperty["roomTypes"][number] {
   return {
+    id: room.id,
     name: room.name,
     price: formatUsd(room.price_per_night),
     capacity: room.capacity
   };
 }
 
+type PropertyMapRelations = {
+  rooms?: Tables<"rooms">[];
+  partner?: Tables<"partners">;
+  propertyMedia?: Array<
+    Tables<"property_media"> & {
+      media_assets?: Tables<"media_assets"> | null;
+    }
+  >;
+};
+
+function getGalleryFromMedia(property: Tables<"properties">, propertyMedia: PropertyMapRelations["propertyMedia"] = []) {
+  const mediaPaths = propertyMedia
+    .filter((media) => media.media_assets?.path)
+    .sort((left, right) => left.sort_order - right.sort_order)
+    .map((media) => media.media_assets?.path as string);
+  const uniquePaths = Array.from(new Set([property.hero_image_path, ...mediaPaths]));
+
+  return uniquePaths.length > 0 ? uniquePaths : [property.hero_image_path];
+}
+
 export function mapPropertyRowToDomain(
   property: Tables<"properties">,
-  rooms: Tables<"rooms">[] = []
+  relations: Tables<"rooms">[] | PropertyMapRelations = []
 ): AdminManagedProperty {
+  const rooms = Array.isArray(relations) ? relations : relations.rooms ?? [];
+  const partner = Array.isArray(relations) ? undefined : relations.partner;
+  const propertyMedia = Array.isArray(relations) ? [] : relations.propertyMedia ?? [];
   const gpsLocation =
     property.latitude !== null && property.longitude !== null ? `${property.latitude}, ${property.longitude}` : "";
+  const gallery = getGalleryFromMedia(property, propertyMedia);
+  const partnerName = partner?.business_name ? `Partner: ${partner.business_name}` : "Partner details available on request";
 
   return {
     id: property.id,
@@ -46,18 +72,18 @@ export function mapPropertyRowToDomain(
     address: property.address ?? "",
     logo: property.name.split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("") || "IT",
     coverImage: property.hero_image_path,
-    gallery: [property.hero_image_path],
+    gallery,
     description: property.short_description,
     shortDescription: property.short_description,
-    fullDescription: property.full_description ?? property.short_description,
+    fullDescription: property.full_description ? `${property.full_description}\n\n${partnerName}` : `${property.short_description}\n\n${partnerName}`,
     roomTypes: rooms.map(mapRoomRowToDomain),
-    amenities: [],
-    policies: [],
+    amenities: property.amenities.length > 0 ? property.amenities : ["Wi-Fi", "Local support", "Direct WhatsApp booking"],
+    policies: property.policies.length > 0 ? property.policies : ["Policies will be confirmed directly with the property."],
     checkIn: property.check_in_time?.slice(0, 5) ?? "",
     checkOut: property.check_out_time?.slice(0, 5) ?? "",
-    whatsapp: property.whatsapp ?? "",
-    email: property.email ?? "",
-    website: property.website ?? "",
+    whatsapp: property.whatsapp ?? partner?.whatsapp ?? "",
+    email: property.email ?? partner?.email ?? "",
+    website: property.website ?? partner?.website ?? "",
     googleMaps: property.address ?? "",
     googleMapsLink: gpsLocation ? `https://maps.google.com/?q=${encodeURIComponent(gpsLocation)}` : "",
     gpsLocation,
@@ -87,6 +113,7 @@ export function mapBookingRowToDomain(
 
   return {
     id: booking.id,
+    reference: booking.booking_reference ?? undefined,
     guest: {
       name: guest?.full_name ?? "Guest",
       email: guest?.email ?? undefined,
@@ -98,6 +125,7 @@ export function mapBookingRowToDomain(
     propertyId: booking.property_id,
     propertyName: property?.name ?? "Property",
     partnerId: booking.partner_id ?? undefined,
+    roomId: booking.room_id ?? undefined,
     arrival: booking.check_in,
     departure: booking.check_out,
     roomType: room?.name ?? "Room to be confirmed",
@@ -111,7 +139,10 @@ export function mapBookingRowToDomain(
       partnerRevenue: booking.partner_revenue
     },
     status: booking.booking_status as Booking["status"],
-    paymentStatus: booking.payment_status === "demo_only" ? "demo-only" : (booking.payment_status as Booking["paymentStatus"]),
+    paymentStatus: booking.payment_status === "demo_only" ? "demo-only" : booking.payment_status === "pending" ? "pending" : (booking.payment_status as Booking["paymentStatus"]),
+    taxesFees: booking.taxes_fees,
+    roomPrepared: booking.room_prepared,
+    internalNotes: booking.internal_notes ?? undefined,
     source: "website"
   };
 }

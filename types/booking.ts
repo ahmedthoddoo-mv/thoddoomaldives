@@ -1,6 +1,6 @@
-export type BookingStatus = "draft" | "new" | "pending" | "confirmed" | "cancelled" | "completed";
+export type BookingStatus = "draft" | "new" | "pending" | "confirmed" | "cancelled" | "completed" | "rejected";
 
-export type PaymentStatus = "demo-only" | "unpaid" | "deposit-requested" | "paid";
+export type PaymentStatus = "demo-only" | "unpaid" | "deposit-requested" | "pending" | "paid" | "refunded" | "failed";
 
 export type Membership = "free" | "verified" | "premium";
 
@@ -63,11 +63,13 @@ export type BookingService = {
 
 export type Booking = {
   id: string;
+  reference?: string;
   guest: Guest;
   guestRecordId?: string;
   propertyId: string;
   propertyName: string;
   partnerId?: string;
+  roomId?: string;
   crmRecordId?: string;
   arrival: string;
   departure: string;
@@ -78,6 +80,9 @@ export type Booking = {
   commission: Commission;
   status: BookingStatus;
   paymentStatus: PaymentStatus;
+  taxesFees?: number;
+  roomPrepared?: boolean;
+  internalNotes?: string;
   source: "whatsapp" | "website" | "partner" | "demo";
 };
 

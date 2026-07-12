@@ -31,8 +31,10 @@ NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-public-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 NEXT_PUBLIC_DATA_MODE=mock
-NEXT_PUBLIC_ADMIN_DEMO_PASSWORD=your-demo-admin-password
+ADMIN_DEMO_PASSWORD=your-demo-admin-password
 ```
+
+`ADMIN_DEMO_PASSWORD` is server-only. Do not prefix it with `NEXT_PUBLIC_`, because public variables are bundled into browser JavaScript.
 
 4. Log in to Supabase CLI
 
@@ -78,7 +80,15 @@ supabase/migrations/202607110001_project_atlas_foundation.sql
 npm run supabase:push
 ```
 
-8. Seed demo data
+To push migrations and include the configured default seed file in one CLI command:
+
+```bash
+npm run supabase:push:seed
+```
+
+This reads `supabase/config.toml`, where `[db.seed].sql_paths` points to `./seed.sql`.
+
+8. Preview and seed demo data
 
 For local Supabase development:
 
@@ -86,7 +96,13 @@ For local Supabase development:
 npm run supabase:seed
 ```
 
-For hosted Supabase, open the SQL Editor and run:
+For hosted Supabase, do not run a reset command. First preview the seed file locally:
+
+```bash
+less supabase/seed.sql
+```
+
+Then open the Supabase SQL Editor and run the full contents of:
 
 ```text
 supabase/seed.sql
@@ -94,9 +110,27 @@ supabase/seed.sql
 
 Use the SQL Editor for hosted seed data so the remote database is not reset by mistake.
 
-9. Verify tables
+9. Verify seed data
 
-Run this in Supabase SQL Editor:
+Run the full contents of this file in Supabase SQL Editor:
+
+```text
+supabase/seed_verify.sql
+```
+
+It checks expected row counts, duplicate slugs, and public property read readiness.
+
+10. Roll back demo seed data if needed
+
+Run the full contents of this file in Supabase SQL Editor:
+
+```text
+supabase/seed_rollback_demo.sql
+```
+
+It removes only known Project Atlas demo seed rows. It does not drop schema and leaves canonical membership plans in place.
+
+11. Verify tables manually
 
 ```sql
 select table_name
@@ -152,15 +186,20 @@ Check:
 - `/stay/thoddoo-sun-sky-inn`
 - `/admin`
 
+When opening `/admin`, enter the `ADMIN_DEMO_PASSWORD`. A successful login creates an HttpOnly, SameSite demo session cookie scoped to `/admin`. Use the dashboard logout button to clear it.
+
 12. Configure Cloudflare
 
 In Cloudflare deployment settings, add:
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `NEXT_PUBLIC_DATA_MODE`
-- `NEXT_PUBLIC_ADMIN_DEMO_PASSWORD`
 
-Add `SUPABASE_SERVICE_ROLE_KEY` only as a protected server-side secret. Never expose it in browser code.
+Add these only as protected server-side secrets:
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `ADMIN_DEMO_PASSWORD`
+
+Never expose the service role key or admin demo password in browser code. `ADMIN_DEMO_PASSWORD` must not use the `NEXT_PUBLIC_` prefix.
 
 13. Roll back to mock mode
 
@@ -181,6 +220,7 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 NEXT_PUBLIC_DATA_MODE=mock
+ADMIN_DEMO_PASSWORD=
 ```
 
 `.env.local` is ignored by Git through `.env*`.
@@ -255,10 +295,19 @@ Service role access:
 - 3 restaurants
 - 3 transfers
 - 5 media assets
+- 5 property media links
+- 5 property experience links
+- 5 property transfer links
 - 3 guests
 - 3 bookings
 - CRM tasks
 - CRM notes
+
+Data labels:
+- Thoddoo Sun Sky Inn is marked as verified Project Atlas data, with operational fields still needing production confirmation.
+- Palm Garden Thoddoo is demo data only.
+- Coral Wave Residence is demo data only.
+- Restaurants, experiences, transfers, guests, bookings, CRM tasks, and CRM notes are demo data unless separately verified later.
 
 Image paths use existing local project assets, including:
 - `/images/hero-thoddoo.jpg`
@@ -305,9 +354,19 @@ npm run supabase:login
 npm run supabase:link -- --project-ref your-project-ref
 npm run supabase:migrations
 npm run supabase:push
+npm run supabase:push:seed
 npm run supabase:seed
 npm run supabase:status
 npm run build
+```
+
+Hosted Supabase seed workflow:
+
+```text
+1. Open supabase/seed.sql locally and review it.
+2. Paste supabase/seed.sql into Supabase SQL Editor and run it.
+3. Paste supabase/seed_verify.sql into Supabase SQL Editor and run it.
+4. If demo seed data must be removed, paste supabase/seed_rollback_demo.sql into Supabase SQL Editor and run it.
 ```
 
 ## Remaining Production Work

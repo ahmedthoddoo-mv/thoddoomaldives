@@ -6,6 +6,7 @@ const statusLabels: Record<BookingStatus, string> = {
   pending: "Pending",
   confirmed: "Confirmed",
   cancelled: "Cancelled",
+  rejected: "Rejected",
   completed: "Completed"
 };
 

@@ -802,6 +802,53 @@
   font-weight: 800;
 }
 
+.partnerBookingActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.partnerBookingActions button,
+.partnerBookingNoteButton {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  cursor: pointer;
+  font: inherit;
+  padding: 8px 11px;
+}
+
+.partnerBookingNoteField {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.partnerBookingNoteField span {
+  color: rgba(238, 247, 243, 0.62);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.partnerBookingNoteField textarea {
+  min-height: 76px;
+  resize: vertical;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  font: inherit;
+  padding: 10px 12px;
+}
+
+.partnerBookingNoteButton {
+  width: fit-content;
+  margin-top: 8px;
+}
+
 .partnerPortalChart {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -1272,6 +1319,20 @@ body {
 
 .platformNotice {
   padding: 22px;
+}
+
+.platformNoticeWarning {
+  margin-bottom: 18px;
+  border-color: rgba(213, 168, 75, 0.3);
+  background: #fff8e6;
+  color: #6c4a10;
+  font-weight: 800;
+}
+
+.platformDetailNotice {
+  position: relative;
+  z-index: 2;
+  margin-top: 18px;
 }
 
 .platformNotice ul {
@@ -1949,6 +2010,33 @@ body {
 
 .adminMainSurface {
   min-width: 0;
+}
+
+.adminLogoutBar {
+  display: flex;
+  width: min(100% - 32px, 1480px);
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin: 0 auto;
+  padding: 16px 0 0;
+  color: rgba(238, 247, 243, 0.62);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.adminLogoutBar button {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  cursor: pointer;
+  font: inherit;
+  padding: 8px 12px;
+}
+
+.adminLogoutBar button:hover {
+  background: rgba(255, 255, 255, 0.14);
 }
 
 .adminContent {
@@ -3954,7 +4042,8 @@ body {
   color: #a7efc6;
 }
 
-.bookingStatus-cancelled {
+.bookingStatus-cancelled,
+.bookingStatus-rejected {
   background: rgba(240, 130, 98, 0.14);
   color: #ffb39e;
 }

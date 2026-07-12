@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { saveAdminPropertyToSupabase } from "@/app/admin/properties/actions";
 import { PropertyPublishPanel } from "@/components/admin/PropertyPublishPanel";
 import { PropertySaveStatus } from "@/components/admin/PropertySaveStatus";
 import Badge from "@/components/ui/Badge";
@@ -187,6 +188,7 @@ function createPropertyFromState({
 
 export function AdminPropertyForm({ mode, property, propertyId }: AdminPropertyFormProps) {
   const router = useRouter();
+  const [isSaving, startSavingTransition] = useTransition();
   const allProperties = useAdminProperties();
   const storedProperty = propertyId ? allProperties.find((item) => item.id === propertyId) : undefined;
   const activeProperty = storedProperty ?? property;
@@ -250,9 +252,14 @@ export function AdminPropertyForm({ mode, property, propertyId }: AdminPropertyF
       existingProperties: allProperties,
       currentProperty: activeProperty
     });
+    const activeSlug = activeProperty ? normalizePropertySlug(activeProperty.slug) : "";
+    const validationProperties =
+      mode === "edit" && activeSlug
+        ? allProperties.filter((existingProperty) => normalizePropertySlug(existingProperty.slug) !== activeSlug)
+        : allProperties;
     const validation = validatePropertyForSave({
       property: nextProperty,
-      existingProperties: allProperties
+      existingProperties: validationProperties
     });
 
     setForm(nextForm);
@@ -264,15 +271,31 @@ export function AdminPropertyForm({ mode, property, propertyId }: AdminPropertyF
     }
 
     const savedProperty = mode === "new" ? createAdminProperty(nextProperty) : saveAdminProperty(nextProperty);
-    setNotice(`${savedProperty.name} saved to browser demo storage.`);
+    setNotice(`${savedProperty.name} saved to browser demo storage. Saving to Supabase...`);
     setValidationErrors([]);
 
-    if (mode === "new") {
-      router.push(`/admin/properties/${savedProperty.id}/edit`);
-      return;
-    }
+    startSavingTransition(async () => {
+      const result = await saveAdminPropertyToSupabase({ property: savedProperty, publish });
 
-    router.refresh();
+      if (!result.ok) {
+        setNotice(`${savedProperty.name} saved locally, but Supabase save failed: ${result.message}`);
+
+        if (mode === "new") {
+          router.push(`/admin/properties/${savedProperty.id}/edit`);
+        }
+
+        return;
+      }
+
+      setNotice(result.message);
+
+      if (mode === "new") {
+        router.push(`/admin/properties/${result.propertyId ?? savedProperty.id}/edit`);
+        return;
+      }
+
+      router.refresh();
+    });
   }
 
   return (
@@ -283,7 +306,7 @@ export function AdminPropertyForm({ mode, property, propertyId }: AdminPropertyF
           <h1>{mode === "new" ? "Add Property" : `Edit ${property?.name ?? "Property"}`}</h1>
           <p>
             Manage listing content, media paths, room prices, contact channels, publication state, partner status, and SEO
-            fields without touching code. This is mock-data CMS behavior only.
+            fields without touching code. Demo storage stays available, and Supabase saves run when the service role is configured.
           </p>
         </div>
         <a className="adminContentAddButton adminContentSecondaryButton" href="/admin/properties">
@@ -429,6 +452,7 @@ export function AdminPropertyForm({ mode, property, propertyId }: AdminPropertyF
           <PropertyPublishPanel
             isFeatured={form.isFeatured}
             isPublished={form.isPublished}
+            isSaving={isSaving}
             onArchive={() => {
               const nextProperty = createPropertyFromState({ form, existingProperties: allProperties, currentProperty: activeProperty });
               saveAdminProperty({ ...nextProperty, isArchived: true, isPublished: false });

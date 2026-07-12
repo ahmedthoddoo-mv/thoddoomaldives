@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
+import { submitRealBookingRequest } from "@/app/booking/actions";
 import { BookingRepository } from "@/lib/repositories";
 import { buildBookingWhatsAppMessage, calculateBookingDraft } from "@/lib/booking";
 import { validateBookingRequest } from "@/lib/bookings/bookingValidation";
@@ -32,6 +33,7 @@ const experienceTypes = new Set<BookingService["type"]>(["experience", "rental",
 
 export function BookingWidget({ propertyName, propertySlug, propertyId, partnerId, crmRecordId, whatsapp, rooms }: BookingWidgetProps) {
   const bookingOptionalServices = BookingRepository.findOptionalServices();
+  const [isSubmitting, startSubmitting] = useTransition();
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [adults, setAdults] = useState(2);
@@ -46,6 +48,8 @@ export function BookingWidget({ propertyName, propertySlug, propertyId, partnerI
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [savedBooking, setSavedBooking] = useState<BookingWorkflowRecord | null>(null);
   const [emailPreviews, setEmailPreviews] = useState<BookingEmailPreview[]>([]);
+  const [submitMessage, setSubmitMessage] = useState("");
+  const [submitFailed, setSubmitFailed] = useState(false);
 
   const selectedRoom = rooms.find((room) => room.id === selectedRoomId) ?? rooms[0];
 
@@ -58,6 +62,7 @@ export function BookingWidget({ propertyName, propertySlug, propertyId, partnerI
       adults,
       children,
       roomType: selectedRoom?.name ?? "Room to be confirmed",
+      roomId: selectedRoom?.id,
       roomRate: selectedRoom?.nightlyRate ?? 0,
       services: selectedServices,
       specialRequests
@@ -92,6 +97,7 @@ export function BookingWidget({ propertyName, propertySlug, propertyId, partnerI
       guestWhatsapp,
       contactPreference,
       roomType: selectedRoom?.name ?? "Room to be confirmed",
+      roomId: selectedRoom?.id,
       roomRate: selectedRoom?.nightlyRate ?? 0,
       nights: estimate.nights,
       estimatedValue: estimate.total,
@@ -108,6 +114,8 @@ export function BookingWidget({ propertyName, propertySlug, propertyId, partnerI
     const validation = validateBookingRequest(payload);
 
     setValidationErrors(validation.errors);
+    setSubmitMessage("");
+    setSubmitFailed(false);
 
     if (!validation.valid) {
       return null;
@@ -117,6 +125,68 @@ export function BookingWidget({ propertyName, propertySlug, propertyId, partnerI
     setSavedBooking(booking);
     setEmailPreviews(createBookingEmailPreviews(booking));
     return booking;
+  }
+
+  function submitBookingRequest() {
+    const payload = createPayload("pending");
+    const validation = validateBookingRequest(payload);
+
+    setValidationErrors(validation.errors);
+    setSubmitMessage("");
+    setSubmitFailed(false);
+
+    if (!validation.valid) {
+      return;
+    }
+
+    startSubmitting(async () => {
+      const result = await submitRealBookingRequest({
+        propertyId,
+        propertySlug,
+        roomId: selectedRoom?.id,
+        checkIn,
+        checkOut,
+        adults,
+        children,
+        guestName,
+        guestEmail,
+        guestWhatsapp,
+        contactPreference,
+        specialRequests
+      });
+
+      if (result.mode === "mock") {
+        const booking = createBookingRequest(payload);
+        setSavedBooking(booking);
+        setEmailPreviews(createBookingEmailPreviews(booking));
+        setSubmitMessage(`${booking.id} saved in the browser demo booking queue.`);
+        setSubmitFailed(false);
+        return;
+      }
+
+      if (!result.ok || !result.booking) {
+        setValidationErrors(result.errors ?? [result.message]);
+        setSubmitMessage(result.message);
+        setSubmitFailed(true);
+        return;
+      }
+
+      const now = new Date().toISOString();
+      const workflowBooking: BookingWorkflowRecord = {
+        ...result.booking,
+        propertySlug,
+        contactPreference,
+        specialRequests,
+        createdAt: now,
+        updatedAt: now
+      };
+
+      setSavedBooking(workflowBooking);
+      setEmailPreviews(result.emailPreviews ?? createBookingEmailPreviews(workflowBooking));
+      setSubmitMessage(result.message);
+      setSubmitFailed(false);
+      setValidationErrors([]);
+    });
   }
 
   function openWhatsApp(action: string) {
@@ -197,13 +267,30 @@ export function BookingWidget({ propertyName, propertySlug, propertyId, partnerI
           {savedBooking ? (
             <div className="bookingSuccessPanel">
               <strong>Booking request saved</strong>
-              <p>{savedBooking.id} is now visible in Admin Bookings, Partner Dashboard, and the CRM demo timeline.</p>
+              <p>
+                {savedBooking.reference ?? savedBooking.id} is now visible in Admin Bookings, Partner Dashboard, and CRM follow-up placeholders.
+              </p>
+              <a className="adminPropertyActionLink" href={`/booking/success?reference=${encodeURIComponent(savedBooking.reference ?? savedBooking.id)}`}>
+                View success page
+              </a>
+            </div>
+          ) : null}
+
+          {submitMessage && submitFailed ? (
+            <div className="bookingValidationPanel" role="alert">
+              <strong>Booking could not be submitted</strong>
+              <p>{submitMessage}</p>
+              <a className="adminPropertyActionLink" href="/booking/failure">
+                View failure page
+              </a>
             </div>
           ) : null}
 
           <div className="bookingActionGrid">
             <button type="button" onClick={() => openWhatsApp("Book via WhatsApp")}>Book via WhatsApp</button>
-            <button type="button" onClick={() => handleSave("pending")}>Booking Request</button>
+            <button disabled={isSubmitting} type="button" onClick={submitBookingRequest}>
+              {isSubmitting ? "Submitting..." : "Booking Request"}
+            </button>
             <button type="button" onClick={() => openWhatsApp("Request Quote")}>Request Quote</button>
             <button type="button" onClick={() => handleSave("draft")}>Save Draft (demo)</button>
           </div>

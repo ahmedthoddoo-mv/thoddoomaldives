@@ -29,7 +29,8 @@ export async function generateMetadata({
   params,
 }: GuesthousePageProps): Promise<Metadata> {
   const { slug } = await params;
-  const guesthouse = (await getPublishedStayPropertyBySlug(slug)).data;
+  const propertyRead = await getPublishedStayPropertyBySlug(slug);
+  const guesthouse = propertyRead.data;
 
   if (!guesthouse) {
     return {
@@ -47,7 +48,8 @@ export async function generateMetadata({
 
 export default async function GuesthousePage({ params }: GuesthousePageProps) {
   const { slug } = await params;
-  const guesthouse = (await getPublishedStayPropertyBySlug(slug)).data;
+  const propertyRead = await getPublishedStayPropertyBySlug(slug);
+  const guesthouse = propertyRead.data;
 
   const propertyImages =
     guesthouse && guesthouse.gallery.length > 0 ? guesthouse.gallery : [guesthouse?.heroImage ?? "/images/hero-thoddoo.jpg"];
@@ -84,7 +86,12 @@ export default async function GuesthousePage({ params }: GuesthousePageProps) {
         dangerouslySetInnerHTML={{ __html: jsonLdScript(propertyJsonLd) }}
       />
       <Suspense fallback={null}>
-        <StayPropertyDetailClient initialGuesthouse={guesthouse} slug={slug} />
+        <StayPropertyDetailClient
+          initialGuesthouse={guesthouse}
+          slug={slug}
+          readSource={propertyRead.source}
+          error={propertyRead.error}
+        />
       </Suspense>
     </>
   );

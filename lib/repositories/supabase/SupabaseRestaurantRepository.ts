@@ -5,7 +5,8 @@ export const SupabaseRestaurantRepository = {
   async findAll() {
     const supabase = createSupabaseServerClient();
     if (!supabase) return [];
-    const { data } = await supabase.from("restaurants").select("*").order("created_at", { ascending: false });
+    const { data, error } = await supabase.from("restaurants").select("*").order("created_at", { ascending: false });
+    if (error) throw error;
     return (data ?? []).map(mapRestaurantRowToDomain);
   },
   async findById(id: string) {

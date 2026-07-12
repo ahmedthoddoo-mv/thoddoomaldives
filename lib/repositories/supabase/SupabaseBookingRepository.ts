@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient, createSupabaseServiceRoleClient } from "@/lib/supabase/server";
 import { mapBookingRowToDomain } from "@/lib/supabase/mappers";
 import type { Tables } from "@/lib/supabase/types";
 
@@ -10,9 +10,10 @@ type BookingWithRelations = Tables<"bookings"> & {
 
 export const SupabaseBookingRepository = {
   async findAll() {
-    const supabase = createSupabaseServerClient();
+    const supabase = createSupabaseServiceRoleClient() ?? createSupabaseServerClient();
     if (!supabase) return [];
-    const { data } = await supabase.from("bookings").select("*, guests(*), properties(*), rooms(*)").order("created_at", { ascending: false });
+    const { data, error } = await supabase.from("bookings").select("*, guests(*), properties(*), rooms(*)").order("created_at", { ascending: false });
+    if (error) throw error;
     return ((data ?? []) as BookingWithRelations[]).map((booking) =>
       mapBookingRowToDomain(booking, booking.guests ?? undefined, booking.properties ?? undefined, booking.rooms ?? undefined)
     );

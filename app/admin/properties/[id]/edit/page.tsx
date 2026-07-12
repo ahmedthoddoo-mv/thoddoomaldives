@@ -4,6 +4,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { adminSidebarItems } from "@/data/adminContent";
 import { PropertyRepository } from "@/lib/repositories";
+import { getLiveAdminProperties } from "@/lib/repositories/liveReads";
 
 type EditAdminPropertyPageProps = {
   params: Promise<{
@@ -29,11 +30,19 @@ export function generateStaticParams() {
 
 export default async function EditAdminPropertyPage({ params }: EditAdminPropertyPageProps) {
   const { id } = await params;
-  const property = PropertyRepository.findById(id);
+  const propertyRead = await getLiveAdminProperties();
+  const property =
+    propertyRead.data.find((item) => item.id === id || item.slug === id) ??
+    PropertyRepository.findById(id);
 
   return (
     <AdminShell sidebar={<AdminSidebar items={adminSidebarItems} />}>
       <div className="adminContent">
+        {propertyRead.error ? (
+          <section className="adminPanel">
+            <p className="mutedText">{propertyRead.error}</p>
+          </section>
+        ) : null}
         <AdminPropertyForm mode="edit" property={property} propertyId={id} />
       </div>
     </AdminShell>

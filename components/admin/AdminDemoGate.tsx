@@ -1,37 +1,18 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { useActionState } from "react";
+import { useFormStatus } from "react-dom";
+import { loginAdminDemo, type AdminLoginState } from "@/app/admin/actions";
 
-type AdminDemoGateProps = {
-  children: React.ReactNode;
-};
+function AdminGateSubmitButton() {
+  const { pending } = useFormStatus();
 
-export function AdminDemoGate({ children }: AdminDemoGateProps) {
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [hasAccess, setHasAccess] = useState(false);
-  const demoPassword = process.env.NEXT_PUBLIC_ADMIN_DEMO_PASSWORD;
+  return <button type="submit">{pending ? "Checking..." : "Unlock admin demo"}</button>;
+}
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (!demoPassword) {
-      setError("Admin demo password is not configured.");
-      return;
-    }
-
-    if (password === demoPassword) {
-      setHasAccess(true);
-      setError("");
-      return;
-    }
-
-    setError("Incorrect password. Please try again.");
-  }
-
-  if (hasAccess) {
-    return children;
-  }
+export function AdminDemoGate() {
+  const initialState: AdminLoginState = {};
+  const [state, formAction] = useActionState(loginAdminDemo, initialState);
 
   return (
     <main className="adminGateShell">
@@ -42,22 +23,21 @@ export function AdminDemoGate({ children }: AdminDemoGateProps) {
           Enter the temporary demo password to view the iThoddoo Maldives admin dashboard.
         </p>
 
-        <form onSubmit={handleSubmit}>
+        <form action={formAction}>
           <label htmlFor="admin-demo-password">Demo password</label>
           <input
             id="admin-demo-password"
+            name="password"
             type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
             autoComplete="current-password"
           />
-          {error ? <span role="alert">{error}</span> : null}
-          <button type="submit">Unlock admin demo</button>
+          {state.error ? <span role="alert">{state.error}</span> : null}
+          <AdminGateSubmitButton />
         </form>
 
         <small>
           This is temporary demo protection only. Replace with real authentication before production.
-          Access is not remembered, so admin pages ask for the password each visit.
+          Access is stored in an HttpOnly demo session cookie and expires automatically.
         </small>
       </section>
     </main>

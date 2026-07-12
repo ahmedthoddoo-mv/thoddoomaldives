@@ -5,6 +5,7 @@ import type { AdminManagedProperty } from "@/data/adminContent";
 type PropertyPublishPanelProps = {
   isPublished: boolean;
   isFeatured: boolean;
+  isSaving?: boolean;
   verificationStatus: AdminManagedProperty["verificationStatus"];
   slug: string;
   onSaveDraft: () => void;
@@ -18,6 +19,7 @@ type PropertyPublishPanelProps = {
 export function PropertyPublishPanel({
   isPublished,
   isFeatured,
+  isSaving = false,
   verificationStatus,
   slug,
   onSaveDraft,
@@ -44,25 +46,25 @@ export function PropertyPublishPanel({
         {isFeatured ? <span>Featured</span> : null}
       </div>
       <div className="adminPropertyEditorActions">
-        <button onClick={onSaveDraft} type="button">
-          Save as Draft
+        <button disabled={isSaving} onClick={onSaveDraft} type="button">
+          {isSaving ? "Saving..." : "Save as Draft"}
         </button>
-        <button onClick={onSubmitForReview} type="button">
+        <button disabled={isSaving} onClick={onSubmitForReview} type="button">
           Save and Submit for Review
         </button>
-        <button onClick={onPublish} type="button">
+        <button disabled={isSaving} onClick={onPublish} type="button">
           Save and Publish
         </button>
         <a className="adminPropertyActionLink" href={previewHref} target="_blank" rel="noopener noreferrer">
           Preview
         </a>
-        <button onClick={onVerify} type="button">
+        <button disabled={isSaving} onClick={onVerify} type="button">
           Mark verified
         </button>
-        <button onClick={onToggleFeatured} type="button">
+        <button disabled={isSaving} onClick={onToggleFeatured} type="button">
           {isFeatured ? "Remove featured" : "Mark featured"}
         </button>
-        <button onClick={onArchive} type="button">
+        <button disabled={isSaving} onClick={onArchive} type="button">
           Archive/delete demo
         </button>
       </div>

@@ -6,8 +6,10 @@ export function PriceCalculator({ draft }: { draft: BookingDraft }) {
 
   return (
     <div className="bookingPriceCalculator">
+      <span>${draft.roomRate}/night</span>
       <span>{estimate.nights} nights</span>
       <span>${estimate.accommodation} accommodation</span>
+      <span>Taxes/fees pending</span>
       <span>${estimate.total} total</span>
     </div>
   );

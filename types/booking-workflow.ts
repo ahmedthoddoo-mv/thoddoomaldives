@@ -53,6 +53,7 @@ export type BookingWorkflowPayload = {
   guestWhatsapp: string;
   contactPreference: ContactPreference;
   roomType: string;
+  roomId?: string;
   roomRate: number;
   nights: number;
   estimatedValue: number;

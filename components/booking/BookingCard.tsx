@@ -5,17 +5,19 @@ type BookingCardProps = {
   booking: Booking;
   onApprove?: () => void;
   onReject?: () => void;
+  onCancel?: () => void;
+  onMarkPaid?: () => void;
   onComplete?: () => void;
   onSelect?: () => void;
 };
 
-export function BookingCard({ booking, onApprove, onReject, onComplete, onSelect }: BookingCardProps) {
+export function BookingCard({ booking, onApprove, onReject, onCancel, onMarkPaid, onComplete, onSelect }: BookingCardProps) {
   const whatsappMessage = encodeURIComponent(`Hi, I am checking booking ${booking.id} for ${booking.propertyName}.`);
 
   return (
     <article className="adminBookingCard">
       <div>
-        <span>{booking.id}</span>
+        <span>{booking.reference ?? booking.id}</span>
         <h3>{booking.guest.name}</h3>
         <p>{booking.propertyName}</p>
       </div>
@@ -26,6 +28,8 @@ export function BookingCard({ booking, onApprove, onReject, onComplete, onSelect
         <div><dt>Guests</dt><dd>{booking.guest.adults} adults | {booking.guest.children} children</dd></div>
         <div><dt>Estimated value</dt><dd>${booking.estimatedValue}</dd></div>
         <div><dt>Commission</dt><dd>${booking.commission.companyRevenue}</dd></div>
+        <div><dt>Payment</dt><dd>{booking.paymentStatus}</dd></div>
+        <div><dt>Prepared</dt><dd>{booking.roomPrepared ? "Yes" : "No"}</dd></div>
         <div><dt>CRM</dt><dd>{booking.crmRecordId ?? "unlinked"}</dd></div>
         <div><dt>Partner</dt><dd>{booking.partnerId ?? "unlinked"}</dd></div>
         <div><dt>Guest record</dt><dd>{booking.guestRecordId ?? "demo guest"}</dd></div>
@@ -37,6 +41,8 @@ export function BookingCard({ booking, onApprove, onReject, onComplete, onSelect
         <button onClick={onSelect} type="button">View Details</button>
         <button onClick={onApprove} type="button">Approve</button>
         <button onClick={onReject} type="button">Reject</button>
+        <button onClick={onCancel} type="button">Cancel</button>
+        <button onClick={onMarkPaid} type="button">Mark Paid</button>
         <button onClick={onComplete} type="button">Complete</button>
       </div>
     </article>

@@ -9,6 +9,7 @@ export type AdminPropertyAction =
   | "Suspend Property";
 
 export type AdminPropertyRoomType = {
+  id?: string;
   name: string;
   price: string;
   capacity: string;

@@ -7,7 +7,7 @@ import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Container from "@/components/ui/Container";
 import SectionTitle from "@/components/ui/SectionTitle";
-import { PropertyRepository } from "@/lib/repositories";
+import { getLiveExperiences, getLivePublishedGuesthouses } from "@/lib/repositories/liveReads";
 import {
   SITE_NAME,
   SITE_URL,
@@ -64,33 +64,6 @@ const reasons = [
     icon: "04",
     title: "Reliable Support",
     text: "A human local concierge helps you choose, confirm, and prepare.",
-  },
-];
-
-const experiencePlaceholders = [
-  {
-    title: "Snorkeling",
-    image: "/images/homepage/hero-4.jpg",
-    description:
-      "Explore Thoddoo reef areas with local guidance, clear lagoons, and a chance to see turtles.",
-  },
-  {
-    title: "Sandbank",
-    image: "/images/hero-thoddoo.jpg",
-    description:
-      "Spend a picture-perfect island day on soft white sand surrounded by turquoise water.",
-  },
-  {
-    title: "Fishing",
-    image: "/images/homepage/hero-1.jpg",
-    description:
-      "Join a traditional fishing trip and enjoy the calm ocean around golden hour.",
-  },
-  {
-    title: "Water Sports",
-    image: "/images/hero-thoddoo.jpg",
-    description:
-      "Add lagoon fun to your holiday with kayaking, paddleboarding, and local water activities.",
   },
 ];
 
@@ -156,8 +129,13 @@ function HeroBackground({ media }: { media: HeroMedia }) {
   );
 }
 
-export default function Home() {
-  const guesthouses = PropertyRepository.findPublicAll();
+export default async function Home() {
+  const [guesthouseRead, experienceRead] = await Promise.all([
+    getLivePublishedGuesthouses(),
+    getLiveExperiences()
+  ]);
+  const guesthouses = guesthouseRead.data;
+  const experiencePlaceholders = experienceRead.data.slice(0, 4);
   const websiteJsonLd = {
     "@context": "https://schema.org",
     "@type": "WebSite",

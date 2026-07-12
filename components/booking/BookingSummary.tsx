@@ -15,6 +15,10 @@ export function BookingSummary({ draft }: { draft: BookingDraft }) {
           <dd>{estimate.nights}</dd>
         </div>
         <div>
+          <dt>Price per night</dt>
+          <dd>${draft.roomRate}</dd>
+        </div>
+        <div>
           <dt>Accommodation</dt>
           <dd>${estimate.accommodation}</dd>
         </div>
@@ -25,6 +29,10 @@ export function BookingSummary({ draft }: { draft: BookingDraft }) {
         <div>
           <dt>Subtotal</dt>
           <dd>${estimate.subtotal}</dd>
+        </div>
+        <div>
+          <dt>Taxes/fees</dt>
+          <dd>To be confirmed</dd>
         </div>
         <div className="bookingSummaryTotal">
           <dt>Estimated total</dt>
