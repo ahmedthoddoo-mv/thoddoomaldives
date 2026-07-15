@@ -45,6 +45,7 @@ export const requestedChangeOptions = [
   "Incomplete contact details",
   "Weak description",
   "Registration details needed",
+  "More verification documents required",
   "Unclear location",
   "Missing policies"
 ];

@@ -1,18 +1,31 @@
 import { partnerNavigation, partnerProfile } from "@/data/partnerPortal";
+import { signOutPartner } from "@/app/partner/auth/actions";
+import type { PartnerPortalData } from "@/lib/partner-portal/partnerAccess";
 
 type PartnerPortalShellProps = {
   children: React.ReactNode;
   title: string;
   subtitle: string;
+  portalData?: PartnerPortalData;
 };
 
-export function PartnerPortalShell({ children, title, subtitle }: PartnerPortalShellProps) {
+export function PartnerPortalShell({ children, title, subtitle, portalData }: PartnerPortalShellProps) {
+  const businessName = portalData?.profile.businessName ?? partnerProfile.businessName;
+  const setupRequired = portalData?.source === "setup_required";
+  const logo =
+    businessName
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join("") || partnerProfile.logo;
+
   return (
     <main className="partnerPortal">
       <div className="partnerPortalFrame">
         <aside className="partnerPortalSidebar" aria-label="Partner portal navigation">
           <a className="partnerPortalBrand" href="/partner/dashboard" aria-label="Partner dashboard home">
-            <span>{partnerProfile.logo}</span>
+            <span>{logo}</span>
             <strong>Partner Portal</strong>
           </a>
           <nav>
@@ -26,16 +39,30 @@ export function PartnerPortalShell({ children, title, subtitle }: PartnerPortalS
         <div className="partnerPortalMain">
           <header className="partnerPortalHeader">
             <div>
-              <p className="eyebrow">{partnerProfile.businessName}</p>
+              <p className="eyebrow">{businessName}</p>
               <h1>{title}</h1>
               <p>{subtitle}</p>
             </div>
             <div className="partnerPortalHeaderBadges">
-              <span>{partnerProfile.membershipPlan}</span>
-              <span>{partnerProfile.verificationStatus}</span>
+              <span>{portalData?.membership.plan ?? partnerProfile.membershipPlan}</span>
+              <span>{portalData?.verification.status ?? partnerProfile.verificationStatus}</span>
+              <span>{portalData?.source ?? "mock"}</span>
+              <form action={signOutPartner}>
+                <button type="submit">Sign out</button>
+              </form>
             </div>
           </header>
-          {children}
+          {setupRequired ? (
+            <section className="partnerPortalPanel">
+              <p className="eyebrow">Account setup required</p>
+              <h2>Your login is not linked to a partner record yet.</h2>
+              <p>
+                Ask the iThoddoo Maldives admin team to link this Supabase Auth user to the correct partner record before
+                managing business data.
+              </p>
+              <a href="/partner/support">Contact support</a>
+            </section>
+          ) : children}
         </div>
       </div>
     </main>

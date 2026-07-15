@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { VerifiedBadge } from "@/components/partner/VerifiedBadge";
 import { usePublicStayProperties } from "@/lib/properties/propertyStore";
 import type { PropertyReadSource } from "@/lib/properties/propertyReads";
 import type { Guesthouse } from "@/types/guesthouse";
@@ -44,6 +45,9 @@ export function StayDirectoryClient({ initialGuesthouses, readSource, error }: S
               </div>
 
               <h3>{guesthouse.name}</h3>
+              {guesthouse.verificationStatus === "Verified" ? (
+                <VerifiedBadge label="Verified by iThoddoo Maldives" />
+              ) : null}
               <p>{guesthouse.tagline}</p>
               <p className="font-semibold text-slate-900">View rooms and amenities</p>
             </div>

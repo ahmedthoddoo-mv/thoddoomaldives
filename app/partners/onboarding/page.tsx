@@ -10,12 +10,12 @@ export default function PartnerOnboardingPage() {
           <h1>Become an iThoddoo Growth Partner</h1>
           <p>
             Submit your guesthouse, transport, activity, dining, retail, wellness, or local tourism business for growth
-            partner review. This demo saves your application in this browser and prepares a WhatsApp submission.
+            partner review. The application is saved first, then you can continue to WhatsApp with your reference.
           </p>
         </div>
         <aside className="onboardingHeroPanel" aria-label="Onboarding scope">
-          <strong>No login. No payments. Browser demo storage only.</strong>
-          <span>Review your details, save to the demo queue, then send through WhatsApp.</span>
+          <strong>No login. No payments. Supabase-backed review queue.</strong>
+          <span>Dynamic questions, pricing rows, media metadata, and WhatsApp confirmation.</span>
         </aside>
       </section>
 

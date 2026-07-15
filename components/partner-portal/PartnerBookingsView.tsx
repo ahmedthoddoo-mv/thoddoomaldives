@@ -2,10 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { updateRealBookingStatus } from "@/app/booking/actions";
+import { updatePartnerBooking } from "@/app/partner/actions";
 import { getBookingsForPartner } from "@/lib/platform/selectors";
 import { updateBookingStatus, useBookingWorkflow } from "@/lib/bookings/bookingWorkflowStore";
-import type { Booking } from "@/types/booking";
+import type { Booking, BookingStatus } from "@/types/booking";
 
 const bookingTabs = ["Upcoming", "Pending", "Completed", "Cancelled"] as const;
 
@@ -27,24 +27,19 @@ export function PartnerBookingsView({ selectedPartnerId = "partner-thoddoo-sun-s
   async function handlePartnerUpdate({
     bookingId,
     status,
-    roomPrepared,
     internalNotes
   }: {
     bookingId: string;
-    status?: "confirmed";
-    roomPrepared?: boolean;
+    status?: Extract<BookingStatus, "confirmed" | "rejected" | "completed" | "cancelled">;
     internalNotes?: string;
   }) {
     if (status) {
       updateBookingStatus(bookingId, status);
     }
 
-    const result = await updateRealBookingStatus({
+    const result = await updatePartnerBooking({
       bookingId,
-      actor: "partner",
-      partnerId: selectedPartnerId,
       status,
-      roomPrepared,
       internalNotes
     });
 
@@ -95,10 +90,13 @@ export function PartnerBookingsView({ selectedPartnerId = "partner-thoddoo-sun-s
                     </small>
                     <div className="partnerBookingActions">
                       <button type="button" onClick={() => handlePartnerUpdate({ bookingId: booking.id, status: "confirmed" })}>
-                        Confirm booking
+                        Confirm
                       </button>
-                      <button type="button" onClick={() => handlePartnerUpdate({ bookingId: booking.id, roomPrepared: true })}>
-                        Mark room prepared
+                      <button type="button" onClick={() => handlePartnerUpdate({ bookingId: booking.id, status: "rejected" })}>
+                        Reject
+                      </button>
+                      <button type="button" onClick={() => handlePartnerUpdate({ bookingId: booking.id, status: "completed" })}>
+                        Complete
                       </button>
                     </div>
                     <label className="partnerBookingNoteField">

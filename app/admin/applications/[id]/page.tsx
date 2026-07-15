@@ -3,6 +3,7 @@ import { ApplicationDetailPanel } from "@/components/admin/ApplicationDetailPane
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { adminSidebarItems } from "@/data/adminContent";
+import { getPartnerApplicationsForAdmin } from "@/lib/applications/partnerApplicationReads";
 
 export const metadata: Metadata = {
   title: "Application Review",
@@ -20,11 +21,13 @@ type AdminApplicationDetailPageProps = {
 
 export default async function AdminApplicationDetailPage({ params }: AdminApplicationDetailPageProps) {
   const { id } = await params;
+  const applicationRead = await getPartnerApplicationsForAdmin();
+  const application = applicationRead.applications.find((item) => item.id === id);
 
   return (
     <AdminShell sidebar={<AdminSidebar items={adminSidebarItems} />}>
       <div className="adminContent">
-        <ApplicationDetailPanel applicationId={id} />
+        <ApplicationDetailPanel applicationId={id} initialApplication={application} dataSource={applicationRead.source} />
       </div>
     </AdminShell>
   );

@@ -11,6 +11,7 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminSystemStatus } from "@/components/admin/AdminSystemStatus";
 import { DashboardStats } from "@/components/admin/DashboardStats";
 import { adminQuickActions, adminSidebarItems } from "@/data/adminContent";
+import { getPartnerApplicationsForAdmin } from "@/lib/applications/partnerApplicationReads";
 import { calculateAdminMetrics } from "@/lib/platform/metrics";
 import { getSupabaseHealthCheck } from "@/lib/supabase/health";
 
@@ -145,6 +146,7 @@ const roadmapGroups = [
 
 export default async function AdminPage() {
   const supabaseHealth = await getSupabaseHealthCheck();
+  const applicationRead = await getPartnerApplicationsForAdmin();
   const systemStatuses = [
     {
       title: "SEO",
@@ -197,7 +199,7 @@ export default async function AdminPage() {
 
         <AdminQuickActions actions={adminQuickActions} />
 
-        <AdminApplicationStats />
+        <AdminApplicationStats initialApplications={applicationRead.applications} />
 
         <AdminPlatformIntegrationPanel />
 

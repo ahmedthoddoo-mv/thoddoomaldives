@@ -29,6 +29,7 @@ export function adminPropertyToGuesthouse(property: AdminManagedProperty): Guest
     location: property.island ? `${property.island}, Maldives` : "Thoddoo, Maldives",
     distanceToBeach: "Beach access details available on request",
     rating: property.verificationStatus === "Verified" ? "Verified" : "New",
+    verificationStatus: property.verificationStatus === "Verified" ? "Verified" : "New",
     priceFrom: firstPrice,
     whatsapp: property.whatsapp.replace(/[^0-9]/g, "") || "9609142538",
     heroImage,

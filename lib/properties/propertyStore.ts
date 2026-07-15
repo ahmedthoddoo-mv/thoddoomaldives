@@ -106,7 +106,7 @@ export function getAdminPropertyById(id: string) {
 export function getPublicStayProperties() {
   const publicGuesthouses = PropertyRepository.findPublicAll();
   const adminGuesthouses = getAdminProperties()
-    .filter((property) => property.isPublished && !property.isArchived && property.verificationStatus !== "Suspended")
+    .filter((property) => property.isPublished && !property.isArchived && property.verificationStatus === "Verified")
     .map(adminPropertyToGuesthouse);
   const bySlug = new Map<string, Guesthouse>();
 

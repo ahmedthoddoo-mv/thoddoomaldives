@@ -6,6 +6,7 @@ import { ApplicationDecisionPanel } from "@/components/admin/ApplicationDecision
 import { ApplicationMessagePreview } from "@/components/admin/ApplicationMessagePreview";
 import { ApplicationStatusBadge } from "@/components/admin/ApplicationStatusBadge";
 import { ApplicationTimeline } from "@/components/admin/ApplicationTimeline";
+import { ApplicationVerificationChecklist } from "@/components/admin/ApplicationVerificationChecklist";
 import { RequestedChangesList } from "@/components/admin/RequestedChangesList";
 import {
   PartnerApplicationRepository,
@@ -21,15 +22,28 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
-export function ApplicationDetailPanel({ applicationId }: { applicationId: string }) {
+export function ApplicationDetailPanel({
+  applicationId,
+  initialApplication,
+  dataSource
+}: {
+  applicationId: string;
+  initialApplication?: PartnerApplicationRecord;
+  dataSource?: "mock" | "supabase" | "fallback";
+}) {
   const [application, setApplication] = useState<PartnerApplicationRecord | undefined>(() =>
-    PartnerApplicationRepository.findById(applicationId)
+    initialApplication ?? PartnerApplicationRepository.findById(applicationId)
   );
 
   useEffect(() => {
+    if (initialApplication) {
+      setApplication(initialApplication);
+      return () => undefined;
+    }
+
     setApplication(PartnerApplicationRepository.findById(applicationId));
     return subscribeToPartnerApplications(() => setApplication(PartnerApplicationRepository.findById(applicationId)));
-  }, [applicationId]);
+  }, [applicationId, initialApplication]);
 
   if (!application) {
     return (
@@ -50,6 +64,8 @@ export function ApplicationDetailPanel({ applicationId }: { applicationId: strin
           <ApplicationStatusBadge status={application.status} />
           <h1>{application.businessName}</h1>
           <p>{application.description}</p>
+          {dataSource === "supabase" ? <p className="mutedText">Loaded from Supabase onboarding submissions.</p> : null}
+          {dataSource === "fallback" ? <p className="mutedText">Supabase unavailable. Showing safe demo application data.</p> : null}
         </div>
         <a className="adminContentAddButton" href="/admin/applications">
           Back to queue
@@ -120,8 +136,10 @@ export function ApplicationDetailPanel({ applicationId }: { applicationId: strin
           <RequestedChangesList changes={application.requestedChanges} />
         </section>
 
-        <ApplicationDecisionPanel application={application} onChange={setApplication} />
+        <ApplicationDecisionPanel application={application} onChange={setApplication} dataSource={dataSource} />
       </div>
+
+      <ApplicationVerificationChecklist application={application} />
 
       <section className="adminPanel">
         <div className="adminSectionHeader">

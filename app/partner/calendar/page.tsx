@@ -1,14 +1,17 @@
 import type { Metadata } from "next";
 import { PartnerCalendarView } from "@/components/partner-portal/PartnerCalendarView";
 import { PartnerPortalShell } from "@/components/partner-portal/PartnerPortalShell";
+import { getCurrentPartnerPortalData } from "@/lib/partner-portal/partnerAccess";
 
 export const metadata: Metadata = {
   title: "Partner Calendar"
 };
 
-export default function PartnerCalendarPage() {
+export default async function PartnerCalendarPage() {
+  const portalData = await getCurrentPartnerPortalData();
+
   return (
-    <PartnerPortalShell title="Calendar" subtitle="Demo monthly availability with occupied, blocked, pending, and open dates.">
+    <PartnerPortalShell portalData={portalData} title="Calendar" subtitle="Monthly availability with occupied, blocked, pending, and open dates.">
       <PartnerCalendarView />
     </PartnerPortalShell>
   );

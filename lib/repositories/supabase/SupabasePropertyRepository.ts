@@ -60,7 +60,12 @@ export const SupabasePropertyRepository = {
   async findFeatured() {
     const supabase = createSupabaseServerClient();
     if (!supabase) return [];
-    const { data, error } = await supabase.from("properties").select(propertySelect).eq("featured", true).eq("publication_status", "published");
+    const { data, error } = await supabase
+      .from("properties")
+      .select(propertySelect)
+      .eq("featured", true)
+      .eq("publication_status", "published")
+      .eq("verification_status", "verified");
     if (error) throw error;
     return ((data ?? []) as PropertyWithRooms[]).map(mapProperty);
   },
@@ -78,7 +83,7 @@ export const SupabasePropertyRepository = {
       .from("properties")
       .select(propertySelect)
       .eq("publication_status", "published")
-      .neq("verification_status", "suspended")
+      .eq("verification_status", "verified")
       .order("featured", { ascending: false })
       .order("created_at", { ascending: false });
     if (error) throw error;

@@ -31,6 +31,7 @@ export type Guesthouse = {
   location: string;
   distanceToBeach: string;
   rating: string;
+  verificationStatus?: "Verified" | "New";
   priceFrom: string;
   whatsapp: string;
   heroImage: string;

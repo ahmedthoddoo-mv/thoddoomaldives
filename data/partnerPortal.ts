@@ -272,12 +272,17 @@ export const partnerMembershipPlans: PartnerMembershipPlan[] = [
 
 export const partnerNavigation = [
   { label: "Dashboard", href: "/partner/dashboard" },
-  { label: "Application", href: "/partner/application" },
-  { label: "Profile", href: "/partner/profile" },
+  { label: "My Business", href: "/partner/business" },
+  { label: "Rooms / Services", href: "/partner/rooms" },
+  { label: "Pricing", href: "/partner/pricing" },
   { label: "Bookings", href: "/partner/bookings" },
   { label: "Calendar", href: "/partner/calendar" },
-  { label: "Rooms", href: "/partner/rooms" },
   { label: "Gallery", href: "/partner/gallery" },
-  { label: "Pricing", href: "/partner/pricing" },
-  { label: "Analytics", href: "/partner/analytics" }
+  { label: "Documents", href: "/partner/documents" },
+  { label: "Verification", href: "/partner/verification" },
+  { label: "Membership", href: "/partner/membership" },
+  { label: "Analytics", href: "/partner/analytics" },
+  { label: "Notifications", href: "/partner/notifications" },
+  { label: "Support", href: "/partner/support" },
+  { label: "Application", href: "/partner/application" }
 ];

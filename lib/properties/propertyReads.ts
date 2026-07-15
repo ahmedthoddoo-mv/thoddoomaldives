@@ -51,7 +51,7 @@ export async function getPublishedStayPropertyBySlug(slug: string): Promise<Prop
   try {
     const property = await SupabasePropertyRepository.findBySlug(slug);
 
-    if (!property || !property.isPublished || property.isArchived || property.verificationStatus === "Suspended") {
+    if (!property || !property.isPublished || property.isArchived || property.verificationStatus !== "Verified") {
       return {
         data: undefined,
         source: "supabase"

@@ -12,7 +12,7 @@ export const platformConfig = {
     name: "iThoddoo Maldives",
     legalName: "iThoddoo Maldives",
     tagline: "Local island stays, experiences, transfers, and growth partnerships",
-    domain: "ithoddoo.com"
+    domain: "thoddoomaldives.com"
   },
   currency: {
     code: "USD",
@@ -28,9 +28,10 @@ export const platformConfig = {
   companyContact: {
     address: "Thoddoo, Alif Alif Atoll, Maldives",
     phone: "+960 914 2538",
-    email: "hello@ithoddoo.com"
+    email: "admin@thoddoomaldives.com",
+    website: "https://thoddoomaldives.com"
   },
-  supportEmail: "support@ithoddoo.com",
+  supportEmail: "admin@thoddoomaldives.com",
   socialLinks: {
     instagram: "https://instagram.com/ithoddoomaldive",
     facebook: "https://facebook.com/ithoddoomaldive",

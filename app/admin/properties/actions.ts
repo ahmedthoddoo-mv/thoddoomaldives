@@ -100,6 +100,14 @@ export async function saveAdminPropertyToSupabase({
   const { latitude, longitude } = parseGpsLocation(property.gpsLocation);
   const membershipPlanId = await findMembershipPlanId(property.membershipPlan);
   const propertyIdIsUuid = uuidPattern.test(property.id);
+  const isVerified = property.verificationStatus === "Verified";
+
+  if ((publish || property.isPublished) && !isVerified) {
+    return {
+      ok: false,
+      message: "Only verified businesses can be published. Approve verification before publishing this property."
+    };
+  }
 
   const { data: rawExistingProperty } = await db
     .from("properties")
@@ -135,7 +143,7 @@ export async function saveAdminPropertyToSupabase({
     check_in_time: property.checkIn || null,
     check_out_time: property.checkOut || null,
     membership_plan_id: membershipPlanId,
-    verification_status: publish ? "verified" : getVerificationStatus(property),
+    verification_status: getVerificationStatus(property),
     publication_status: getPublicationStatus(property, publish),
     featured: property.isFeatured,
     seo_title: property.seo.title || `${property.name} | iThoddoo Maldives`,

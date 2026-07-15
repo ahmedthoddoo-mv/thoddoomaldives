@@ -17,15 +17,57 @@ const defaultFilters: PartnerApplicationFilters = {
   sort: "newest"
 };
 
-export function ApplicationReviewQueue() {
+function filterApplications(applications: PartnerApplicationRecord[], filters: PartnerApplicationFilters) {
+  const normalizedSearch = filters.search.trim().toLowerCase();
+
+  return applications
+    .filter((application) => {
+      if (!normalizedSearch) return true;
+      return [
+        application.businessName,
+        application.contactPerson,
+        application.email,
+        application.whatsapp,
+        application.businessType,
+        application.status
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(normalizedSearch);
+    })
+    .filter((application) => filters.status === "all" || application.status === filters.status)
+    .filter((application) => filters.businessType === "all" || application.businessType === filters.businessType)
+    .filter((application) => filters.membershipTier === "all" || application.requestedMembershipTier === filters.membershipTier)
+    .sort((left, right) => {
+      const leftDate = new Date(left.submittedDate).getTime();
+      const rightDate = new Date(right.submittedDate).getTime();
+      return filters.sort === "newest" ? rightDate - leftDate : leftDate - rightDate;
+    });
+}
+
+export function ApplicationReviewQueue({
+  initialApplications,
+  dataSource
+}: {
+  initialApplications?: PartnerApplicationRecord[];
+  dataSource?: "mock" | "supabase" | "fallback";
+}) {
+  const hasServerApplications = Boolean(initialApplications);
   const [applications, setApplications] = useState<PartnerApplicationRecord[]>(() =>
-    PartnerApplicationRepository.findAll()
+    initialApplications ?? PartnerApplicationRepository.findAll()
   );
   const [filters, setFilters] = useState<PartnerApplicationFilters>(defaultFilters);
 
-  useEffect(() => subscribeToPartnerApplications(() => setApplications(PartnerApplicationRepository.findAll())), []);
+  useEffect(() => {
+    if (hasServerApplications) {
+      setApplications(initialApplications ?? []);
+      return () => undefined;
+    }
 
-  const filteredApplications = useMemo(() => PartnerApplicationRepository.filter(filters), [applications, filters]);
+    return subscribeToPartnerApplications(() => setApplications(PartnerApplicationRepository.findAll()));
+  }, [hasServerApplications, initialApplications]);
+
+  const filteredApplications = useMemo(() => filterApplications(applications, filters), [applications, filters]);
   const reviewCount = applications.filter((application) =>
     ["submitted", "under_review", "changes_requested"].includes(application.status)
   ).length;
@@ -37,6 +79,8 @@ export function ApplicationReviewQueue() {
           <p className="eyebrow">Review queue</p>
           <h1>Partner Applications</h1>
           <p>Review, request changes, approve partners, and draft listings without publishing them automatically.</p>
+          {dataSource === "supabase" ? <p className="mutedText">Showing Supabase onboarding submissions.</p> : null}
+          {dataSource === "fallback" ? <p className="mutedText">Supabase unavailable. Showing safe demo application data.</p> : null}
         </div>
         <div className="applicationHeroMetric">
           <span>{reviewCount}</span>

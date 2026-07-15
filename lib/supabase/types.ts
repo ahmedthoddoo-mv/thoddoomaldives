@@ -19,6 +19,7 @@ export type Database = {
           address: string | null;
           latitude: number | null;
           longitude: number | null;
+          auth_user_id: string | null;
           lead_source: string | null;
           priority: string | null;
           created_at: string;
@@ -44,6 +45,7 @@ export type Database = {
           whatsapp: string | null;
           email: string | null;
           website: string | null;
+          google_maps_link: string | null;
           short_description: string;
           full_description: string | null;
           hero_image_path: string;
@@ -51,6 +53,9 @@ export type Database = {
           policies: string[];
           check_in_time: string | null;
           check_out_time: string | null;
+          operating_hours: string | null;
+          languages: string[];
+          social_links: Json;
           membership_plan_id: string | null;
           verification_status: string;
           publication_status: string;
@@ -268,6 +273,135 @@ export type Database = {
         };
         Insert: Partial<Database["public"]["Tables"]["crm_notes"]["Row"]> & { author: string; body: string };
         Update: Partial<Database["public"]["Tables"]["crm_notes"]["Row"]>;
+      };
+      partner_application_verification_documents: {
+        Row: {
+          id: string;
+          application_id: string;
+          document_key: string;
+          document_label: string;
+          required: boolean;
+          storage_bucket: string;
+          storage_path: string | null;
+          file_name: string | null;
+          mime_type: string | null;
+          file_size_bytes: number | null;
+          status: string;
+          admin_note: string | null;
+          submitted_at: string;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["partner_application_verification_documents"]["Row"]> & {
+          application_id: string;
+          document_key: string;
+          document_label: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["partner_application_verification_documents"]["Row"]>;
+      };
+      partner_service_items: {
+        Row: {
+          id: string;
+          partner_id: string | null;
+          property_id: string | null;
+          service_type: string;
+          title: string;
+          description: string | null;
+          price: number | null;
+          currency: string;
+          unit: string;
+          child_price: number | null;
+          notes: string | null;
+          active: boolean;
+          sort_order: number;
+          metadata: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["partner_service_items"]["Row"]> & { title: string };
+        Update: Partial<Database["public"]["Tables"]["partner_service_items"]["Row"]>;
+      };
+      partner_documents: {
+        Row: {
+          id: string;
+          partner_id: string;
+          property_id: string | null;
+          document_key: string;
+          document_label: string;
+          category: string;
+          required: boolean;
+          storage_bucket: string;
+          storage_path: string | null;
+          file_name: string | null;
+          status: string;
+          expiry_date: string | null;
+          admin_note: string | null;
+          uploaded_at: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["partner_documents"]["Row"]> & {
+          partner_id: string;
+          document_key: string;
+          document_label: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["partner_documents"]["Row"]>;
+      };
+      partner_notifications: {
+        Row: {
+          id: string;
+          partner_id: string;
+          title: string;
+          body: string;
+          notification_type: string;
+          status: string;
+          action_href: string | null;
+          created_at: string;
+          read_at: string | null;
+        };
+        Insert: Partial<Database["public"]["Tables"]["partner_notifications"]["Row"]> & {
+          partner_id: string;
+          title: string;
+          body: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["partner_notifications"]["Row"]>;
+      };
+      partner_audit_events: {
+        Row: {
+          id: string;
+          partner_id: string | null;
+          auth_user_id: string | null;
+          event_type: string;
+          metadata: Json;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["partner_audit_events"]["Row"]> & {
+          event_type: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["partner_audit_events"]["Row"]>;
+      };
+      partner_account_invitations: {
+        Row: {
+          id: string;
+          partner_id: string;
+          application_id: string | null;
+          email: string;
+          status: string;
+          invitation_url: string | null;
+          notes: string | null;
+          created_by: string | null;
+          created_at: string;
+          sent_at: string | null;
+          accepted_at: string | null;
+        };
+        Insert: Partial<Database["public"]["Tables"]["partner_account_invitations"]["Row"]> & {
+          partner_id: string;
+          email: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["partner_account_invitations"]["Row"]>;
       };
       membership_plans: {
         Row: {

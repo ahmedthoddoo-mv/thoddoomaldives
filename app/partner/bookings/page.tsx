@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { PartnerBookingsView } from "@/components/partner-portal/PartnerBookingsView";
 import { PartnerPortalShell } from "@/components/partner-portal/PartnerPortalShell";
+import { getCurrentPartnerPortalData } from "@/lib/partner-portal/partnerAccess";
 import { getLiveBookings } from "@/lib/repositories/liveReads";
 
 export const metadata: Metadata = {
@@ -8,13 +9,13 @@ export const metadata: Metadata = {
 };
 
 export default async function PartnerBookingsPage() {
-  const bookingRead = await getLiveBookings();
-  const selectedPartnerId = bookingRead.source === "supabase" ? "10000000-0000-0000-0000-000000000001" : "partner-thoddoo-sun-sky";
+  const [bookingRead, portalData] = await Promise.all([getLiveBookings(), getCurrentPartnerPortalData()]);
+  const selectedPartnerId = portalData.partnerId;
 
   return (
-    <PartnerPortalShell title="Bookings" subtitle="View upcoming guests, pending requests, completed bookings, cancellations, and guest summaries.">
+    <PartnerPortalShell portalData={portalData} title="Bookings" subtitle="View upcoming guests, pending requests, completed bookings, cancellations, and guest summaries.">
       <PartnerBookingsView
-        initialBookings={bookingRead.data.filter((booking) => booking.partnerId === selectedPartnerId)}
+        initialBookings={portalData.bookings.length > 0 ? portalData.bookings : bookingRead.data.filter((booking) => booking.partnerId === selectedPartnerId)}
         selectedPartnerId={selectedPartnerId}
       />
     </PartnerPortalShell>

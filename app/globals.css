@@ -5,6 +5,78 @@
   --foreground: #171717;
 }
 
+.partnerAuthPage {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 32px 16px;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(20, 184, 166, 0.22), transparent 32%),
+    linear-gradient(135deg, #07111f 0%, #0b1728 52%, #07111f 100%);
+  color: #f8fafc;
+}
+
+.partnerAuthCard {
+  width: min(100%, 460px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  background: rgba(7, 17, 31, 0.82);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.34);
+  padding: 28px;
+}
+
+.partnerAuthCard h1 {
+  margin: 8px 0 10px;
+  color: #fff;
+  font-size: clamp(2rem, 8vw, 3rem);
+  line-height: 1;
+}
+
+.partnerAuthCard p {
+  color: rgba(248, 250, 252, 0.72);
+}
+
+.partnerAuthForm {
+  display: grid;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.partnerAuthForm label {
+  display: grid;
+  gap: 8px;
+  color: rgba(248, 250, 252, 0.78);
+  font-weight: 800;
+}
+
+.partnerAuthForm input {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  padding: 13px 14px;
+  font: inherit;
+}
+
+.partnerAuthForm button,
+.partnerPortalHeaderBadges button {
+  border: 0;
+  border-radius: 8px;
+  background: #14b8a6;
+  color: #042f2e;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 900;
+  padding: 12px 16px;
+}
+
+.partnerAuthForm a,
+.partnerPortalPanel a {
+  color: #5eead4;
+  font-weight: 800;
+}
+
 /* EPIC-026 platform integration */
 .adminPlatformIntegration {
   display: grid;
@@ -888,7 +960,9 @@
 }
 
 .partnerPortalFormGrid input,
-.partnerPortalFormGrid textarea {
+.partnerPortalFormGrid textarea,
+.partnerPortalFormGrid select,
+.partnerPortalGalleryCard input {
   width: 100%;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 14px;
@@ -933,6 +1007,7 @@
 }
 
 .partnerPortalActions button,
+.partnerPortalActions a,
 .partnerPortalUploadPanel button {
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 999px;
@@ -943,6 +1018,7 @@
   padding: 9px 12px;
   font-size: 0.84rem;
   font-weight: 900;
+  text-decoration: none;
 }
 
 .partnerPortalNotice {
@@ -1061,6 +1137,25 @@
   height: 8px;
   border-radius: 999px;
   background: linear-gradient(135deg, #087f7a, #0ca497);
+}
+
+.partnerPortalServiceEditor,
+.partnerPortalDocumentGrid {
+  display: grid;
+  gap: 14px;
+}
+
+.partnerPortalSectionHeader button {
+  width: fit-content;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #eef7f3;
+  cursor: pointer;
+  font: inherit;
+  padding: 9px 12px;
+  font-size: 0.84rem;
+  font-weight: 900;
 }
 
 @media (min-width: 760px) {
@@ -4369,10 +4464,212 @@ body {
 }
 
 .onboardingForm,
-.onboardingReview {
+.onboardingReview,
+.smartOnboarding {
   display: grid;
   gap: 24px;
   margin: 44px 0;
+}
+
+.onboardingCard {
+  display: grid;
+  gap: 22px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 18px;
+}
+
+.businessTypeGrid,
+.onboardingGrid,
+.membershipCardGrid {
+  display: grid;
+  gap: 12px;
+}
+
+.businessTypeCard {
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+  padding: 16px;
+  text-align: left;
+}
+
+.businessTypeCard span,
+.onboardingGrid label small {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.businessTypeCardActive {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(8, 127, 122, 0.14);
+}
+
+.onboardingGrid label,
+.onboardingSoloField {
+  display: grid;
+  gap: 8px;
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.onboardingGrid input,
+.onboardingGrid textarea,
+.onboardingGrid select,
+.onboardingSoloField input,
+.onboardingSoloField textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  padding: 12px 14px;
+}
+
+.onboardingGrid input[type="checkbox"] {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--teal);
+}
+
+.onboardingGrid textarea,
+.onboardingSoloField textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.pricingEditor {
+  display: grid;
+  gap: 14px;
+}
+
+.pricingEditorRow {
+  display: grid;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  padding: 14px;
+}
+
+.pricingEditorHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.pricingEditorHeader div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pricingEditorHeader button,
+.pricingEditorAdd,
+.pricingEditorToggle {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  padding: 8px 12px;
+  font-weight: 800;
+}
+
+.pricingEditorAdd {
+  width: fit-content;
+  background: var(--teal);
+  color: #fff;
+}
+
+.pricingEditorToggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.membershipCardGrid .membershipChoice {
+  cursor: pointer;
+}
+
+.membershipChoiceActive {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(8, 127, 122, 0.14);
+}
+
+.verificationChecklistPanel,
+.applicationVerificationPanel {
+  display: grid;
+  gap: 16px;
+  border: 1px solid rgba(8, 127, 122, 0.18);
+  border-radius: 8px;
+  background: rgba(8, 127, 122, 0.05);
+  padding: 16px;
+}
+
+.verificationCompletionBar {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.1);
+}
+
+.verificationCompletionBar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--teal), var(--gold));
+}
+
+.verificationDocumentGrid,
+.applicationVerificationList {
+  display: grid;
+  gap: 12px;
+}
+
+.verificationDocumentCard,
+.applicationVerificationList article {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  padding: 14px;
+}
+
+.verificationDocumentCard > div,
+.applicationVerificationList article > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.verificationDocumentCard span,
+.applicationVerificationList article span,
+.applicationVerificationList article p {
+  color: var(--muted);
+}
+
+.adminContentStatusVerified {
+  border-color: rgba(8, 127, 122, 0.3);
+  background: rgba(8, 127, 122, 0.1);
+  color: var(--teal-dark);
+}
+
+.adminContentStatusPending {
+  border-color: rgba(182, 135, 62, 0.35);
+  background: rgba(182, 135, 62, 0.12);
+  color: #7a5620;
 }
 
 .onboardingSteps {

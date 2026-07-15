@@ -1,26 +1,43 @@
 "use client";
 
 import { useState } from "react";
+import { savePartnerGallery } from "@/app/partner/actions";
 import { partnerGallery } from "@/data/partnerPortal";
 import { getMediaForEntity } from "@/lib/platform/selectors";
+import type { PartnerPortalGalleryItem } from "@/lib/partner-portal/partnerAccess";
 
-export function PartnerGalleryManager() {
+export function PartnerGalleryManager({ initialGallery }: { initialGallery?: PartnerPortalGalleryItem[] }) {
   const linkedImages = getMediaForEntity("partner", "partner-thoddoo-sun-sky").map((asset) => ({
     id: asset.id,
     path: asset.path,
     caption: asset.caption,
-    isHero: asset.isHero
+    altText: asset.altText,
+    usage: asset.isHero ? "hero" : "gallery",
+    sortOrder: 0
   }));
-  const [images, setImages] = useState(linkedImages.length > 0 ? linkedImages : partnerGallery);
-  const [notice, setNotice] = useState("Gallery demo state ready.");
+  const [images, setImages] = useState<PartnerPortalGalleryItem[]>(
+    initialGallery !== undefined
+      ? initialGallery
+      : linkedImages.length > 0
+        ? linkedImages as PartnerPortalGalleryItem[]
+        : partnerGallery.map((image, index) => ({
+            id: image.id,
+            path: image.path,
+            caption: image.caption,
+            altText: image.caption,
+            usage: image.isHero ? "hero" : "gallery",
+            sortOrder: index
+          }))
+  );
+  const [notice, setNotice] = useState("Gallery ready.");
 
   function markHero(id: string) {
-    setImages((current) => current.map((image) => ({ ...image, isHero: image.id === id })));
+    setImages((current) => current.map((image) => ({ ...image, usage: image.id === id ? "hero" : "gallery" })));
   }
 
   function removeImage(id: string) {
     setImages((current) => current.filter((image) => image.id !== id));
-    setNotice("Demo image removed from local state.");
+    setNotice("Image removed from the pending gallery changes.");
   }
 
   function moveFirst(id: string) {
@@ -31,6 +48,11 @@ export function PartnerGalleryManager() {
       }
       return [selected, ...current.filter((image) => image.id !== id)];
     });
+  }
+
+  async function saveGallery() {
+    const result = await savePartnerGallery(images.map((image, index) => ({ ...image, sortOrder: index })));
+    setNotice(result.message);
   }
 
   return (
@@ -44,6 +66,9 @@ export function PartnerGalleryManager() {
         <button onClick={() => setNotice("Upload placeholder queued. Connect to storage later.")} type="button">
           Upload Placeholder
         </button>
+        <button onClick={saveGallery} type="button">
+          Save Gallery
+        </button>
       </section>
 
       <section className="partnerPortalGalleryGrid">
@@ -52,7 +77,17 @@ export function PartnerGalleryManager() {
             <div style={{ backgroundImage: `url('${image.path}')` }} />
             <h2>{image.caption}</h2>
             <p>{image.path}</p>
-            <div className="partnerPortalPills">{image.isHero ? <span>Hero image</span> : <span>Gallery image</span>}</div>
+            <input
+              value={image.caption}
+              onChange={(event) => setImages((current) => current.map((item) => item.id === image.id ? { ...item, caption: event.target.value } : item))}
+              aria-label="Caption"
+            />
+            <input
+              value={image.altText}
+              onChange={(event) => setImages((current) => current.map((item) => item.id === image.id ? { ...item, altText: event.target.value } : item))}
+              aria-label="Alt text"
+            />
+            <div className="partnerPortalPills">{image.usage === "hero" ? <span>Hero image</span> : <span>{image.usage}</span>}</div>
             <div className="partnerPortalActions">
               <button onClick={() => markHero(image.id)} type="button">
                 Choose Hero
@@ -61,7 +96,7 @@ export function PartnerGalleryManager() {
                 Move First
               </button>
               <button onClick={() => removeImage(image.id)} type="button">
-                Delete Demo
+                Delete
               </button>
             </div>
           </article>

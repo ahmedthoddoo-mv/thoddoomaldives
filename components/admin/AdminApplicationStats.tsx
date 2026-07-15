@@ -7,24 +7,44 @@ import {
 } from "@/lib/applications/partnerApplicationRepository";
 import type { PartnerApplicationRecord } from "@/types/partner-application";
 
-export function AdminApplicationStats() {
+export function AdminApplicationStats({ initialApplications }: { initialApplications?: PartnerApplicationRecord[] }) {
+  const hasServerApplications = Boolean(initialApplications);
   const [applications, setApplications] = useState<PartnerApplicationRecord[]>(() =>
-    PartnerApplicationRepository.findAll()
+    initialApplications ?? PartnerApplicationRepository.findAll()
   );
 
-  useEffect(() => subscribeToPartnerApplications(() => setApplications(PartnerApplicationRepository.findAll())), []);
+  useEffect(() => {
+    if (hasServerApplications) {
+      setApplications(initialApplications ?? []);
+      return () => undefined;
+    }
 
-  const stats = useMemo(
-    () => [
+    return subscribeToPartnerApplications(() => setApplications(PartnerApplicationRepository.findAll()));
+  }, [hasServerApplications, initialApplications]);
+
+  const stats = useMemo(() => {
+    const applicationsWithDocuments = applications.filter(
+      (item) => item.verificationDocuments && item.verificationDocuments.length > 0
+    );
+    const averageCompletion =
+      applicationsWithDocuments.length > 0
+        ? Math.round(
+            applicationsWithDocuments.reduce((total, item) => total + (item.verificationCompletion ?? 0), 0) /
+              applicationsWithDocuments.length
+          )
+        : 0;
+    const missingDocuments = applications.filter((item) => (item.verificationCompletion ?? 0) < 100).length;
+
+    return [
       { label: "New applications", value: applications.filter((item) => item.status === "submitted").length },
       { label: "Under review", value: applications.filter((item) => item.status === "under_review").length },
       { label: "Changes requested", value: applications.filter((item) => item.status === "changes_requested").length },
       { label: "Approved", value: applications.filter((item) => item.status === "approved").length },
       { label: "Rejected", value: applications.filter((item) => item.status === "rejected").length },
-      { label: "Awaiting partner", value: applications.filter((item) => item.status === "changes_requested").length }
-    ],
-    [applications]
-  );
+      { label: "Verification complete", value: `${averageCompletion}%` },
+      { label: "Missing documents", value: missingDocuments }
+    ];
+  }, [applications]);
 
   return (
     <section className="adminPanel">

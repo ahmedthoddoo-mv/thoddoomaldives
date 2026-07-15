@@ -1,4 +1,5 @@
 import type { MembershipTier } from "@/types/membership";
+import type { PartnerVerificationDocumentInput } from "@/types/verification-documents";
 
 export type PartnerApplicationStatus =
   | "draft"
@@ -80,6 +81,8 @@ export type PartnerApplicationRecord = {
   listingWorkflow: PartnerApplicationListingWorkflow;
   listingPublicationStatus: "draft" | "pending" | "published" | "archived";
   verificationStatus: "unverified" | "pending" | "verified" | "rejected";
+  verificationDocuments?: PartnerVerificationDocumentInput[];
+  verificationCompletion?: number;
   timeline: PartnerApplicationTimelineEvent[];
 };
 
