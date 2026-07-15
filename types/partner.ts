@@ -1,19 +1,7 @@
 import type { MembershipTier } from "./membership";
+import type { BusinessType } from "@/types/business-type";
 
-export type PartnerCategory =
-  | "guesthouse"
-  | "hotel"
-  | "speedboat-company"
-  | "ferry-operator"
-  | "dive-center"
-  | "watersports"
-  | "restaurant"
-  | "cafe"
-  | "photographer"
-  | "taxi-service"
-  | "shop"
-  | "wellness-spa"
-  | "tour-guide";
+export type PartnerCategory = BusinessType;
 
 export type PartnerVerificationStatus =
   | "draft"

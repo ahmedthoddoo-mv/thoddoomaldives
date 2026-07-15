@@ -6,6 +6,7 @@ import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
 import { getDataMode } from "@/lib/supabase/status";
 import type { PartnerApplicationRecord, PartnerApplicationBusinessType } from "@/types/partner-application";
 import type { SmartPartnerApplicationInput } from "@/types/partner-smart-onboarding";
+import { getBusinessTypeListingWorkflow, normalizeBusinessType } from "@/types/business-type";
 import { getVerificationCompletion, getVerificationRequirements } from "@/types/verification-documents";
 
 export type SmartPartnerApplicationResult = {
@@ -19,24 +20,6 @@ export type SmartPartnerApplicationResult = {
   duplicateWarning?: string;
 };
 
-const allowedBusinessTypes: PartnerApplicationBusinessType[] = [
-  "guesthouse",
-  "hotel",
-  "restaurant",
-  "cafe",
-  "speedboat-company",
-  "ferry-operator",
-  "excursion-operator",
-  "dive-center",
-  "watersports",
-  "shop",
-  "photographer",
-  "wellness",
-  "farm-experience",
-  "local-guide",
-  "other"
-];
-
 const submissionAttempts = new Map<string, number[]>();
 const submissionWindowMs = 10 * 60 * 1000;
 const submissionLimit = 5;
@@ -47,13 +30,6 @@ function sanitizeText(value: string, maxLength = 1200) {
 
 function normalizePhone(value: string) {
   return value.replace(/[^\d+]/g, "");
-}
-
-function normalizeBusinessType(value: string): PartnerApplicationBusinessType {
-  if (value === "transfer-company") return "speedboat-company";
-  return allowedBusinessTypes.includes(value as PartnerApplicationBusinessType)
-    ? (value as PartnerApplicationBusinessType)
-    : "other";
 }
 
 function logSupabaseWriteError(stage: string, error: unknown) {
@@ -69,11 +45,7 @@ function logSupabaseWriteError(stage: string, error: unknown) {
 }
 
 function getListingWorkflow(type: PartnerApplicationBusinessType): PartnerApplicationRecord["listingWorkflow"] {
-  if (type === "guesthouse" || type === "hotel") return "property";
-  if (type === "restaurant" || type === "cafe") return "restaurant";
-  if (type === "speedboat-company" || type === "ferry-operator") return "transfer";
-  if (["excursion-operator", "dive-center", "watersports", "farm-experience", "local-guide"].includes(type)) return "experience";
-  return "business";
+  return getBusinessTypeListingWorkflow(type);
 }
 
 function validateApplication(input: SmartPartnerApplicationInput) {
@@ -204,12 +176,13 @@ export async function submitSmartPartnerApplication(input: SmartPartnerApplicati
     };
   }
 
-  const errors = validateApplication(input);
+  const canonicalInput = { ...input, businessType: normalizeBusinessType(input.businessType) };
+  const errors = validateApplication(canonicalInput);
   if (errors.length > 0) {
     return { ok: false, mode: "supabase", message: "Please fix the application details.", errors };
   }
 
-  if (!checkSubmissionRateLimit(input)) {
+  if (!checkSubmissionRateLimit(canonicalInput)) {
     return {
       ok: false,
       mode: "supabase",
@@ -229,7 +202,7 @@ export async function submitSmartPartnerApplication(input: SmartPartnerApplicati
   }
 
   const db = supabase as any;
-  const businessType = normalizeBusinessType(input.businessType);
+  const businessType = normalizeBusinessType(canonicalInput.businessType);
   let reference = "";
   try {
     reference = await createApplicationReference(db);
@@ -242,12 +215,12 @@ export async function submitSmartPartnerApplication(input: SmartPartnerApplicati
       errors: ["Please try again or contact iThoddoo Maldives."]
     };
   }
-  const normalizedWhatsapp = normalizePhone(input.whatsapp);
+  const normalizedWhatsapp = normalizePhone(canonicalInput.whatsapp);
 
   const { data: duplicate, error: duplicateError } = await db
     .from("partner_applications")
     .select("id, business_name")
-    .or(`business_name.ilike.%${sanitizeText(input.businessName, 80)}%,email.eq.${input.email.trim()},whatsapp.eq.${normalizedWhatsapp}`)
+    .or(`business_name.ilike.%${sanitizeText(canonicalInput.businessName, 80)}%,email.eq.${canonicalInput.email.trim()},whatsapp.eq.${normalizedWhatsapp}`)
     .limit(1)
     .maybeSingle();
 
@@ -256,11 +229,11 @@ export async function submitSmartPartnerApplication(input: SmartPartnerApplicati
   }
 
   const metadata = {
-    googleMapsLink: sanitizeText(input.googleMapsLink, 600),
-    registrationNumber: sanitizeText(input.registrationNumber, 160),
-    fullDescription: sanitizeText(input.fullDescription, 2400),
-    categoryAnswers: input.categoryAnswers,
-    verificationCompletion: getVerificationCompletion(input.verificationDocuments),
+    googleMapsLink: sanitizeText(canonicalInput.googleMapsLink, 600),
+    registrationNumber: sanitizeText(canonicalInput.registrationNumber, 160),
+    fullDescription: sanitizeText(canonicalInput.fullDescription, 2400),
+    categoryAnswers: canonicalInput.categoryAnswers,
+    verificationCompletion: getVerificationCompletion(canonicalInput.verificationDocuments),
     source: "smart_partner_onboarding"
   };
   const now = new Date().toISOString();
@@ -269,23 +242,23 @@ export async function submitSmartPartnerApplication(input: SmartPartnerApplicati
     .from("partner_applications")
     .insert({
       application_reference: reference,
-      business_name: sanitizeText(input.businessName, 180),
+      business_name: sanitizeText(canonicalInput.businessName, 180),
       business_type: businessType,
-      contact_person: sanitizeText(input.contactPerson, 180),
+      contact_person: sanitizeText(canonicalInput.contactPerson, 180),
       whatsapp: normalizedWhatsapp,
-      email: input.email.trim().toLowerCase(),
-      island: sanitizeText(input.island, 80),
-      address: sanitizeText(input.address, 300),
-      google_maps_link: sanitizeText(input.googleMapsLink, 600),
-      website: sanitizeText(input.website, 300),
-      instagram: sanitizeText(input.instagram, 300),
-      facebook: sanitizeText(input.facebook, 300),
-      short_description: sanitizeText(input.shortDescription, 1000),
-      registration_number: sanitizeText(input.registrationNumber, 160),
-      membership_plan: input.membershipPlan,
+      email: canonicalInput.email.trim().toLowerCase(),
+      island: sanitizeText(canonicalInput.island, 80),
+      address: sanitizeText(canonicalInput.address, 300),
+      google_maps_link: sanitizeText(canonicalInput.googleMapsLink, 600),
+      website: sanitizeText(canonicalInput.website, 300),
+      instagram: sanitizeText(canonicalInput.instagram, 300),
+      facebook: sanitizeText(canonicalInput.facebook, 300),
+      short_description: sanitizeText(canonicalInput.shortDescription, 1000),
+      registration_number: sanitizeText(canonicalInput.registrationNumber, 160),
+      membership_plan: canonicalInput.membershipPlan,
       status: "submitted",
       metadata,
-      notes: sanitizeText(input.notes, 1200),
+      notes: sanitizeText(canonicalInput.notes, 1200),
       missing_information: [],
       review_notes: [],
       submitted_at: now,
@@ -316,7 +289,7 @@ export async function submitSmartPartnerApplication(input: SmartPartnerApplicati
     };
   }
 
-  const activePrices = input.prices.filter((price) => price.itemName.trim());
+  const activePrices = canonicalInput.prices.filter((price) => price.itemName.trim());
   if (activePrices.length > 0) {
     const { error: pricesError } = await db.from("partner_application_prices").insert(
       activePrices.map((price, index) => ({
@@ -335,7 +308,7 @@ export async function submitSmartPartnerApplication(input: SmartPartnerApplicati
     if (pricesError) return failAfterPartialWrite("partner_application_prices_insert", pricesError, "Pricing could not be saved.");
   }
 
-  const mediaRows = input.media.filter((media) => media.pathOrNote.trim() || media.fileName.trim());
+  const mediaRows = canonicalInput.media.filter((media) => media.pathOrNote.trim() || media.fileName.trim());
   if (mediaRows.length > 0) {
     const { error: mediaError } = await db.from("partner_application_media").insert(
       mediaRows.map((media, index) => ({
@@ -351,7 +324,7 @@ export async function submitSmartPartnerApplication(input: SmartPartnerApplicati
     if (mediaError) return failAfterPartialWrite("partner_application_media_insert", mediaError, "Media metadata could not be saved.");
   }
 
-  const serviceRows = Object.entries(input.categoryAnswers).filter(([, value]) => String(value).trim());
+  const serviceRows = Object.entries(canonicalInput.categoryAnswers).filter(([, value]) => String(value).trim());
   if (serviceRows.length > 0) {
     const { error: serviceError } = await db.from("partner_application_services").insert(
       serviceRows.map(([key, value], index) => ({
@@ -365,7 +338,7 @@ export async function submitSmartPartnerApplication(input: SmartPartnerApplicati
     if (serviceError) return failAfterPartialWrite("partner_application_services_insert", serviceError, "Service answers could not be saved.");
   }
 
-  const verificationDocumentRows = input.verificationDocuments.map((document) => ({
+  const verificationDocumentRows = canonicalInput.verificationDocuments.map((document) => ({
     application_id: applicationRow.id,
     document_key: document.key,
     document_label: sanitizeText(document.label, 180),
@@ -392,7 +365,7 @@ export async function submitSmartPartnerApplication(input: SmartPartnerApplicati
 
   const crmNoteResult = await db.from("crm_notes").insert({
     author: "Partner Onboarding",
-    body: `Application ${reference} submitted by ${input.businessName}. Duplicate check: ${duplicate?.business_name ?? "none found"}.`
+    body: `Application ${reference} submitted by ${canonicalInput.businessName}. Duplicate check: ${duplicate?.business_name ?? "none found"}.`
   });
   if (crmNoteResult.error) logSupabaseWriteError("crm_notes_insert", crmNoteResult.error);
 
@@ -406,7 +379,7 @@ export async function submitSmartPartnerApplication(input: SmartPartnerApplicati
   });
   if (crmTaskResult.error) logSupabaseWriteError("crm_tasks_insert", crmTaskResult.error);
 
-  const summary = buildApplicationSummary(input, reference);
+  const summary = buildApplicationSummary(canonicalInput, reference);
   const officialWhatsapp = platformConfig.whatsappNumbers.partnerships.replace(/\D/g, "");
   const whatsappUrl = `https://wa.me/${officialWhatsapp}?text=${encodeURIComponent(summary)}`;
 
@@ -415,7 +388,7 @@ export async function submitSmartPartnerApplication(input: SmartPartnerApplicati
     mode: "supabase",
     message: `Application ${reference} submitted successfully.`,
     reference,
-    application: mapSavedApplication(applicationRow, input),
+    application: mapSavedApplication(applicationRow, canonicalInput),
     whatsappUrl,
     duplicateWarning: duplicate ? `Possible duplicate found: ${duplicate.business_name}` : undefined
   };

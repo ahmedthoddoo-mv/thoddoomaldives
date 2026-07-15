@@ -1,5 +1,6 @@
 import type { MembershipTier } from "@/types/membership";
 import type { PartnerVerificationDocumentInput } from "@/types/verification-documents";
+import type { BusinessType } from "@/types/business-type";
 
 export type PartnerApplicationStatus =
   | "draft"
@@ -10,22 +11,7 @@ export type PartnerApplicationStatus =
   | "rejected"
   | "withdrawn";
 
-export type PartnerApplicationBusinessType =
-  | "guesthouse"
-  | "hotel"
-  | "restaurant"
-  | "cafe"
-  | "speedboat-company"
-  | "ferry-operator"
-  | "excursion-operator"
-  | "dive-center"
-  | "watersports"
-  | "shop"
-  | "photographer"
-  | "wellness"
-  | "farm-experience"
-  | "local-guide"
-  | "other";
+export type PartnerApplicationBusinessType = BusinessType;
 
 export type PartnerApplicationTimelineType =
   | "submitted"

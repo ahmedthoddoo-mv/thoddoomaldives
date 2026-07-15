@@ -2,7 +2,7 @@ import type { MembershipTier } from "@/types/membership";
 import type { PartnerApplicationBusinessType } from "@/types/partner-application";
 import type { PartnerVerificationDocumentInput } from "@/types/verification-documents";
 
-export type SmartBusinessType = PartnerApplicationBusinessType | "transfer-company";
+export type SmartBusinessType = PartnerApplicationBusinessType;
 
 export type PricingUnit =
   | "per night"

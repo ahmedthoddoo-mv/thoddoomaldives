@@ -8,6 +8,7 @@ import type {
   PartnerApplicationRecord,
   PartnerApplicationStatus
 } from "@/types/partner-application";
+import { getBusinessTypeListingWorkflow, normalizeBusinessType } from "@/types/business-type";
 import type { PartnerVerificationDocumentInput, VerificationDocumentStatus } from "@/types/verification-documents";
 import { getVerificationCompletion } from "@/types/verification-documents";
 
@@ -76,24 +77,6 @@ type PartnerApplicationVerificationDocumentRow = {
   updated_at: string;
 };
 
-const businessTypes: PartnerApplicationBusinessType[] = [
-  "guesthouse",
-  "hotel",
-  "restaurant",
-  "cafe",
-  "speedboat-company",
-  "ferry-operator",
-  "excursion-operator",
-  "dive-center",
-  "watersports",
-  "shop",
-  "photographer",
-  "wellness",
-  "farm-experience",
-  "local-guide",
-  "other"
-];
-
 const applicationStatuses: PartnerApplicationStatus[] = [
   "draft",
   "submitted",
@@ -106,12 +89,6 @@ const applicationStatuses: PartnerApplicationStatus[] = [
 
 const membershipTiers: MembershipTier[] = ["free", "verified", "premium"];
 
-function normalizeBusinessType(value: string): PartnerApplicationBusinessType {
-  return businessTypes.includes(value as PartnerApplicationBusinessType)
-    ? (value as PartnerApplicationBusinessType)
-    : "other";
-}
-
 function normalizeStatus(value: string): PartnerApplicationStatus {
   return applicationStatuses.includes(value as PartnerApplicationStatus)
     ? (value as PartnerApplicationStatus)
@@ -123,13 +100,7 @@ function normalizeMembership(value: string): MembershipTier {
 }
 
 function getListingWorkflow(type: PartnerApplicationBusinessType): PartnerApplicationListingWorkflow {
-  if (type === "guesthouse" || type === "hotel") return "property";
-  if (type === "restaurant" || type === "cafe") return "restaurant";
-  if (type === "speedboat-company" || type === "ferry-operator") return "transfer";
-  if (["excursion-operator", "dive-center", "watersports", "farm-experience", "local-guide"].includes(type)) {
-    return "experience";
-  }
-  return "business";
+  return getBusinessTypeListingWorkflow(type);
 }
 
 function byApplicationId<T extends { application_id: string; sort_order: number }>(rows: T[], applicationId: string) {

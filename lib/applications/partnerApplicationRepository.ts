@@ -4,6 +4,7 @@ import { defaultPartnerApplications } from "@/data/partnerApplications";
 import type { AdminManagedProperty } from "@/data/adminContent";
 import { saveAdminProperty } from "@/lib/properties/propertyStore";
 import { createPropertySlug } from "@/lib/properties/propertySlug";
+import { getBusinessTypeListingWorkflow, normalizeBusinessType } from "@/types/business-type";
 import type { PartnerOnboardingApplication } from "@/types/partner-onboarding";
 import type {
   ApplicationDecisionResult,
@@ -121,60 +122,8 @@ function appendCrmEvent(application: PartnerApplicationRecord, event: PartnerApp
   }
 }
 
-function normalizeBusinessType(value: string): PartnerApplicationBusinessType {
-  if (value === "tour-guide") {
-    return "local-guide";
-  }
-
-  if (value === "wellness-spa") {
-    return "wellness";
-  }
-
-  if (value === "taxi-service") {
-    return "speedboat-company";
-  }
-
-  const allowed: PartnerApplicationBusinessType[] = [
-    "guesthouse",
-    "hotel",
-    "restaurant",
-    "cafe",
-    "speedboat-company",
-    "ferry-operator",
-    "excursion-operator",
-    "dive-center",
-    "watersports",
-    "shop",
-    "photographer",
-    "wellness",
-    "farm-experience",
-    "local-guide",
-    "other"
-  ];
-
-  return allowed.includes(value as PartnerApplicationBusinessType)
-    ? (value as PartnerApplicationBusinessType)
-    : "other";
-}
-
 function getListingWorkflow(businessType: PartnerApplicationBusinessType): PartnerApplicationListingWorkflow {
-  if (businessType === "guesthouse" || businessType === "hotel") {
-    return "property";
-  }
-
-  if (businessType === "restaurant" || businessType === "cafe") {
-    return "restaurant";
-  }
-
-  if (businessType === "speedboat-company" || businessType === "ferry-operator") {
-    return "transfer";
-  }
-
-  if (["excursion-operator", "dive-center", "watersports", "local-guide", "farm-experience"].includes(businessType)) {
-    return "experience";
-  }
-
-  return "business";
+  return getBusinessTypeListingWorkflow(businessType);
 }
 
 function upsertApplication(updatedApplication: PartnerApplicationRecord) {

@@ -13,6 +13,7 @@ import {
   validateCategoryAnswers,
   validatePricingRows
 } from "@/lib/partner-onboarding/onboardingSchemas";
+import { getBusinessTypeSchemaKind, normalizeBusinessType } from "@/types/business-type";
 import type { PartnerCategoryDefinition } from "@/types/partner";
 import type {
   PartnerApplicationMediaInput,
@@ -75,15 +76,13 @@ function createInitialApplication(): SmartPartnerApplicationInput {
 }
 
 function getCategoryKey(type: SmartBusinessType) {
-  if (type === "guesthouse" || type === "hotel") return "accommodation";
-  if (type === "restaurant" || type === "cafe") return "dining";
-  if (type === "watersports" || type === "excursion-operator" || type === "dive-center") return "activity";
-  if (type === "speedboat-company" || type === "ferry-operator" || type === "transfer-company") return "transfer";
-  if (type === "shop") return "shop";
-  if (type === "photographer") return "photographer";
-  if (type === "wellness") return "wellness";
-  if (type === "farm-experience") return "farm";
-  if (type === "local-guide") return "guide";
+  const schemaKind = getBusinessTypeSchemaKind(type);
+  if (schemaKind === "accommodation") return "accommodation";
+  if (schemaKind === "dining") return "dining";
+  if (schemaKind === "activity-service") return "activity";
+  if (schemaKind === "transfer") return "transfer";
+  if (schemaKind === "shop") return "shop";
+  if (schemaKind === "wellness") return "wellness";
   return "other";
 }
 
@@ -119,9 +118,11 @@ function mergeVerificationDocuments(type: SmartBusinessType, savedDocuments: Par
 }
 
 function buildMockApplication(input: SmartPartnerApplicationInput) {
+  const businessType = normalizeBusinessType(input.businessType);
+
   return {
     businessName: input.businessName,
-    businessType: input.businessType === "transfer-company" ? "speedboat-company" : input.businessType,
+    businessType,
     contactPerson: input.contactPerson,
     whatsappNumber: input.whatsapp,
     email: input.email,
@@ -144,9 +145,9 @@ function buildMockApplication(input: SmartPartnerApplicationInput) {
     capacity: String(input.categoryAnswers.vesselCapacity ?? input.categoryAnswers.maxGuests ?? input.categoryAnswers.roomCapacity ?? ""),
     departureTimes: String(input.categoryAnswers.schedule ?? ""),
     airportTransferSupport: String(input.categoryAnswers.airportRep ?? input.categoryAnswers.airportTransfer ?? ""),
-    activityType: String(input.categoryAnswers.activities ?? input.categoryAnswers.tourTypes ?? ""),
+    activityType: String(input.categoryAnswers.activityName ?? input.categoryAnswers.activities ?? input.categoryAnswers.tourTypes ?? ""),
     duration: String(input.categoryAnswers.duration ?? ""),
-    includedItems: String(input.categoryAnswers.includedEquipment ?? input.categoryAnswers.safetyEquipment ?? ""),
+    includedItems: String(input.categoryAnswers.includedItems ?? input.categoryAnswers.equipment ?? input.categoryAnswers.safetyInformation ?? ""),
     notes: input.notes
   };
 }
@@ -160,6 +161,7 @@ export function PartnerOnboardingForm(_props: PartnerOnboardingFormProps) {
   const [duplicateWarning, setDuplicateWarning] = useState("");
   const [isPending, startTransition] = useTransition();
   const schema = getBusinessTypeSchema(application.businessType);
+  const schemaKind = getBusinessTypeSchemaKind(application.businessType);
   const fields = schema.fields;
 
   useEffect(() => {
@@ -167,11 +169,15 @@ export function PartnerOnboardingForm(_props: PartnerOnboardingFormProps) {
       const raw = window.localStorage.getItem(draftKey);
       if (raw) {
         const savedApplication = JSON.parse(raw) as Partial<SmartPartnerApplicationInput>;
-        const nextBusinessType = savedApplication.businessType ?? "guesthouse";
+        const nextBusinessType = normalizeBusinessType(savedApplication.businessType ?? "guesthouse");
         setApplication({
           ...createInitialApplication(),
           ...savedApplication,
           businessType: nextBusinessType,
+          categoryAnswers:
+            nextBusinessType === normalizeBusinessType(savedApplication.businessType)
+              ? savedApplication.categoryAnswers ?? {}
+              : {},
           verificationDocuments: mergeVerificationDocuments(nextBusinessType, savedApplication.verificationDocuments)
         });
       }
@@ -200,13 +206,14 @@ export function PartnerOnboardingForm(_props: PartnerOnboardingFormProps) {
   }
 
   function changeBusinessType(type: SmartBusinessType) {
-    const nextSchema = getBusinessTypeSchema(type);
+    const nextBusinessType = normalizeBusinessType(type);
+    const nextSchema = getBusinessTypeSchema(nextBusinessType);
     setApplication((current) => ({
       ...current,
-      businessType: type,
+      businessType: nextBusinessType,
       categoryAnswers: {},
       prices: [createPricingRow({ unit: nextSchema.pricing.defaultUnit })],
-      verificationDocuments: mergeVerificationDocuments(type)
+      verificationDocuments: mergeVerificationDocuments(nextBusinessType)
     }));
   }
 
@@ -349,6 +356,12 @@ export function PartnerOnboardingForm(_props: PartnerOnboardingFormProps) {
         <div className="bookingValidationPanel" role="alert">
           <strong>Please fix these details</strong>
           <ul>{errors.map((error) => <li key={error}>{error}</li>)}</ul>
+        </div>
+      ) : null}
+
+      {process.env.NODE_ENV !== "production" ? (
+        <div className="onboardingSchemaIndicator">
+          Selected type: {schema.label} · Schema: {schemaKind}
         </div>
       ) : null}
 

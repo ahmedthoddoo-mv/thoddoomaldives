@@ -65,11 +65,11 @@ export const partnerCategories: PartnerCategoryDefinition[] = [
     defaultServiceType: "local-service"
   },
   {
-    id: "taxi-service",
-    label: "Taxi Service",
-    pluralLabel: "Taxi Services",
+    id: "transfer-company",
+    label: "Transfer Company",
+    pluralLabel: "Transfer Companies",
     description: "Island mobility providers for guest movement and local transfers.",
-    defaultServiceType: "local-service"
+    defaultServiceType: "transfer"
   },
   {
     id: "shop",
@@ -79,16 +79,16 @@ export const partnerCategories: PartnerCategoryDefinition[] = [
     defaultServiceType: "retail"
   },
   {
-    id: "wellness-spa",
-    label: "Wellness & Spa",
-    pluralLabel: "Wellness & Spa",
+    id: "wellness",
+    label: "Wellness",
+    pluralLabel: "Wellness",
     description: "Massage, spa, recovery, and wellness experiences.",
     defaultServiceType: "wellness"
   },
   {
-    id: "tour-guide",
-    label: "Tour Guide",
-    pluralLabel: "Tour Guides",
+    id: "local-guide",
+    label: "Local Guide",
+    pluralLabel: "Local Guides",
     description: "Local guides offering culture, nature, food, and island discovery experiences.",
     defaultServiceType: "activity"
   }

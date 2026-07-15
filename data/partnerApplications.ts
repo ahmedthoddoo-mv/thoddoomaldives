@@ -4,27 +4,16 @@ import type {
   PartnerApplicationStatus
 } from "@/types/partner-application";
 import type { MembershipTier } from "@/types/membership";
+import {
+  businessTypeOptions,
+  getBusinessTypeLabel,
+  normalizeBusinessType
+} from "@/types/business-type";
 
 export const partnerApplicationBusinessTypes: Array<{
   value: PartnerApplicationBusinessType;
   label: string;
-}> = [
-  { value: "guesthouse", label: "Guesthouse" },
-  { value: "hotel", label: "Hotel" },
-  { value: "restaurant", label: "Restaurant" },
-  { value: "cafe", label: "Cafe" },
-  { value: "speedboat-company", label: "Speedboat Company" },
-  { value: "ferry-operator", label: "Ferry Operator" },
-  { value: "excursion-operator", label: "Excursion Operator" },
-  { value: "dive-center", label: "Dive Center" },
-  { value: "watersports", label: "Watersports" },
-  { value: "shop", label: "Shop" },
-  { value: "photographer", label: "Photographer" },
-  { value: "wellness", label: "Wellness" },
-  { value: "farm-experience", label: "Farm Experience" },
-  { value: "local-guide", label: "Local Guide" },
-  { value: "other", label: "Other" }
-];
+}> = businessTypeOptions.map(({ id, label }) => ({ value: id, label }));
 
 export const partnerApplicationStatuses: Array<{
   value: PartnerApplicationStatus;
@@ -185,8 +174,8 @@ export const defaultPartnerApplications: PartnerApplicationRecord[] = [
   }
 ];
 
-export function getPartnerApplicationBusinessTypeLabel(value: PartnerApplicationBusinessType) {
-  return partnerApplicationBusinessTypes.find((type) => type.value === value)?.label ?? "Other";
+export function getPartnerApplicationBusinessTypeLabel(value: PartnerApplicationBusinessType | string) {
+  return getBusinessTypeLabel(normalizeBusinessType(value));
 }
 
 export function getPartnerApplicationStatusLabel(value: PartnerApplicationStatus) {

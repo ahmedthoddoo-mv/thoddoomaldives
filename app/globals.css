@@ -4834,6 +4834,18 @@ body {
   color: #fff;
 }
 
+.onboardingSchemaIndicator {
+  display: inline-flex;
+  width: fit-content;
+  margin: 0 0 1rem;
+  border: 1px solid rgba(8, 127, 122, 0.32);
+  border-radius: 999px;
+  padding: 0.45rem 0.8rem;
+  color: var(--teal-dark);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
 .formSection {
   display: grid;
   gap: 20px;

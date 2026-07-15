@@ -3,6 +3,13 @@ import type {
   PricingUnit,
   SmartBusinessType
 } from "@/types/partner-smart-onboarding";
+import {
+  businessTypeOptions as canonicalBusinessTypeOptions,
+  getBusinessTypeDefinition,
+  getBusinessTypeSchemaKind,
+  normalizeBusinessType,
+  type BusinessTypeSchemaKind
+} from "@/types/business-type";
 
 export type OnboardingFieldDefinition = {
   key: string;
@@ -34,6 +41,7 @@ export type BusinessTypeOption = {
 };
 
 export type BusinessTypeSchema = BusinessTypeOption & {
+  schemaKind: BusinessTypeSchemaKind;
   sectionTitle: string;
   sectionDescription: string;
   fields: OnboardingFieldDefinition[];
@@ -55,9 +63,9 @@ const accommodationPricing: PricingEditorCopy = {
 };
 
 const activityPricing: PricingEditorCopy = {
-  heading: "Activity pricing",
-  helper: "Add each tour, activity, dive, package, or equipment-supported service.",
-  rowLabel: "Activity",
+  heading: "Activity/service pricing",
+  helper: "Add each tour, activity, guided service, package, or equipment-supported offer.",
+  rowLabel: "Activity/service",
   itemLabel: "Activity/service name",
   itemPlaceholder: "Turtle snorkeling, Discover scuba, Jet ski session...",
   descriptionPlaceholder: "Duration, inclusions, safety notes, or meeting point",
@@ -187,22 +195,24 @@ const accommodationFields: OnboardingFieldDefinition[] = [
 ];
 
 const activityFields: OnboardingFieldDefinition[] = [
-  { key: "activities", label: "Activities/services", placeholder: "Snorkeling, diving, sandbank, jet ski...", type: "textarea", required: true },
+  { key: "activityName", label: "Activity/service name", placeholder: "Turtle snorkeling, sandbank escape, island photo walk...", required: true },
+  { key: "activityCategory", label: "Category", placeholder: "Snorkeling, diving, watersports, farm tour, local guide...", required: true },
   { key: "duration", label: "Duration", placeholder: "2 hours, half-day, full-day", required: true },
   { key: "minGuests", label: "Minimum guests", placeholder: "Example: 2" },
   { key: "maxGuests", label: "Maximum guests", placeholder: "Example: 12", required: true },
-  { key: "includedEquipment", label: "Included equipment", placeholder: "Mask, fins, life jackets, dive gear...", type: "textarea" },
-  { key: "safetyEquipment", label: "Safety equipment", placeholder: "Life jackets, first aid, radio, oxygen kit...", type: "textarea" },
-  { key: "certification", label: "Certification/license", placeholder: "PADI, operator permit, guide license..." },
+  { key: "includedItems", label: "Included items", placeholder: "Guide, water, equipment, pickup, photos...", type: "textarea" },
+  { key: "excludedItems", label: "Excluded items", placeholder: "Meals, towels, private transfer, photos...", type: "textarea" },
+  { key: "equipment", label: "Equipment", placeholder: "Mask, fins, life jackets, dive gear, camera gear...", type: "textarea" },
+  { key: "safetyInformation", label: "Safety information", placeholder: "Swim ability, safety briefing, first aid, radio, oxygen kit...", type: "textarea", required: true },
   { key: "meetingPoint", label: "Meeting point", placeholder: "Harbour, dive center, beach, pickup point..." },
   { key: "operatingHours", label: "Operating hours", placeholder: "Daily 08:00-18:00", required: true },
   { key: "ageRestrictions", label: "Age restrictions", placeholder: "Minimum age, swim ability, certification level..." },
   { key: "weatherPolicy", label: "Weather cancellation policy", placeholder: "Reschedule/refund conditions..." },
   { key: "privateTrip", label: "Private trip available", placeholder: "", type: "checkbox" },
   { key: "groupTrip", label: "Group trip available", placeholder: "", type: "checkbox" },
+  { key: "pickup", label: "Pickup", placeholder: "", type: "checkbox" },
   { key: "gopro", label: "GoPro option", placeholder: "", type: "checkbox" },
   { key: "drone", label: "Drone option", placeholder: "", type: "checkbox" },
-  { key: "pickupIncluded", label: "Pickup included", placeholder: "", type: "checkbox" },
   { key: "languages", label: "Languages spoken", placeholder: "Dhivehi, English, Russian..." }
 ];
 
@@ -296,6 +306,7 @@ export const businessTypeSchemas: Record<SmartBusinessType, BusinessTypeSchema> 
     id: "guesthouse",
     label: "Guesthouse",
     description: "Rooms, guest policies, amenities, and stay operations.",
+    schemaKind: "accommodation",
     sectionTitle: "Rooms and stay details",
     sectionDescription: "Only accommodation fields are shown for guesthouses.",
     fields: accommodationFields,
@@ -305,6 +316,7 @@ export const businessTypeSchemas: Record<SmartBusinessType, BusinessTypeSchema> 
     id: "hotel",
     label: "Hotel",
     description: "Accommodation with structured room and service details.",
+    schemaKind: "accommodation",
     sectionTitle: "Rooms and hotel details",
     sectionDescription: "Only accommodation fields are shown for hotels.",
     fields: accommodationFields,
@@ -314,6 +326,7 @@ export const businessTypeSchemas: Record<SmartBusinessType, BusinessTypeSchema> 
     id: "watersports",
     label: "Watersports",
     description: "Water activities, equipment, safety, and add-ons.",
+    schemaKind: "activity-service",
     sectionTitle: "Watersports services",
     sectionDescription: "Add activities, equipment, safety information, operating hours, and trip options.",
     fields: activityFields,
@@ -323,6 +336,7 @@ export const businessTypeSchemas: Record<SmartBusinessType, BusinessTypeSchema> 
     id: "excursion-operator",
     label: "Excursion Operator",
     description: "Tours, activities, inclusions, and schedules.",
+    schemaKind: "activity-service",
     sectionTitle: "Excursions and inclusions",
     sectionDescription: "Add tours, durations, meeting points, inclusions, guest limits, and weather policies.",
     fields: activityFields,
@@ -332,6 +346,7 @@ export const businessTypeSchemas: Record<SmartBusinessType, BusinessTypeSchema> 
     id: "dive-center",
     label: "Dive Center",
     description: "Dives, certifications, equipment, and safety details.",
+    schemaKind: "activity-service",
     sectionTitle: "Dive services and safety",
     sectionDescription: "Add dive services, certification requirements, equipment, safety details, and schedules.",
     fields: activityFields,
@@ -341,6 +356,7 @@ export const businessTypeSchemas: Record<SmartBusinessType, BusinessTypeSchema> 
     id: "restaurant",
     label: "Restaurant",
     description: "Dining, menu, opening hours, and reservation details.",
+    schemaKind: "dining",
     sectionTitle: "Restaurant menu and service",
     sectionDescription: "Add cuisine, menu, opening hours, seating, delivery, and dietary options.",
     fields: diningFields,
@@ -350,6 +366,7 @@ export const businessTypeSchemas: Record<SmartBusinessType, BusinessTypeSchema> 
     id: "cafe",
     label: "Cafe",
     description: "Coffee, snacks, casual dining, and menu details.",
+    schemaKind: "dining",
     sectionTitle: "Cafe menu and service",
     sectionDescription: "Add menu items, drinks, opening hours, delivery, seating, and dietary options.",
     fields: diningFields,
@@ -359,6 +376,7 @@ export const businessTypeSchemas: Record<SmartBusinessType, BusinessTypeSchema> 
     id: "speedboat-company",
     label: "Speedboat Company",
     description: "Routes, schedules, fares, and vessel details.",
+    schemaKind: "transfer",
     sectionTitle: "Speedboat routes and fares",
     sectionDescription: "Add routes, schedules, fares, luggage, vessel capacity, and airport support.",
     fields: transferFields,
@@ -368,6 +386,7 @@ export const businessTypeSchemas: Record<SmartBusinessType, BusinessTypeSchema> 
     id: "ferry-operator",
     label: "Ferry Operator",
     description: "Public ferry routes, schedules, and fares.",
+    schemaKind: "transfer",
     sectionTitle: "Ferry routes and fares",
     sectionDescription: "Add route schedules, fare notes, luggage, capacity, and cancellation terms.",
     fields: transferFields,
@@ -377,6 +396,7 @@ export const businessTypeSchemas: Record<SmartBusinessType, BusinessTypeSchema> 
     id: "transfer-company",
     label: "Transfer Company",
     description: "Private transfers, pickup, drop-off, and route pricing.",
+    schemaKind: "transfer",
     sectionTitle: "Transfer routes and service details",
     sectionDescription: "Add pickup/drop-off, routes, schedules, fares, capacity, and booking cutoff details.",
     fields: transferFields,
@@ -386,6 +406,7 @@ export const businessTypeSchemas: Record<SmartBusinessType, BusinessTypeSchema> 
     id: "shop",
     label: "Shop",
     description: "Products, opening hours, delivery, and price range.",
+    schemaKind: "shop",
     sectionTitle: "Shop products and service",
     sectionDescription: "Add product categories, featured products, delivery details, opening hours, and price range.",
     fields: shopFields,
@@ -395,15 +416,17 @@ export const businessTypeSchemas: Record<SmartBusinessType, BusinessTypeSchema> 
     id: "photographer",
     label: "Photographer",
     description: "Packages, shoot duration, photos, video, and drone options.",
-    sectionTitle: "Photography packages",
-    sectionDescription: "Add packages, duration, photo count, video, drone, portfolio, and delivery details.",
-    fields: photographerFields,
-    pricing: photographerPricing
+    schemaKind: "activity-service",
+    sectionTitle: "Photography services",
+    sectionDescription: "Add activity/service details, duration, guest limits, equipment, safety notes, meeting point, and media options.",
+    fields: activityFields,
+    pricing: activityPricing
   },
   wellness: {
     id: "wellness",
     label: "Wellness",
     description: "Treatments, prices, booking hours, and duration.",
+    schemaKind: "wellness",
     sectionTitle: "Wellness treatments",
     sectionDescription: "Add treatments, prices, booking hours, duration, and therapist credentials.",
     fields: wellnessFields,
@@ -413,24 +436,27 @@ export const businessTypeSchemas: Record<SmartBusinessType, BusinessTypeSchema> 
     id: "farm-experience",
     label: "Farm Experience",
     description: "Farm activities, seasonal availability, and prices.",
+    schemaKind: "activity-service",
     sectionTitle: "Farm experiences",
-    sectionDescription: "Add activities, seasonality, guest limits, pickup availability, duration, and prices.",
-    fields: farmFields,
-    pricing: guidePricing
+    sectionDescription: "Add activity/service details, duration, guest limits, included items, equipment, meeting point, and weather policies.",
+    fields: activityFields,
+    pricing: activityPricing
   },
   "local-guide": {
     id: "local-guide",
     label: "Local Guide",
     description: "Tours, languages, duration, and prices.",
+    schemaKind: "activity-service",
     sectionTitle: "Guide tours",
-    sectionDescription: "Add tour types, languages, duration, guest limits, pickup availability, and prices.",
-    fields: guideFields,
-    pricing: guidePricing
+    sectionDescription: "Add activity/service details, duration, guest limits, included items, meeting point, operating hours, and languages.",
+    fields: activityFields,
+    pricing: activityPricing
   },
   other: {
     id: "other",
     label: "Other",
     description: "Any other tourism-supporting business.",
+    schemaKind: "business-service",
     sectionTitle: "Business services",
     sectionDescription: "Add the specific services, availability, and pricing visitors should understand.",
     fields: otherFields,
@@ -438,15 +464,13 @@ export const businessTypeSchemas: Record<SmartBusinessType, BusinessTypeSchema> 
   }
 };
 
-export const businessTypeOptions: BusinessTypeOption[] = Object.values(businessTypeSchemas).map(
-  ({ id, label, description }) => ({ id, label, description })
-);
+export const businessTypeOptions: BusinessTypeOption[] = canonicalBusinessTypeOptions;
 
-export function getBusinessTypeSchema(type: SmartBusinessType) {
-  return businessTypeSchemas[type] ?? businessTypeSchemas.other;
+export function getBusinessTypeSchema(type: unknown) {
+  return businessTypeSchemas[normalizeBusinessType(type)];
 }
 
-export function getCategoryAnswerReviewRows(type: SmartBusinessType, answers: Record<string, string | boolean>) {
+export function getCategoryAnswerReviewRows(type: unknown, answers: Record<string, string | boolean>) {
   const rows: Array<[string, string | boolean]> = [];
 
   getBusinessTypeSchema(type).fields.forEach((field) => {
@@ -457,7 +481,7 @@ export function getCategoryAnswerReviewRows(type: SmartBusinessType, answers: Re
   return rows;
 }
 
-export function validateCategoryAnswers(type: SmartBusinessType, answers: Record<string, string | boolean>) {
+export function validateCategoryAnswers(type: unknown, answers: Record<string, string | boolean>) {
   return getBusinessTypeSchema(type).fields
     .filter((field) => field.required)
     .filter((field) => {
@@ -467,8 +491,54 @@ export function validateCategoryAnswers(type: SmartBusinessType, answers: Record
     .map((field) => `${field.label} is required.`);
 }
 
-export function validatePricingRows(type: SmartBusinessType, prices: PartnerApplicationPriceInput[]) {
+export function validatePricingRows(type: unknown, prices: PartnerApplicationPriceInput[]) {
   const schema = getBusinessTypeSchema(type);
   const hasActivePricedRow = prices.some((price) => price.active && price.itemName.trim() && price.price.trim());
   return hasActivePricedRow ? [] : [`Add at least one active ${schema.pricing.rowLabel.toLowerCase()} with a price.`];
 }
+
+const forbiddenActivityFieldKeys = new Set([
+  "roomCount",
+  "roomTypes",
+  "bedTypes",
+  "roomCapacity",
+  "breakfastIncluded",
+  "amenities",
+  "checkInTime",
+  "checkOutTime",
+  "bikiniBeachDistance",
+  "roomPhotos"
+]);
+
+export function assertBusinessTypeSchemaMappings() {
+  const activityTypes: SmartBusinessType[] = [
+    "watersports",
+    "excursion-operator",
+    "dive-center",
+    "farm-experience",
+    "local-guide",
+    "photographer"
+  ];
+
+  activityTypes.forEach((type) => {
+    const schema = getBusinessTypeSchema(type);
+    const definition = getBusinessTypeDefinition(type);
+    if (schema.schemaKind !== "activity-service" || definition.schemaKind !== "activity-service") {
+      throw new Error(`${type} must use the activity-service onboarding schema.`);
+    }
+
+    const forbiddenFields = schema.fields.filter((field) => forbiddenActivityFieldKeys.has(field.key));
+    if (forbiddenFields.length > 0 || schema.pricing.defaultUnit === "per night") {
+      throw new Error(`${type} contains accommodation-only fields in the onboarding schema.`);
+    }
+  });
+
+  const aliases = ["Excursion", "Excursion Operator", "experience", "experiences", "Watersports", "tour-guide"];
+  aliases.forEach((alias) => {
+    if (getBusinessTypeSchemaKind(alias) !== "activity-service") {
+      throw new Error(`${alias} must normalize to an activity-service schema.`);
+    }
+  });
+}
+
+assertBusinessTypeSchemaMappings();

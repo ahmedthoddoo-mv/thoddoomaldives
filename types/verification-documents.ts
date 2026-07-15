@@ -1,4 +1,5 @@
 import type { SmartBusinessType } from "@/types/partner-smart-onboarding";
+import { getBusinessTypeSchemaKind, normalizeBusinessType } from "@/types/business-type";
 
 export type VerificationDocumentKey =
   | "tourism_operating_license"
@@ -45,7 +46,10 @@ const ownerId: VerificationDocumentRequirement = {
 };
 
 export function getVerificationRequirements(type: SmartBusinessType): VerificationDocumentRequirement[] {
-  if (type === "guesthouse" || type === "hotel") {
+  const canonicalType = normalizeBusinessType(type);
+  const schemaKind = getBusinessTypeSchemaKind(canonicalType);
+
+  if (schemaKind === "accommodation") {
     return [
       {
         key: "tourism_operating_license",
@@ -70,7 +74,7 @@ export function getVerificationRequirements(type: SmartBusinessType): Verificati
     ];
   }
 
-  if (type === "watersports" || type === "excursion-operator" || type === "dive-center") {
+  if (schemaKind === "activity-service") {
     return [
       commonBusinessRegistration,
       {
@@ -89,7 +93,7 @@ export function getVerificationRequirements(type: SmartBusinessType): Verificati
     ];
   }
 
-  if (type === "restaurant" || type === "cafe") {
+  if (schemaKind === "dining") {
     return [
       commonBusinessRegistration,
       {
@@ -102,7 +106,7 @@ export function getVerificationRequirements(type: SmartBusinessType): Verificati
     ];
   }
 
-  if (type === "speedboat-company" || type === "ferry-operator" || type === "transfer-company") {
+  if (schemaKind === "transfer") {
     return [
       commonBusinessRegistration,
       {
