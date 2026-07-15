@@ -1,6 +1,4 @@
 "use server";
-
-import { revalidatePath } from "next/cache";
 import type { AdminManagedProperty } from "@/data/adminContent";
 import { hasAdminDemoSession } from "@/lib/admin/adminAuth";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
@@ -228,11 +226,6 @@ export async function saveAdminPropertyToSupabase({
       return { ok: false, message: mediaLinkError.message };
     }
   }
-
-  revalidatePath("/admin/properties");
-  revalidatePath(`/admin/properties/${savedProperty.id}/edit`);
-  revalidatePath("/stay");
-  revalidatePath(`/stay/${savedProperty.slug}`);
 
   return {
     ok: true,

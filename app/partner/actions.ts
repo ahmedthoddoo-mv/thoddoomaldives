@@ -1,6 +1,4 @@
 "use server";
-
-import { revalidatePath } from "next/cache";
 import { getAuthorizedPartnerScope } from "@/lib/partner-portal/partnerAccess";
 import { logPartnerAuditEvent } from "@/lib/partner-portal/partnerAuth";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
@@ -57,19 +55,6 @@ async function getScopedSupabase() {
   return { scope, supabase, mode: "supabase" as const };
 }
 
-function revalidatePartnerPortal() {
-  revalidatePath("/partner");
-  revalidatePath("/partner/dashboard");
-  revalidatePath("/partner/profile");
-  revalidatePath("/partner/rooms");
-  revalidatePath("/partner/pricing");
-  revalidatePath("/partner/gallery");
-  revalidatePath("/partner/documents");
-  revalidatePath("/partner/verification");
-  revalidatePath("/stay");
-  revalidatePath("/stay/thoddoo-sun-sky-inn");
-}
-
 export async function savePartnerBusinessProfile(profile: PartnerPortalProfileForm): Promise<PartnerPortalActionResult> {
   const { scope, supabase, mode } = await getScopedSupabase();
   if (mode === "mock") return { ok: true, mode, message: "Mock profile saved in local portal state." };
@@ -117,7 +102,6 @@ export async function savePartnerBusinessProfile(profile: PartnerPortalProfileFo
 
   await logPartnerAuditEvent("profile_update", { propertyId: scope.propertyId }, scope.partnerId);
   await logPartnerAuditEvent("property_update", { propertyId: scope.propertyId }, scope.partnerId);
-  revalidatePartnerPortal();
   return { ok: true, mode, message: "Business profile saved to Supabase." };
 }
 
@@ -168,7 +152,6 @@ export async function savePartnerServices(services: PartnerPortalServiceItem[]):
   }
 
   await logPartnerAuditEvent("price_update", { propertyId: scope.propertyId, itemCount: services.length }, scope.partnerId);
-  revalidatePartnerPortal();
   return { ok: true, mode, message: "Rooms and pricing saved to Supabase." };
 }
 
@@ -214,7 +197,6 @@ export async function savePartnerGallery(gallery: PartnerPortalGalleryItem[]): P
   }
 
   await logPartnerAuditEvent("gallery_update", { propertyId: scope.propertyId, itemCount: normalized.length }, scope.partnerId);
-  revalidatePartnerPortal();
   return { ok: true, mode, message: "Gallery saved to Supabase." };
 }
 
@@ -248,7 +230,6 @@ export async function savePartnerDocuments(documents: PartnerPortalDocument[]): 
   if (error) return { ok: false, mode, message: error.message };
 
   await logPartnerAuditEvent("document_update", { documentCount: rows.length }, scope.partnerId);
-  revalidatePartnerPortal();
   return { ok: true, mode, message: "Document center saved to Supabase." };
 }
 
@@ -274,8 +255,6 @@ export async function updatePartnerBooking(params: {
   if (error) return { ok: false, mode, message: error.message };
 
   await logPartnerAuditEvent("booking_update", { bookingId: params.bookingId, status: params.status ?? null }, scope.partnerId);
-  revalidatePath("/partner/bookings");
-  revalidatePath("/partner/dashboard");
   return { ok: true, mode, message: "Booking updated." };
 }
 
@@ -292,6 +271,5 @@ export async function markPartnerNotificationRead(notificationId: string): Promi
   if (error) return { ok: false, mode, message: error.message };
 
   await logPartnerAuditEvent("notification_update", { notificationId }, scope.partnerId);
-  revalidatePath("/partner/notifications");
   return { ok: true, mode, message: "Notification marked read." };
 }
