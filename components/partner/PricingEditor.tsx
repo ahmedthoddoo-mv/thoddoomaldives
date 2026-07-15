@@ -1,5 +1,6 @@
 "use client";
 
+import type { PricingEditorCopy } from "@/lib/partner-onboarding/onboardingSchemas";
 import type { PartnerApplicationPriceInput, PricingCurrency, PricingUnit } from "@/types/partner-smart-onboarding";
 
 const currencies: PricingCurrency[] = ["USD", "MVR"];
@@ -8,9 +9,24 @@ const units: PricingUnit[] = ["per night", "per person", "per trip", "per hour",
 type PricingEditorProps = {
   rows: PartnerApplicationPriceInput[];
   onChange: (rows: PartnerApplicationPriceInput[]) => void;
+  copy?: PricingEditorCopy;
 };
 
-function createRow(): PartnerApplicationPriceInput {
+const defaultCopy: PricingEditorCopy = {
+  heading: "Pricing",
+  helper: "Add the items, services, packages, or offers visitors can request.",
+  rowLabel: "Pricing row",
+  itemLabel: "Item/service name",
+  itemPlaceholder: "Service package, visitor offer, custom request...",
+  descriptionPlaceholder: "Short explanation for the customer",
+  priceLabel: "Price",
+  childPriceLabel: "Child price",
+  notesPlaceholder: "Seasonal pricing, inclusions, blackout dates...",
+  addLabel: "Add pricing row",
+  defaultUnit: "per person"
+};
+
+function createRow(overrides: Partial<PartnerApplicationPriceInput> = {}): PartnerApplicationPriceInput {
   return {
     id: `price-${Date.now().toString(36)}`,
     itemName: "",
@@ -20,11 +36,12 @@ function createRow(): PartnerApplicationPriceInput {
     unit: "per person",
     childPrice: "",
     notes: "",
-    active: true
+    active: true,
+    ...overrides
   };
 }
 
-export function PricingEditor({ rows, onChange }: PricingEditorProps) {
+export function PricingEditor({ rows, onChange, copy = defaultCopy }: PricingEditorProps) {
   function updateRow(id: string, updates: Partial<PartnerApplicationPriceInput>) {
     onChange(rows.map((row) => (row.id === id ? { ...row, ...updates } : row)));
   }
@@ -41,27 +58,32 @@ export function PricingEditor({ rows, onChange }: PricingEditorProps) {
 
   return (
     <div className="pricingEditor">
+      <div className="sectionHeader">
+        <h3>{copy.heading}</h3>
+        <p>{copy.helper}</p>
+      </div>
       {rows.map((row, index) => (
         <article className="pricingEditorRow" key={row.id}>
           <div className="pricingEditorHeader">
-            <strong>Pricing row {index + 1}</strong>
+            <strong>{copy.rowLabel} {index + 1}</strong>
             <div>
               <button type="button" onClick={() => moveRow(row.id, -1)}>Up</button>
               <button type="button" onClick={() => moveRow(row.id, 1)}>Down</button>
+              <button type="button" onClick={() => onChange([...rows.slice(0, index + 1), createRow({ ...row, id: `price-${Date.now().toString(36)}-copy` }), ...rows.slice(index + 1)])}>Duplicate</button>
               <button type="button" onClick={() => onChange(rows.filter((item) => item.id !== row.id))}>Remove</button>
             </div>
           </div>
           <div className="onboardingGrid">
             <label>
-              <span>Item/service/room name</span>
-              <input value={row.itemName} onChange={(event) => updateRow(row.id, { itemName: event.target.value })} placeholder="Deluxe Room, Turtle Snorkeling, Airport Transfer..." />
+              <span>{copy.itemLabel}</span>
+              <input value={row.itemName} onChange={(event) => updateRow(row.id, { itemName: event.target.value })} placeholder={copy.itemPlaceholder} />
             </label>
             <label>
               <span>Description</span>
-              <input value={row.description} onChange={(event) => updateRow(row.id, { description: event.target.value })} placeholder="Short explanation for the customer" />
+              <input value={row.description} onChange={(event) => updateRow(row.id, { description: event.target.value })} placeholder={copy.descriptionPlaceholder} />
             </label>
             <label>
-              <span>Price</span>
+              <span>{copy.priceLabel}</span>
               <input inputMode="decimal" value={row.price} onChange={(event) => updateRow(row.id, { price: event.target.value.replace(/[^\d.]/g, "") })} placeholder="85" />
             </label>
             <label>
@@ -77,12 +99,12 @@ export function PricingEditor({ rows, onChange }: PricingEditorProps) {
               </select>
             </label>
             <label>
-              <span>Child price</span>
+              <span>{copy.childPriceLabel}</span>
               <input inputMode="decimal" value={row.childPrice} onChange={(event) => updateRow(row.id, { childPrice: event.target.value.replace(/[^\d.]/g, "") })} placeholder="Optional" />
             </label>
             <label className="onboardingWide">
               <span>Notes</span>
-              <textarea value={row.notes} onChange={(event) => updateRow(row.id, { notes: event.target.value })} placeholder="Seasonal pricing, inclusions, blackout dates..." />
+              <textarea value={row.notes} onChange={(event) => updateRow(row.id, { notes: event.target.value })} placeholder={copy.notesPlaceholder} />
             </label>
             <label className="pricingEditorToggle">
               <input checked={row.active} onChange={(event) => updateRow(row.id, { active: event.target.checked })} type="checkbox" />
@@ -91,8 +113,8 @@ export function PricingEditor({ rows, onChange }: PricingEditorProps) {
           </div>
         </article>
       ))}
-      <button className="pricingEditorAdd" type="button" onClick={() => onChange([...rows, createRow()])}>
-        Add pricing row
+      <button className="pricingEditorAdd" type="button" onClick={() => onChange([...rows, createRow({ unit: copy.defaultUnit })])}>
+        {copy.addLabel}
       </button>
     </div>
   );

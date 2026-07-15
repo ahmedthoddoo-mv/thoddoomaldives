@@ -16,7 +16,7 @@ import type {
 type ApplicationDecisionPanelProps = {
   application: PartnerApplicationRecord;
   onChange: (application: PartnerApplicationRecord) => void;
-  dataSource?: "mock" | "supabase" | "fallback";
+  dataSource?: "mock" | "supabase" | "supabase_error";
 };
 
 function getTimelineType(action: AdminApplicationDecisionAction): PartnerApplicationTimelineType {

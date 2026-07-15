@@ -4646,7 +4646,7 @@ body {
   padding: 14px;
 }
 
-.verificationDocumentCard > div,
+.verificationDocumentHeader,
 .applicationVerificationList article > div {
   display: flex;
   flex-wrap: wrap;
@@ -4654,10 +4654,113 @@ body {
   gap: 8px;
 }
 
+.verificationDocumentHeader > div {
+  display: grid;
+  gap: 4px;
+}
+
 .verificationDocumentCard span,
 .applicationVerificationList article span,
 .applicationVerificationList article p {
   color: var(--muted);
+}
+
+.documentDropzone {
+  display: grid;
+  place-items: center;
+  gap: 8px;
+  min-height: 142px;
+  border: 1px dashed rgba(8, 127, 122, 0.45);
+  border-radius: 8px;
+  background: rgba(8, 127, 122, 0.06);
+  color: var(--ink);
+  cursor: pointer;
+  padding: 18px;
+  text-align: center;
+}
+
+.documentDropzone input,
+.documentUploadActions input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.documentDropzone strong {
+  color: var(--teal-dark);
+}
+
+.uploadStatus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(120, 113, 108, 0.24);
+  border-radius: 999px;
+  background: rgba(120, 113, 108, 0.09);
+  color: var(--muted);
+  padding: 6px 10px;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.uploadStatusReady {
+  border-color: rgba(8, 127, 122, 0.28);
+  background: rgba(8, 127, 122, 0.1);
+  color: var(--teal-dark);
+}
+
+.uploadProgressShell {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.08);
+}
+
+.uploadProgressShell span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--teal), var(--gold));
+}
+
+.uploadedFileMeta {
+  display: grid;
+  gap: 4px;
+  border: 1px solid rgba(8, 127, 122, 0.14);
+  border-radius: 8px;
+  background: rgba(8, 127, 122, 0.04);
+  padding: 10px 12px;
+}
+
+.uploadedFileMeta strong {
+  overflow-wrap: anywhere;
+  color: var(--ink);
+}
+
+.documentUploadActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.documentUploadActions label,
+.documentUploadActions button {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 900;
+  padding: 8px 12px;
+}
+
+.documentUploadActions button {
+  color: #8a2d2d;
 }
 
 .adminContentStatusVerified {
@@ -4689,7 +4792,7 @@ body {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fff;
-  color: var(--muted);
+  color: var(--ink);
   padding: 10px;
   font-size: 0.86rem;
   font-weight: 800;
@@ -4712,6 +4815,17 @@ body {
 .onboardingStepComplete {
   border-color: rgba(8, 127, 122, 0.32);
   color: var(--ink);
+}
+
+.onboardingStepActive {
+  border-color: var(--teal);
+  background: rgba(8, 127, 122, 0.08);
+  color: var(--teal-dark);
+  box-shadow: 0 0 0 3px rgba(8, 127, 122, 0.12);
+}
+
+.onboardingStepComplete {
+  background: rgba(8, 127, 122, 0.04);
 }
 
 .onboardingStepActive span,

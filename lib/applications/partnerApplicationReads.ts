@@ -1,5 +1,6 @@
 import { defaultPartnerApplications } from "@/data/partnerApplications";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
+import { getDataMode } from "@/lib/supabase/status";
 import type { MembershipTier } from "@/types/membership";
 import type {
   PartnerApplicationBusinessType,
@@ -12,7 +13,7 @@ import { getVerificationCompletion } from "@/types/verification-documents";
 
 type PartnerApplicationReadResult = {
   applications: PartnerApplicationRecord[];
-  source: "mock" | "supabase" | "fallback";
+  source: "mock" | "supabase" | "supabase_error";
   error?: string;
 };
 
@@ -203,15 +204,15 @@ function mapApplication(
 }
 
 export async function getPartnerApplicationsForAdmin(): Promise<PartnerApplicationReadResult> {
-  if (process.env.NEXT_PUBLIC_DATA_MODE !== "supabase") {
+  if (getDataMode() !== "supabase") {
     return { applications: defaultPartnerApplications, source: "mock" };
   }
 
   const supabase = createSupabaseServiceRoleClient();
   if (!supabase) {
     return {
-      applications: defaultPartnerApplications,
-      source: "fallback",
+      applications: [],
+      source: "supabase_error",
       error: "Supabase service role is not configured."
     };
   }
@@ -231,22 +232,25 @@ export async function getPartnerApplicationsForAdmin(): Promise<PartnerApplicati
       return { applications: [], source: "supabase" };
     }
 
-    const [pricesResult, mediaResult, servicesResult, verificationResult] = await Promise.all([
-      db.from("partner_application_prices").select("*").in("application_id", applicationIds),
-      db.from("partner_application_media").select("*").in("application_id", applicationIds),
-      db.from("partner_application_services").select("*").in("application_id", applicationIds),
-      db.from("partner_application_verification_documents").select("*").in("application_id", applicationIds)
+    async function readChildRows<T>(table: string) {
+      const result = await db.from(table).select("*").in("application_id", applicationIds);
+      if (result.error) {
+        console.error("[admin-applications-read]", {
+          table,
+          code: result.error.code,
+          message: result.error.message
+        });
+        return [] as T[];
+      }
+      return (result.data ?? []) as T[];
+    }
+
+    const [prices, media, services, verificationDocuments] = await Promise.all([
+      readChildRows<PartnerApplicationPriceRow>("partner_application_prices"),
+      readChildRows<PartnerApplicationMediaRow>("partner_application_media"),
+      readChildRows<PartnerApplicationServiceRow>("partner_application_services"),
+      readChildRows<PartnerApplicationVerificationDocumentRow>("partner_application_verification_documents")
     ]);
-
-    if (pricesResult.error) throw pricesResult.error;
-    if (mediaResult.error) throw mediaResult.error;
-    if (servicesResult.error) throw servicesResult.error;
-    if (verificationResult.error) throw verificationResult.error;
-
-    const prices = (pricesResult.data ?? []) as PartnerApplicationPriceRow[];
-    const media = (mediaResult.data ?? []) as PartnerApplicationMediaRow[];
-    const services = (servicesResult.data ?? []) as PartnerApplicationServiceRow[];
-    const verificationDocuments = (verificationResult.data ?? []) as PartnerApplicationVerificationDocumentRow[];
 
     return {
       applications: applications.map((application) =>
@@ -261,9 +265,13 @@ export async function getPartnerApplicationsForAdmin(): Promise<PartnerApplicati
       source: "supabase"
     };
   } catch (error) {
+    console.error("[admin-applications-read]", {
+      table: "partner_applications",
+      message: error instanceof Error ? error.message : "Unknown Supabase read failure"
+    });
     return {
-      applications: defaultPartnerApplications,
-      source: "fallback",
+      applications: [],
+      source: "supabase_error",
       error: error instanceof Error ? error.message : "Supabase applications could not be loaded."
     };
   }

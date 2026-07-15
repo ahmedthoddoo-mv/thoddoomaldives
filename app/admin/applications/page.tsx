@@ -19,7 +19,11 @@ export default async function AdminApplicationsPage() {
   return (
     <AdminShell sidebar={<AdminSidebar items={adminSidebarItems} />}>
       <div className="adminContent">
-        <ApplicationReviewQueue initialApplications={applicationRead.applications} dataSource={applicationRead.source} />
+        <ApplicationReviewQueue
+          initialApplications={applicationRead.applications}
+          dataSource={applicationRead.source}
+          readError={applicationRead.error}
+        />
       </div>
     </AdminShell>
   );

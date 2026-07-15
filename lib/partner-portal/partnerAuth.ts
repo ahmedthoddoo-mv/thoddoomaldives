@@ -2,6 +2,7 @@ import "server-only";
 
 import { cookies } from "next/headers";
 import { createSupabaseServerClient, createSupabaseServiceRoleClient } from "@/lib/supabase/server";
+import { getDataMode } from "@/lib/supabase/status";
 import type { Tables } from "@/lib/supabase/types";
 
 export const partnerAccessTokenCookie = "ithoddoo_partner_access_token";
@@ -43,7 +44,7 @@ export async function clearPartnerSessionCookies() {
 }
 
 export async function getPartnerAuthState(): Promise<PartnerAuthState> {
-  if (process.env.NEXT_PUBLIC_DATA_MODE !== "supabase") {
+  if (getDataMode() !== "supabase") {
     return { status: "mock" };
   }
 
@@ -95,7 +96,7 @@ export async function logPartnerAuditEvent(
   partnerId?: string | null,
   authUserId?: string | null
 ) {
-  if (process.env.NEXT_PUBLIC_DATA_MODE !== "supabase") return;
+  if (getDataMode() !== "supabase") return;
   const serviceRole = createSupabaseServiceRoleClient();
   if (!serviceRole) return;
 

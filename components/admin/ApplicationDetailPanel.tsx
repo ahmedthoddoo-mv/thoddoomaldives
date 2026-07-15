@@ -25,14 +25,17 @@ function formatDate(value: string) {
 export function ApplicationDetailPanel({
   applicationId,
   initialApplication,
-  dataSource
+  dataSource,
+  readError
 }: {
   applicationId: string;
   initialApplication?: PartnerApplicationRecord;
-  dataSource?: "mock" | "supabase" | "fallback";
+  dataSource?: "mock" | "supabase" | "supabase_error";
+  readError?: string;
 }) {
+  const useMockStore = !dataSource || dataSource === "mock";
   const [application, setApplication] = useState<PartnerApplicationRecord | undefined>(() =>
-    initialApplication ?? PartnerApplicationRepository.findById(applicationId)
+    initialApplication ?? (useMockStore ? PartnerApplicationRepository.findById(applicationId) : undefined)
   );
 
   useEffect(() => {
@@ -41,9 +44,14 @@ export function ApplicationDetailPanel({
       return () => undefined;
     }
 
+    if (!useMockStore) {
+      setApplication(undefined);
+      return () => undefined;
+    }
+
     setApplication(PartnerApplicationRepository.findById(applicationId));
     return subscribeToPartnerApplications(() => setApplication(PartnerApplicationRepository.findById(applicationId)));
-  }, [applicationId, initialApplication]);
+  }, [applicationId, initialApplication, useMockStore]);
 
   if (!application) {
     return (
@@ -64,8 +72,11 @@ export function ApplicationDetailPanel({
           <ApplicationStatusBadge status={application.status} />
           <h1>{application.businessName}</h1>
           <p>{application.description}</p>
-          {dataSource === "supabase" ? <p className="mutedText">Loaded from Supabase onboarding submissions.</p> : null}
-          {dataSource === "fallback" ? <p className="mutedText">Supabase unavailable. Showing safe demo application data.</p> : null}
+          {dataSource === "supabase" ? <p className="mutedText">Data source: Supabase</p> : null}
+          {dataSource === "mock" ? <p className="mutedText">Data source: Mock</p> : null}
+          {dataSource === "supabase_error" ? (
+            <p className="bookingValidationPanel">Data source: Supabase unavailable. {readError ?? "Check migrations and service role configuration."}</p>
+          ) : null}
         </div>
         <a className="adminContentAddButton" href="/admin/applications">
           Back to queue

@@ -4,6 +4,7 @@ import { createBookingEmailPreviews } from "@/lib/bookings/bookingEmails";
 import { calculateCommission, calculateNights } from "@/lib/booking";
 import { hasAdminDemoSession } from "@/lib/admin/adminAuth";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
+import { getDataMode } from "@/lib/supabase/status";
 import { mapBookingRowToDomain } from "@/lib/supabase/mappers";
 import type { Tables } from "@/lib/supabase/types";
 import type { ContactPreference, BookingEmailPreview } from "@/types/booking-workflow";
@@ -44,7 +45,7 @@ type BookingWithRelations = Tables<"bookings"> & {
 };
 
 function isSupabaseMode() {
-  return process.env.NEXT_PUBLIC_DATA_MODE === "supabase";
+  return getDataMode() === "supabase";
 }
 
 function isUuid(value?: string) {

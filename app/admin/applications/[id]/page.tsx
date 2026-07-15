@@ -27,7 +27,12 @@ export default async function AdminApplicationDetailPage({ params }: AdminApplic
   return (
     <AdminShell sidebar={<AdminSidebar items={adminSidebarItems} />}>
       <div className="adminContent">
-        <ApplicationDetailPanel applicationId={id} initialApplication={application} dataSource={applicationRead.source} />
+        <ApplicationDetailPanel
+          applicationId={id}
+          initialApplication={application}
+          dataSource={applicationRead.source}
+          readError={applicationRead.error}
+        />
       </div>
     </AdminShell>
   );

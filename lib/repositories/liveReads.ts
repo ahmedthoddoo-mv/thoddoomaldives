@@ -15,7 +15,7 @@ export type LiveReadResult<T> = {
 };
 
 function normalizeProviderMode(mode: string): "mock" | "supabase" {
-  return mode === "supabase" ? "supabase" : "mock";
+  return mode === "mock" ? "mock" : "supabase";
 }
 
 async function safeRead<T>({

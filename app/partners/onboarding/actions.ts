@@ -1,7 +1,9 @@
 "use server";
 
 import { platformConfig } from "@/lib/config/platform";
+import { validateCategoryAnswers, validatePricingRows } from "@/lib/partner-onboarding/onboardingSchemas";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
+import { getDataMode } from "@/lib/supabase/status";
 import type { PartnerApplicationRecord, PartnerApplicationBusinessType } from "@/types/partner-application";
 import type { SmartPartnerApplicationInput } from "@/types/partner-smart-onboarding";
 import { getVerificationCompletion, getVerificationRequirements } from "@/types/verification-documents";
@@ -54,6 +56,18 @@ function normalizeBusinessType(value: string): PartnerApplicationBusinessType {
     : "other";
 }
 
+function logSupabaseWriteError(stage: string, error: unknown) {
+  const safeError =
+    error && typeof error === "object"
+      ? {
+          code: "code" in error ? String((error as { code?: unknown }).code ?? "") : undefined,
+          message: "message" in error ? String((error as { message?: unknown }).message ?? "") : "Unknown write failure"
+        }
+      : { message: "Unknown write failure" };
+
+  console.error("[partner-onboarding-submit]", { stage, ...safeError });
+}
+
 function getListingWorkflow(type: PartnerApplicationBusinessType): PartnerApplicationRecord["listingWorkflow"] {
   if (type === "guesthouse" || type === "hotel") return "property";
   if (type === "restaurant" || type === "cafe") return "restaurant";
@@ -72,7 +86,9 @@ function validateApplication(input: SmartPartnerApplicationInput) {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.email.trim())) errors.push("A valid email is required.");
   if (!sanitizeText(input.island, 80)) errors.push("Island is required.");
   if (!sanitizeText(input.shortDescription, 800)) errors.push("Short business description is required.");
-  if (!input.prices.some((price) => price.itemName.trim() && price.active)) errors.push("Add at least one active price/service row.");
+  if (!sanitizeText(input.fullDescription, 2000)) errors.push("Full business description is required.");
+  errors.push(...validateCategoryAnswers(input.businessType, input.categoryAnswers));
+  errors.push(...validatePricingRows(input.businessType, input.prices));
   const requiredDocuments = getVerificationRequirements(input.businessType).filter((document) => document.required);
   const missingDocuments = requiredDocuments.filter((requirement) => {
     const document = input.verificationDocuments.find((item) => item.key === requirement.key);
@@ -100,11 +116,12 @@ function checkSubmissionRateLimit(input: SmartPartnerApplicationInput) {
 
 async function createApplicationReference(db: any) {
   const year = new Date().getFullYear();
-  const { count } = await db
+  const { count, error } = await db
     .from("partner_applications")
     .select("id", { count: "exact", head: true })
     .gte("submitted_at", `${year}-01-01T00:00:00.000Z`);
 
+  if (error) throw error;
   return `ITM-APP-${year}-${String((count ?? 0) + 1).padStart(6, "0")}`;
 }
 
@@ -126,7 +143,8 @@ function buildApplicationSummary(input: SmartPartnerApplicationInput, reference:
     `Island: ${input.island}`,
     `Membership: ${input.membershipPlan}`,
     "",
-    `Description: ${input.shortDescription}`,
+    `Short description: ${input.shortDescription}`,
+    `Full description: ${input.fullDescription}`,
     "",
     "Pricing/services:",
     priceLines || "No pricing rows",
@@ -178,7 +196,7 @@ function mapSavedApplication(row: any, input: SmartPartnerApplicationInput): Par
 }
 
 export async function submitSmartPartnerApplication(input: SmartPartnerApplicationInput): Promise<SmartPartnerApplicationResult> {
-  if (process.env.NEXT_PUBLIC_DATA_MODE !== "supabase") {
+  if (getDataMode() !== "supabase") {
     return {
       ok: false,
       mode: "mock",
@@ -212,23 +230,40 @@ export async function submitSmartPartnerApplication(input: SmartPartnerApplicati
 
   const db = supabase as any;
   const businessType = normalizeBusinessType(input.businessType);
-  const reference = await createApplicationReference(db);
+  let reference = "";
+  try {
+    reference = await createApplicationReference(db);
+  } catch (error) {
+    logSupabaseWriteError("create_application_reference", error);
+    return {
+      ok: false,
+      mode: "supabase",
+      message: "Application reference could not be created.",
+      errors: ["Please try again or contact iThoddoo Maldives."]
+    };
+  }
   const normalizedWhatsapp = normalizePhone(input.whatsapp);
 
-  const { data: duplicate } = await db
+  const { data: duplicate, error: duplicateError } = await db
     .from("partner_applications")
     .select("id, business_name")
     .or(`business_name.ilike.%${sanitizeText(input.businessName, 80)}%,email.eq.${input.email.trim()},whatsapp.eq.${normalizedWhatsapp}`)
     .limit(1)
     .maybeSingle();
 
+  if (duplicateError) {
+    logSupabaseWriteError("duplicate_check", duplicateError);
+  }
+
   const metadata = {
     googleMapsLink: sanitizeText(input.googleMapsLink, 600),
     registrationNumber: sanitizeText(input.registrationNumber, 160),
+    fullDescription: sanitizeText(input.fullDescription, 2400),
     categoryAnswers: input.categoryAnswers,
     verificationCompletion: getVerificationCompletion(input.verificationDocuments),
     source: "smart_partner_onboarding"
   };
+  const now = new Date().toISOString();
 
   const { data: applicationRow, error: applicationError } = await db
     .from("partner_applications")
@@ -252,17 +287,32 @@ export async function submitSmartPartnerApplication(input: SmartPartnerApplicati
       metadata,
       notes: sanitizeText(input.notes, 1200),
       missing_information: [],
-      review_notes: []
+      review_notes: [],
+      submitted_at: now,
+      updated_at: now
     })
     .select("*")
     .single();
 
   if (applicationError || !applicationRow) {
+    logSupabaseWriteError("partner_applications_insert", applicationError);
     return {
       ok: false,
       mode: "supabase",
       message: "Application could not be saved.",
-      errors: [applicationError?.message ?? "Please try again or contact iThoddoo Maldives."]
+      errors: ["Please try again or contact iThoddoo Maldives."]
+    };
+  }
+
+  async function failAfterPartialWrite(stage: string, error: unknown, message: string): Promise<SmartPartnerApplicationResult> {
+    logSupabaseWriteError(stage, error);
+    const rollback = await db.from("partner_applications").delete().eq("id", applicationRow.id);
+    if (rollback.error) logSupabaseWriteError(`${stage}_rollback`, rollback.error);
+    return {
+      ok: false,
+      mode: "supabase",
+      message,
+      errors: ["The application was not completed. Please try again or contact iThoddoo Maldives."]
     };
   }
 
@@ -282,7 +332,7 @@ export async function submitSmartPartnerApplication(input: SmartPartnerApplicati
         sort_order: index
       }))
     );
-    if (pricesError) return { ok: false, mode: "supabase", message: "Pricing could not be saved.", errors: [pricesError.message] };
+    if (pricesError) return failAfterPartialWrite("partner_application_prices_insert", pricesError, "Pricing could not be saved.");
   }
 
   const mediaRows = input.media.filter((media) => media.pathOrNote.trim() || media.fileName.trim());
@@ -298,7 +348,7 @@ export async function submitSmartPartnerApplication(input: SmartPartnerApplicati
         sort_order: index
       }))
     );
-    if (mediaError) return { ok: false, mode: "supabase", message: "Media metadata could not be saved.", errors: [mediaError.message] };
+    if (mediaError) return failAfterPartialWrite("partner_application_media_insert", mediaError, "Media metadata could not be saved.");
   }
 
   const serviceRows = Object.entries(input.categoryAnswers).filter(([, value]) => String(value).trim());
@@ -312,7 +362,7 @@ export async function submitSmartPartnerApplication(input: SmartPartnerApplicati
         sort_order: index
       }))
     );
-    if (serviceError) return { ok: false, mode: "supabase", message: "Service answers could not be saved.", errors: [serviceError.message] };
+    if (serviceError) return failAfterPartialWrite("partner_application_services_insert", serviceError, "Service answers could not be saved.");
   }
 
   const verificationDocumentRows = input.verificationDocuments.map((document) => ({
@@ -332,21 +382,21 @@ export async function submitSmartPartnerApplication(input: SmartPartnerApplicati
       { onConflict: "application_id,document_key" }
     );
     if (verificationError) {
-      return {
-        ok: false,
-        mode: "supabase",
-        message: "Verification documents could not be saved.",
-        errors: [verificationError.message]
-      };
+      return failAfterPartialWrite(
+        "partner_application_verification_documents_upsert",
+        verificationError,
+        "Verification documents could not be saved."
+      );
     }
   }
 
-  await db.from("crm_notes").insert({
+  const crmNoteResult = await db.from("crm_notes").insert({
     author: "Partner Onboarding",
     body: `Application ${reference} submitted by ${input.businessName}. Duplicate check: ${duplicate?.business_name ?? "none found"}.`
   });
+  if (crmNoteResult.error) logSupabaseWriteError("crm_notes_insert", crmNoteResult.error);
 
-  await db.from("crm_tasks").insert({
+  const crmTaskResult = await db.from("crm_tasks").insert({
     title: `Review ${reference}`,
     task_type: "Review Application",
     owner: "Admin",
@@ -354,6 +404,7 @@ export async function submitSmartPartnerApplication(input: SmartPartnerApplicati
     status: "open",
     priority: "high"
   });
+  if (crmTaskResult.error) logSupabaseWriteError("crm_tasks_insert", crmTaskResult.error);
 
   const summary = buildApplicationSummary(input, reference);
   const officialWhatsapp = platformConfig.whatsappNumbers.partnerships.replace(/\D/g, "");

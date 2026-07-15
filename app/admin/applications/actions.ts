@@ -1,6 +1,7 @@
 "use server";
 
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
+import { getDataMode } from "@/lib/supabase/status";
 import { createPropertySlug } from "@/lib/properties/propertySlug";
 import { logPartnerAuditEvent } from "@/lib/partner-portal/partnerAuth";
 import type { PartnerApplicationStatus } from "@/types/partner-application";
@@ -125,7 +126,7 @@ async function ensurePartnerAndInvitationPreview(db: any, applicationId: string,
 export async function updateSupabasePartnerApplicationDecision(
   input: AdminApplicationDecisionInput
 ): Promise<AdminApplicationDecisionResult> {
-  if (process.env.NEXT_PUBLIC_DATA_MODE !== "supabase") {
+  if (getDataMode() !== "supabase") {
     return { ok: false, message: "Mock mode is active." };
   }
 

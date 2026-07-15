@@ -47,6 +47,7 @@ export type SmartPartnerApplicationInput = {
   instagram: string;
   facebook: string;
   shortDescription: string;
+  fullDescription: string;
   registrationNumber: string;
   membershipPlan: MembershipTier;
   notes: string;

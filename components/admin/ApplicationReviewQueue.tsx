@@ -47,10 +47,12 @@ function filterApplications(applications: PartnerApplicationRecord[], filters: P
 
 export function ApplicationReviewQueue({
   initialApplications,
-  dataSource
+  dataSource,
+  readError
 }: {
   initialApplications?: PartnerApplicationRecord[];
-  dataSource?: "mock" | "supabase" | "fallback";
+  dataSource?: "mock" | "supabase" | "supabase_error";
+  readError?: string;
 }) {
   const hasServerApplications = Boolean(initialApplications);
   const [applications, setApplications] = useState<PartnerApplicationRecord[]>(() =>
@@ -79,8 +81,11 @@ export function ApplicationReviewQueue({
           <p className="eyebrow">Review queue</p>
           <h1>Partner Applications</h1>
           <p>Review, request changes, approve partners, and draft listings without publishing them automatically.</p>
-          {dataSource === "supabase" ? <p className="mutedText">Showing Supabase onboarding submissions.</p> : null}
-          {dataSource === "fallback" ? <p className="mutedText">Supabase unavailable. Showing safe demo application data.</p> : null}
+          {dataSource === "supabase" ? <p className="mutedText">Data source: Supabase</p> : null}
+          {dataSource === "mock" ? <p className="mutedText">Data source: Mock</p> : null}
+          {dataSource === "supabase_error" ? (
+            <p className="bookingValidationPanel">Data source: Supabase unavailable. {readError ?? "Check migrations and service role configuration."}</p>
+          ) : null}
         </div>
         <div className="applicationHeroMetric">
           <span>{reviewCount}</span>

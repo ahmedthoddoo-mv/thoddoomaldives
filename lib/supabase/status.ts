@@ -5,7 +5,7 @@ export const SUPABASE_MIGRATION_VERSION = "202607110001";
 export function getDataMode() {
   const requestedMode = process.env.NEXT_PUBLIC_DATA_MODE;
 
-  if (requestedMode === "supabase" && isSupabaseServerConfigured()) {
+  if (requestedMode !== "mock" && isSupabaseServerConfigured()) {
     return "supabase";
   }
 

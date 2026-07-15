@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getDataMode } from "@/lib/supabase/status";
 import {
   clearPartnerSessionCookies,
   getPartnerAuthState,
@@ -25,7 +26,7 @@ function getPartnerRedirectPath(formData: FormData) {
 }
 
 export async function signInPartner(_prevState: PartnerAuthFormState, formData: FormData): Promise<PartnerAuthFormState> {
-  if (process.env.NEXT_PUBLIC_DATA_MODE !== "supabase") {
+  if (getDataMode() !== "supabase") {
     return { ok: false, message: "Partner login is only required in Supabase mode." };
   }
 
@@ -63,7 +64,7 @@ export async function requestPartnerPasswordReset(
   _prevState: PartnerAuthFormState,
   formData: FormData
 ): Promise<PartnerAuthFormState> {
-  if (process.env.NEXT_PUBLIC_DATA_MODE !== "supabase") {
+  if (getDataMode() !== "supabase") {
     return { ok: false, message: "Password reset is only available in Supabase mode." };
   }
 
@@ -91,7 +92,7 @@ export async function requestPartnerPasswordReset(
 }
 
 export async function resetPartnerPassword(_prevState: PartnerAuthFormState, formData: FormData): Promise<PartnerAuthFormState> {
-  if (process.env.NEXT_PUBLIC_DATA_MODE !== "supabase") {
+  if (getDataMode() !== "supabase") {
     return { ok: false, message: "Password reset is only available in Supabase mode." };
   }
 
