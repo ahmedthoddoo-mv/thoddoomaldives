@@ -14,7 +14,9 @@
     "supabase:push:seed": "supabase db push --include-seed",
     "supabase:seed": "supabase db reset",
     "supabase:reset-and-seed": "supabase db reset",
-    "supabase:status": "supabase status"
+    "supabase:status": "supabase status",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "opennextjs-cloudflare build && wrangler deploy"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.2",
