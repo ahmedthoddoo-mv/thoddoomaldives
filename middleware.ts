@@ -8,12 +8,8 @@ const publicPartnerRoutes = new Set([
   "/partner/reset-password"
 ]);
 
-export function proxy(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
-
-  if (!pathname.startsWith("/partner")) {
-    return NextResponse.next();
-  }
 
   if (publicPartnerRoutes.has(pathname)) {
     return NextResponse.next();
