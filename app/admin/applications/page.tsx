@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { ApplicationReviewQueue } from "@/components/admin/ApplicationReviewQueue";
-import { AdminShell } from "@/components/admin/AdminShell";
-import { AdminSidebar } from "@/components/admin/AdminSidebar";
-import { adminSidebarItems } from "@/data/adminContent";
+import { AdminProtectedPage } from "@/components/admin/AdminProtectedPage";
 import { getPartnerApplicationsForAdmin } from "@/lib/applications/partnerApplicationReads";
 
 export const metadata: Metadata = {
@@ -17,14 +15,12 @@ export default async function AdminApplicationsPage() {
   const applicationRead = await getPartnerApplicationsForAdmin();
 
   return (
-    <AdminShell sidebar={<AdminSidebar items={adminSidebarItems} />}>
-      <div className="adminContent">
-        <ApplicationReviewQueue
-          initialApplications={applicationRead.applications}
-          dataSource={applicationRead.source}
-          readError={applicationRead.error}
-        />
-      </div>
-    </AdminShell>
+    <AdminProtectedPage>
+      <ApplicationReviewQueue
+        initialApplications={applicationRead.applications}
+        dataSource={applicationRead.source}
+        readError={applicationRead.error}
+      />
+    </AdminProtectedPage>
   );
 }

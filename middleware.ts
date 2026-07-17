@@ -15,7 +15,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (process.env.NEXT_PUBLIC_DATA_MODE !== "supabase") {
+  if (process.env.DATA_MODE !== "supabase") {
     return NextResponse.next();
   }
 
