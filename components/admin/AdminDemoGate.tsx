@@ -2,43 +2,47 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import { loginAdminDemo, type AdminLoginState } from "@/app/admin/actions";
+import { loginAdmin, type AdminLoginState } from "@/app/admin/actions";
 
 function AdminGateSubmitButton() {
   const { pending } = useFormStatus();
 
-  return <button type="submit">{pending ? "Checking..." : "Unlock admin demo"}</button>;
+  return <button type="submit">{pending ? "Signing in..." : "Sign in securely"}</button>;
 }
 
 export function AdminDemoGate() {
   const initialState: AdminLoginState = {};
-  const [state, formAction] = useActionState(loginAdminDemo, initialState);
+  const [state, formAction] = useActionState(loginAdmin, initialState);
 
   return (
     <main className="adminGateShell">
       <section className="adminGateCard" aria-labelledby="admin-gate-title">
-        <p className="eyebrow">Internal demo</p>
-        <h1 id="admin-gate-title">Admin access required</h1>
-        <p>
-          Enter the temporary demo password to view the iThoddoo Maldives admin dashboard.
-        </p>
+        <p className="eyebrow">Owner portal</p>
+        <h1 id="admin-gate-title">Secure owner access</h1>
+        <p>Sign in with your approved iThoddoo Maldives owner account.</p>
 
         <form action={formAction}>
-          <label htmlFor="admin-demo-password">Demo password</label>
+          <label htmlFor="admin-email">Email</label>
           <input
-            id="admin-demo-password"
+            id="admin-email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            required
+          />
+          <label htmlFor="admin-password">Password</label>
+          <input
+            id="admin-password"
             name="password"
             type="password"
             autoComplete="current-password"
+            required
           />
           {state.error ? <span role="alert">{state.error}</span> : null}
           <AdminGateSubmitButton />
         </form>
 
-        <small>
-          This is temporary demo protection only. Replace with real authentication before production.
-          Access is stored in an HttpOnly demo session cookie and expires automatically.
-        </small>
+        <small>Only approved owner and admin accounts can access this dashboard.</small>
       </section>
     </main>
   );

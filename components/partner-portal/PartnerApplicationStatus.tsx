@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { getPartnerApplicationBusinessTypeLabel } from "@/data/partnerApplications";
 import { ApplicationStatusBadge } from "@/components/admin/ApplicationStatusBadge";
 import { ApplicationTimeline } from "@/components/admin/ApplicationTimeline";
@@ -50,9 +51,9 @@ export function PartnerApplicationStatus() {
       <section className="partnerPortalPanel">
         <h2>No application yet</h2>
         <p>Submit the partner onboarding form to create a demo review record.</p>
-        <a className="primaryButton" href="/partners/onboarding">
+        <Link className="primaryButton" href="/partners/onboarding">
           Start application
-        </a>
+        </Link>
       </section>
     );
   }

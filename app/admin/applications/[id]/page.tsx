@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { ApplicationDetailPanel } from "@/components/admin/ApplicationDetailPanel";
-import { AdminProtectedPage } from "@/components/admin/AdminProtectedPage";
+import { AdminShell } from "@/components/admin/AdminShell";
+import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { adminSidebarItems } from "@/data/adminContent";
 import { getPartnerApplicationsForAdmin } from "@/lib/applications/partnerApplicationReads";
 
 export const metadata: Metadata = {
@@ -23,13 +25,15 @@ export default async function AdminApplicationDetailPage({ params }: AdminApplic
   const application = applicationRead.applications.find((item) => item.id === id);
 
   return (
-    <AdminProtectedPage>
-      <ApplicationDetailPanel
-        applicationId={id}
-        initialApplication={application}
-        dataSource={applicationRead.source}
-        readError={applicationRead.error}
-      />
-    </AdminProtectedPage>
+    <AdminShell sidebar={<AdminSidebar items={adminSidebarItems} />}>
+      <div className="adminContent">
+        <ApplicationDetailPanel
+          applicationId={id}
+          initialApplication={application}
+          dataSource={applicationRead.source}
+          readError={applicationRead.error}
+        />
+      </div>
+    </AdminShell>
   );
 }

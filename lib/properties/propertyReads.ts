@@ -1,10 +1,9 @@
 import { adminPropertyToGuesthouse } from "@/lib/properties/propertyDomain";
-import { PropertyRepository } from "@/lib/repositories";
 import { SupabasePropertyRepository } from "@/lib/repositories/supabase";
 import { getDataMode } from "@/lib/supabase/status";
 import type { Guesthouse } from "@/types/guesthouse";
 
-export type PropertyReadSource = "mock" | "supabase" | "fallback";
+export type PropertyReadSource = "supabase" | "setup_required" | "unavailable";
 
 export type PropertyReadResult<T> = {
   data: T;
@@ -12,15 +11,11 @@ export type PropertyReadResult<T> = {
   error?: string;
 };
 
-function publicMockProperties() {
-  return PropertyRepository.findPublicAll();
-}
-
 export async function getPublishedStayProperties(): Promise<PropertyReadResult<Guesthouse[]>> {
   if (getDataMode() !== "supabase") {
     return {
-      data: publicMockProperties(),
-      source: "mock"
+      data: [],
+      source: "setup_required"
     };
   }
 
@@ -33,9 +28,9 @@ export async function getPublishedStayProperties(): Promise<PropertyReadResult<G
     };
   } catch {
     return {
-      data: publicMockProperties(),
-      source: "fallback",
-      error: "Supabase property read failed. Showing mock properties."
+      data: [],
+      source: "unavailable",
+      error: "The live property directory is temporarily unavailable."
     };
   }
 }
@@ -43,8 +38,8 @@ export async function getPublishedStayProperties(): Promise<PropertyReadResult<G
 export async function getPublishedStayPropertyBySlug(slug: string): Promise<PropertyReadResult<Guesthouse | undefined>> {
   if (getDataMode() !== "supabase") {
     return {
-      data: PropertyRepository.findPublicBySlug(slug),
-      source: "mock"
+      data: undefined,
+      source: "setup_required"
     };
   }
 
@@ -64,9 +59,9 @@ export async function getPublishedStayPropertyBySlug(slug: string): Promise<Prop
     };
   } catch {
     return {
-      data: PropertyRepository.findPublicBySlug(slug),
-      source: "fallback",
-      error: "Supabase property detail read failed. Showing mock property if available."
+      data: undefined,
+      source: "unavailable",
+      error: "The live property listing is temporarily unavailable."
     };
   }
 }

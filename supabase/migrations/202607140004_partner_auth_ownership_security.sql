@@ -3,15 +3,11 @@
 
 alter table public.partners
   add column if not exists auth_user_id uuid unique references auth.users(id) on delete set null;
-
 create index if not exists partners_auth_user_id_idx on public.partners(auth_user_id);
-
 -- This column is added after the initial onboarding migration so approved applications can be linked safely.
 alter table public.partner_applications
   add column if not exists partner_id uuid references public.partners(id) on delete set null;
-
 create index if not exists partner_applications_partner_id_idx on public.partner_applications(partner_id);
-
 create table if not exists public.partner_audit_events (
   id uuid primary key default gen_random_uuid(),
   partner_id uuid references public.partners(id) on delete set null,
@@ -20,11 +16,9 @@ create table if not exists public.partner_audit_events (
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now()
 );
-
 create index if not exists partner_audit_events_partner_id_idx on public.partner_audit_events(partner_id);
 create index if not exists partner_audit_events_auth_user_id_idx on public.partner_audit_events(auth_user_id);
 create index if not exists partner_audit_events_event_type_idx on public.partner_audit_events(event_type);
-
 create table if not exists public.partner_account_invitations (
   id uuid primary key default gen_random_uuid(),
   partner_id uuid not null references public.partners(id) on delete cascade,
@@ -38,10 +32,8 @@ create table if not exists public.partner_account_invitations (
   sent_at timestamptz,
   accepted_at timestamptz
 );
-
 create index if not exists partner_account_invitations_partner_id_idx on public.partner_account_invitations(partner_id);
 create index if not exists partner_account_invitations_email_idx on public.partner_account_invitations(email);
-
 do $$
 begin
   if not exists (select 1 from pg_constraint where conname = 'partner_audit_events_event_type_check') then
@@ -66,26 +58,20 @@ begin
       check (status in ('preview', 'sent', 'accepted', 'expired', 'cancelled'));
   end if;
 end $$;
-
 alter table public.partner_audit_events enable row level security;
 alter table public.partner_account_invitations enable row level security;
-
 drop policy if exists "Service role can manage partner audit events" on public.partner_audit_events;
 drop policy if exists "Service role can manage partner account invitations" on public.partner_account_invitations;
-
 create policy "Service role can manage partner audit events"
   on public.partner_audit_events
   for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
-
 create policy "Service role can manage partner account invitations"
   on public.partner_account_invitations
   for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
-
 drop policy if exists "Partners can read own audit events" on public.partner_audit_events;
 create policy "Partners can read own audit events"
   on public.partner_audit_events
   for select using (auth_user_id = auth.uid());
-
 drop policy if exists "Partners can read own invitation previews" on public.partner_account_invitations;
 create policy "Partners can read own invitation previews"
   on public.partner_account_invitations
@@ -96,19 +82,16 @@ create policy "Partners can read own invitation previews"
         and partners.auth_user_id = auth.uid()
     )
   );
-
 -- Partner-owned record policies. Service role policies remain functional through Supabase role bypass.
 
 drop policy if exists "Partners can read own partner record" on public.partners;
 create policy "Partners can read own partner record"
   on public.partners
   for select using (auth_user_id = auth.uid());
-
 drop policy if exists "Partners can update own partner contact profile" on public.partners;
 create policy "Partners can update own partner contact profile"
   on public.partners
   for update using (auth_user_id = auth.uid()) with check (auth_user_id = auth.uid());
-
 drop policy if exists "Partners can read own properties" on public.properties;
 create policy "Partners can read own properties"
   on public.properties
@@ -119,7 +102,6 @@ create policy "Partners can read own properties"
         and partners.auth_user_id = auth.uid()
     )
   );
-
 drop policy if exists "Partners can update own properties" on public.properties;
 create policy "Partners can update own properties"
   on public.properties
@@ -136,7 +118,6 @@ create policy "Partners can update own properties"
         and partners.auth_user_id = auth.uid()
     )
   );
-
 drop policy if exists "Partners can manage own rooms" on public.rooms;
 create policy "Partners can manage own rooms"
   on public.rooms
@@ -157,7 +138,6 @@ create policy "Partners can manage own rooms"
         and partners.auth_user_id = auth.uid()
     )
   );
-
 drop policy if exists "Partners can manage own service items" on public.partner_service_items;
 create policy "Partners can manage own service items"
   on public.partner_service_items
@@ -174,7 +154,6 @@ create policy "Partners can manage own service items"
         and partners.auth_user_id = auth.uid()
     )
   );
-
 drop policy if exists "Partners can manage own documents" on public.partner_documents;
 create policy "Partners can manage own documents"
   on public.partner_documents
@@ -191,7 +170,6 @@ create policy "Partners can manage own documents"
         and partners.auth_user_id = auth.uid()
     )
   );
-
 drop policy if exists "Partners can read own notifications" on public.partner_notifications;
 create policy "Partners can read own notifications"
   on public.partner_notifications
@@ -202,7 +180,6 @@ create policy "Partners can read own notifications"
         and partners.auth_user_id = auth.uid()
     )
   );
-
 drop policy if exists "Partners can update own notifications" on public.partner_notifications;
 create policy "Partners can update own notifications"
   on public.partner_notifications
@@ -219,7 +196,6 @@ create policy "Partners can update own notifications"
         and partners.auth_user_id = auth.uid()
     )
   );
-
 drop policy if exists "Partners can read own bookings" on public.bookings;
 create policy "Partners can read own bookings"
   on public.bookings
@@ -230,7 +206,6 @@ create policy "Partners can read own bookings"
         and partners.auth_user_id = auth.uid()
     )
   );
-
 drop policy if exists "Partners can update own bookings" on public.bookings;
 create policy "Partners can update own bookings"
   on public.bookings
@@ -247,7 +222,6 @@ create policy "Partners can update own bookings"
         and partners.auth_user_id = auth.uid()
     )
   );
-
 drop policy if exists "Partners can manage own partner media links" on public.partner_media;
 create policy "Partners can manage own partner media links"
   on public.partner_media
@@ -264,7 +238,6 @@ create policy "Partners can manage own partner media links"
         and partners.auth_user_id = auth.uid()
     )
   );
-
 drop policy if exists "Partners can manage own property media links" on public.property_media;
 create policy "Partners can manage own property media links"
   on public.property_media
@@ -285,12 +258,10 @@ create policy "Partners can manage own property media links"
         and partners.auth_user_id = auth.uid()
     )
   );
-
 drop policy if exists "Partners can create own media assets" on public.media_assets;
 create policy "Partners can create own media assets"
   on public.media_assets
   for insert with check (auth.role() = 'authenticated' and rights_status = 'partner_submitted');
-
 drop policy if exists "Partners can update own submitted media assets" on public.media_assets;
 create policy "Partners can update own submitted media assets"
   on public.media_assets
@@ -314,7 +285,6 @@ create policy "Partners can update own submitted media assets"
       )
     )
   ) with check (rights_status = 'partner_submitted');
-
 drop policy if exists "Partners can read own application prices" on public.partner_application_prices;
 create policy "Partners can read own application prices"
   on public.partner_application_prices
@@ -327,7 +297,6 @@ create policy "Partners can read own application prices"
         and partners.auth_user_id = auth.uid()
     )
   );
-
 drop policy if exists "Partners can read own application services" on public.partner_application_services;
 create policy "Partners can read own application services"
   on public.partner_application_services
@@ -340,7 +309,6 @@ create policy "Partners can read own application services"
         and partners.auth_user_id = auth.uid()
     )
   );
-
 drop policy if exists "Partners can read own application media" on public.partner_application_media;
 create policy "Partners can read own application media"
   on public.partner_application_media
@@ -353,7 +321,6 @@ create policy "Partners can read own application media"
         and partners.auth_user_id = auth.uid()
     )
   );
-
 drop policy if exists "Partners can read own application verification documents" on public.partner_application_verification_documents;
 create policy "Partners can read own application verification documents"
   on public.partner_application_verification_documents
@@ -366,7 +333,6 @@ create policy "Partners can read own application verification documents"
         and partners.auth_user_id = auth.uid()
     )
   );
-
 -- Private storage policies for partner verification documents.
 -- Expected object name: partner-documents/{partner_id}/{document_id}/{filename}
 do $$
@@ -377,7 +343,6 @@ begin
     on conflict (id) do update set public = false;
   end if;
 end $$;
-
 do $$
 begin
   if exists (select 1 from information_schema.tables where table_schema = 'storage' and table_name = 'objects') then

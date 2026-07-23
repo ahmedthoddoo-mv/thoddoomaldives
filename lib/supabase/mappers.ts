@@ -11,11 +11,6 @@ function formatUsd(value: number | null) {
   return value ? `From $${Number(value).toFixed(0)}/night` : "Price on request";
 }
 
-function parseCapacityAdults(capacity: string | null) {
-  const match = capacity?.match(/\d+/);
-  return match ? Number(match[0]) : 2;
-}
-
 function normalizeVerificationStatus(status: string): AdminManagedProperty["verificationStatus"] {
   if (status === "verified") return "Verified";
   if (status === "suspended") return "Suspended";

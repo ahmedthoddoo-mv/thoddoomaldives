@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import Badge from "@/components/ui/Badge";
 import { AdminCrmStatusBadge } from "@/components/admin/AdminCrmStatusBadge";
 import { crmFilterOptions, type CrmPartner } from "@/data/adminCrm";
@@ -65,7 +66,7 @@ export function AdminCrmPartners() {
       const searchMatch = normalizedQuery.length === 0 || searchablePartnerText(partner).includes(normalizedQuery);
       return searchMatch && matchesFilter(partner, activeFilter);
     });
-  }, [activeFilter, query]);
+  }, [activeFilter, crmPartners, query]);
 
   const selectedPartner = crmPartners.find((partner) => partner.id === selectedPartnerId) ?? filteredPartners[0] ?? crmPartners[0];
   const selectedRelationship = selectedPartner
@@ -80,9 +81,9 @@ export function AdminCrmPartners() {
           <h1>Partner Relationship Pipeline</h1>
           <p>Track internal partner leads, owners, follow-ups, verification, membership potential, and sales notes.</p>
         </div>
-        <a className="adminContentAddButton" href="/admin/crm/tasks">
+        <Link className="adminContentAddButton" href="/admin/crm/tasks">
           View Tasks
-        </a>
+        </Link>
       </section>
 
       <section className="adminPanel">

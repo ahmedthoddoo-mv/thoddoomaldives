@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { saveAdminPropertyToSupabase } from "@/app/admin/properties/actions";
 import { PropertyPublishPanel } from "@/components/admin/PropertyPublishPanel";
 import { PropertySaveStatus } from "@/components/admin/PropertySaveStatus";
 import Badge from "@/components/ui/Badge";
 import type { AdminManagedProperty } from "@/data/adminContent";
 import { createPropertySlug, normalizePropertySlug } from "@/lib/properties/propertySlug";
-import { createAdminProperty, saveAdminProperty, useAdminProperties } from "@/lib/properties/propertyStore";
 import { validatePropertyForSave } from "@/lib/properties/propertyValidation";
 
 type AdminPropertyFormProps = {
@@ -186,21 +186,14 @@ function createPropertyFromState({
   };
 }
 
-export function AdminPropertyForm({ mode, property, propertyId }: AdminPropertyFormProps) {
+export function AdminPropertyForm({ mode, property }: AdminPropertyFormProps) {
   const router = useRouter();
   const [isSaving, startSavingTransition] = useTransition();
-  const allProperties = useAdminProperties();
-  const storedProperty = propertyId ? allProperties.find((item) => item.id === propertyId) : undefined;
-  const activeProperty = storedProperty ?? property;
+  const allProperties = property ? [property] : [];
+  const activeProperty = property;
   const [form, setForm] = useState<PropertyFormState>(() => stateFromProperty(activeProperty));
   const [notice, setNotice] = useState("Ready to save property changes.");
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
-
-  useEffect(() => {
-    if (mode === "edit" && activeProperty) {
-      setForm(stateFromProperty(activeProperty));
-    }
-  }, [activeProperty, mode]);
 
   const preview = useMemo(() => {
     const gallery = listFromText(form.gallery);
@@ -270,27 +263,21 @@ export function AdminPropertyForm({ mode, property, propertyId }: AdminPropertyF
       return;
     }
 
-    const savedProperty = mode === "new" ? createAdminProperty(nextProperty) : saveAdminProperty(nextProperty);
-    setNotice(`${savedProperty.name} saved to browser demo storage. Saving to Supabase...`);
+    setNotice(`Saving ${nextProperty.name} to the live business database...`);
     setValidationErrors([]);
 
     startSavingTransition(async () => {
-      const result = await saveAdminPropertyToSupabase({ property: savedProperty, publish });
+      const result = await saveAdminPropertyToSupabase({ property: nextProperty, publish });
 
       if (!result.ok) {
-        setNotice(`${savedProperty.name} saved locally, but Supabase save failed: ${result.message}`);
-
-        if (mode === "new") {
-          router.push(`/admin/properties/${savedProperty.id}/edit`);
-        }
-
+        setNotice(`Nothing was saved: ${result.message}`);
         return;
       }
 
       setNotice(result.message);
 
       if (mode === "new") {
-        router.push(`/admin/properties/${result.propertyId ?? savedProperty.id}/edit`);
+        router.push(`/admin/properties/${result.propertyId ?? nextProperty.id}/edit`);
         return;
       }
 
@@ -306,12 +293,12 @@ export function AdminPropertyForm({ mode, property, propertyId }: AdminPropertyF
           <h1>{mode === "new" ? "Add Property" : `Edit ${property?.name ?? "Property"}`}</h1>
           <p>
             Manage listing content, media paths, room prices, contact channels, publication state, partner status, and SEO
-            fields without touching code. Demo storage stays available, and Supabase saves run when the service role is configured.
+            fields without touching code. Records are saved only to the live business database.
           </p>
         </div>
-        <a className="adminContentAddButton adminContentSecondaryButton" href="/admin/properties">
+        <Link className="adminContentAddButton adminContentSecondaryButton" href="/admin/properties">
           Back to properties
-        </a>
+        </Link>
       </section>
 
       <PropertySaveStatus message={notice} errors={validationErrors} />
@@ -455,9 +442,16 @@ export function AdminPropertyForm({ mode, property, propertyId }: AdminPropertyF
             isSaving={isSaving}
             onArchive={() => {
               const nextProperty = createPropertyFromState({ form, existingProperties: allProperties, currentProperty: activeProperty });
-              saveAdminProperty({ ...nextProperty, isArchived: true, isPublished: false });
-              setNotice(`${nextProperty.name || "Property"} archived in browser demo storage.`);
-              router.push("/admin/properties");
+              setNotice(`Archiving ${nextProperty.name || "property"}...`);
+              startSavingTransition(async () => {
+                const result = await saveAdminPropertyToSupabase({
+                  property: { ...nextProperty, isArchived: true, isPublished: false }
+                });
+                setNotice(result.message);
+                if (result.ok) {
+                  router.push("/admin/properties");
+                }
+              });
             }}
             onPublish={() => saveWithStatus({ status: "Verified", publish: true, verify: true })}
             onSaveDraft={() => saveWithStatus({ status: "Draft", publish: false })}

@@ -12,7 +12,6 @@ import { AdminSystemStatus } from "@/components/admin/AdminSystemStatus";
 import { DashboardStats } from "@/components/admin/DashboardStats";
 import { adminQuickActions, adminSidebarItems } from "@/data/adminContent";
 import { getPartnerApplicationsForAdmin } from "@/lib/applications/partnerApplicationReads";
-import { calculateAdminMetrics } from "@/lib/platform/metrics";
 import { getSupabaseHealthCheck } from "@/lib/supabase/health";
 
 export const metadata: Metadata = {
@@ -23,41 +22,39 @@ export const metadata: Metadata = {
   }
 };
 
-const adminMetrics = calculateAdminMetrics();
-
 const dashboardStats = [
   {
     label: "Pending Partner Applications",
-    value: String(adminMetrics.pendingApplications),
-    detail: "CRM records needing approval",
+    value: "0",
+    detail: "Live applications needing approval",
     tone: "coral" as const
   },
   {
     label: "Verified Partners",
-    value: String(adminMetrics.recentPartners - adminMetrics.pendingApplications),
-    detail: "Derived from CRM verification",
+    value: "0",
+    detail: "Approved live records",
     tone: "green" as const
   },
   {
-    label: "Guesthouses",
-    value: String(adminMetrics.publishedProperties),
-    detail: "Published property records"
+    label: "Real Businesses",
+    value: "0",
+    detail: "Live database records"
   },
   {
     label: "Restaurants",
-    value: "6",
-    detail: "3 ready for content refresh",
+    value: "0",
+    detail: "No demo records",
     tone: "gold" as const
   },
   {
     label: "Excursions",
-    value: "9",
-    detail: "Snorkeling, fishing, sandbank"
+    value: "0",
+    detail: "No demo records"
   },
   {
     label: "Transfer Companies",
-    value: "4",
-    detail: "2 premium transfer partners",
+    value: "0",
+    detail: "No demo records",
     tone: "green" as const
   },
   {
@@ -67,63 +64,14 @@ const dashboardStats = [
   },
   {
     label: "Open CRM Tasks",
-    value: String(adminMetrics.openTasks),
-    detail: "Calls, photos, pricing, responses",
+    value: "0",
+    detail: "Live follow-up tasks",
     tone: "gold" as const
   }
 ];
 
-const recentApplications = [
-  {
-    business: "Palm Garden Thoddoo",
-    type: "Guesthouse",
-    plan: "Verified",
-    status: "Pending review",
-    date: "Jul 9, 2026"
-  },
-  {
-    business: "Lagoon Bite Cafe",
-    type: "Restaurant",
-    plan: "Free",
-    status: "Needs photos",
-    date: "Jul 8, 2026"
-  },
-  {
-    business: "Blue Channel Transfers",
-    type: "Speedboat",
-    plan: "Premium",
-    status: "Ready to verify",
-    date: "Jul 7, 2026"
-  },
-  {
-    business: "North Reef Adventures",
-    type: "Excursion",
-    plan: "Verified",
-    status: "In review",
-    date: "Jul 6, 2026"
-  }
-];
-
-const recentPartners = [
-  {
-    name: "Thoddoo Sun Sky Inn",
-    status: "Verified",
-    joined: "Joined July 2026",
-    category: "Guesthouse"
-  },
-  {
-    name: "Blue Channel Speedboat",
-    status: "Premium",
-    joined: "Joined July 2026",
-    category: "Transfer Company"
-  },
-  {
-    name: "Island Bites",
-    status: "Verified",
-    joined: "Joined July 2026",
-    category: "Restaurant"
-  }
-];
+const recentApplications: [] = [];
+const recentPartners: [] = [];
 
 const roadmapGroups = [
   {
@@ -151,7 +99,7 @@ export default async function AdminPage() {
     {
       title: "SEO",
       value: "Healthy",
-      description: "Metadata and structured content are ready for demo review."
+      description: "Metadata and structured content are configured."
     },
     {
       title: "Sitemap",
@@ -166,17 +114,17 @@ export default async function AdminPage() {
     {
       title: "Partner Program",
       value: "Healthy",
-      description: "Plans, onboarding, and partner examples are connected."
+      description: "Plans and onboarding are connected."
     },
     {
       title: "Website",
       value: "Healthy",
-      description: "Public pages are available as static demo surfaces."
+      description: "Public pages are available."
     },
     {
       title: "Data Mode",
-      value: supabaseHealth.dataMode === "supabase" ? "Supabase" : "Mock",
-      description: "Controlled by NEXT_PUBLIC_DATA_MODE with mock as the safe default."
+      value: supabaseHealth.dataMode === "supabase" ? "Live database" : "Setup required",
+      description: "Real business records require the live database."
     },
     {
       title: "Supabase",

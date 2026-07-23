@@ -4,7 +4,7 @@ export function AdminHeader() {
   return (
     <header className="adminHeader">
       <div>
-        <Badge>Demo mode</Badge>
+        <Badge>Owner portal</Badge>
         <p className="eyebrow">iThoddoo Maldives Admin</p>
         <h1>Business Control Center</h1>
         <p>
@@ -13,9 +13,9 @@ export function AdminHeader() {
         </p>
       </div>
       <aside className="adminNotice" aria-label="Dashboard environment">
-        <span>UI only</span>
-        <strong>No backend connected</strong>
-        <p>No login, database, API, payments, or authentication are active in this demo.</p>
+        <span>Secure access</span>
+        <strong>Owner session active</strong>
+        <p>Secure owner authentication and live database access are active.</p>
       </aside>
     </header>
   );

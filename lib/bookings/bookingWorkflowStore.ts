@@ -156,21 +156,19 @@ export function subscribeToBookingStore(callback: () => void) {
 }
 
 export function useBookingWorkflow(initialBookings: Booking[]) {
-  const [bookings, setBookings] = useState<BookingWorkflowRecord[]>(() => initialBookings.map(normalizeInitialBooking));
+  const [, setVersion] = useState(0);
 
   useEffect(() => {
-    setBookings(mergeBookings(initialBookings));
-    return subscribeToBookingStore(() => setBookings(mergeBookings(initialBookings)));
-  }, [initialBookings]);
+    return subscribeToBookingStore(() => setVersion((version) => version + 1));
+  }, []);
 
-  return bookings;
+  return mergeBookings(initialBookings);
 }
 
 export function useBookingTimeline() {
-  const [events, setEvents] = useState<BookingTimelineEvent[]>([]);
+  const [events, setEvents] = useState<BookingTimelineEvent[]>(getBookingTimelineEvents);
 
   useEffect(() => {
-    setEvents(getBookingTimelineEvents());
     return subscribeToBookingStore(() => setEvents(getBookingTimelineEvents()));
   }, []);
 

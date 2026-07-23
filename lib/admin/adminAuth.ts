@@ -1,118 +1,87 @@
 import "server-only";
 
-import { createHmac, timingSafeEqual } from "crypto";
 import { cookies } from "next/headers";
+import { createSupabaseServerClient, createSupabaseServiceRoleClient } from "@/lib/supabase/server";
+import type { Tables } from "@/lib/supabase/types";
 
-export const adminSessionCookieName = "ithoddoo_admin_demo_session";
+export const adminAccessTokenCookie = "ithoddoo_admin_access_token";
+export const adminRefreshTokenCookie = "ithoddoo_admin_refresh_token";
 
-const sessionDurationMs = 8 * 60 * 60 * 1000;
+export type AdminAuthState =
+  | { status: "authenticated"; userId: string; email: string; role: "owner" | "admin" }
+  | { status: "unauthenticated"; reason: string }
+  | { status: "unconfigured"; reason: string };
 
-type AdminSessionPayload = {
-  issuedAt: number;
-  expiresAt: number;
-};
+const secureCookie = process.env.NODE_ENV === "production";
 
-type AdminCookieOptions = {
-  httpOnly: true;
-  secure: boolean;
-  sameSite: "lax";
-  path: string;
-  expires?: Date;
-  maxAge?: number;
-};
-
-export function isAdminDemoPasswordConfigured() {
-  return Boolean(process.env.ADMIN_DEMO_PASSWORD);
-}
-
-function getAdminDemoPassword() {
-  return process.env.ADMIN_DEMO_PASSWORD ?? "";
-}
-
-function getCookieOptions(expiresAt?: number): AdminCookieOptions {
+function getAdminCookieOptions(maxAge: number) {
   return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/admin",
-    ...(expiresAt ? { expires: new Date(expiresAt) } : {})
+    secure: secureCookie,
+    sameSite: "lax" as const,
+    path: "/",
+    maxAge
   };
 }
 
-function signPayload(payload: string) {
-  return createHmac("sha256", getAdminDemoPassword()).update(payload).digest("base64url");
+export async function setAdminSessionCookies(accessToken: string, refreshToken: string, expiresIn: number) {
+  const cookieStore = await cookies();
+  cookieStore.set(adminAccessTokenCookie, accessToken, getAdminCookieOptions(Math.max(60, expiresIn)));
+  cookieStore.set(adminRefreshTokenCookie, refreshToken, getAdminCookieOptions(60 * 60 * 24 * 30));
 }
 
-function safeCompare(left: string, right: string) {
-  const leftBuffer = Buffer.from(left);
-  const rightBuffer = Buffer.from(right);
-
-  return leftBuffer.length === rightBuffer.length && timingSafeEqual(leftBuffer, rightBuffer);
+export async function clearAdminSessionCookies() {
+  const cookieStore = await cookies();
+  cookieStore.delete(adminAccessTokenCookie);
+  cookieStore.delete(adminRefreshTokenCookie);
 }
 
-function createSessionValue() {
-  const issuedAt = Date.now();
-  const payload: AdminSessionPayload = {
-    issuedAt,
-    expiresAt: issuedAt + sessionDurationMs
+export async function getAdminAuthState(): Promise<AdminAuthState> {
+  const supabase = createSupabaseServerClient();
+  const serviceRole = createSupabaseServiceRoleClient();
+  if (!supabase || !serviceRole) {
+    return { status: "unconfigured", reason: "Supabase owner authentication is not configured." };
+  }
+
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get(adminAccessTokenCookie)?.value;
+  if (!accessToken) {
+    return { status: "unauthenticated", reason: "Owner session is missing." };
+  }
+
+  const { data: userResult, error: userError } = await supabase.auth.getUser(accessToken);
+  if (userError || !userResult.user?.email) {
+    return { status: "unauthenticated", reason: "Owner session is invalid or expired." };
+  }
+
+  const { data: adminUser, error: adminError } = await serviceRole
+    .from("admin_users")
+    .select("role, is_active")
+    .eq("auth_user_id", userResult.user.id)
+    .eq("is_active", true)
+    .maybeSingle();
+  const adminRecord = adminUser as Tables<"admin_users"> | null;
+
+  if (adminError || !adminRecord || !["owner", "admin"].includes(adminRecord.role)) {
+    return { status: "unauthenticated", reason: "This account does not have dashboard access." };
+  }
+
+  return {
+    status: "authenticated",
+    userId: userResult.user.id,
+    email: userResult.user.email,
+    role: adminRecord.role
   };
-  const encodedPayload = Buffer.from(JSON.stringify(payload)).toString("base64url");
-  const signature = signPayload(encodedPayload);
-
-  return `${encodedPayload}.${signature}`;
 }
 
-function verifySessionValue(value?: string) {
-  if (!value || !isAdminDemoPasswordConfigured()) {
-    return false;
-  }
-
-  const [encodedPayload, signature] = value.split(".");
-  if (!encodedPayload || !signature) {
-    return false;
-  }
-
-  const expectedSignature = signPayload(encodedPayload);
-  if (!safeCompare(signature, expectedSignature)) {
-    return false;
-  }
-
-  try {
-    const payload = JSON.parse(Buffer.from(encodedPayload, "base64url").toString("utf8")) as Partial<AdminSessionPayload>;
-    return typeof payload.expiresAt === "number" && payload.expiresAt > Date.now();
-  } catch {
-    return false;
-  }
+export async function hasAdminSession() {
+  return (await getAdminAuthState()).status === "authenticated";
 }
 
-export async function hasAdminDemoSession() {
-  const cookieStore = await cookies();
-  return verifySessionValue(cookieStore.get(adminSessionCookieName)?.value);
-}
-
-export async function createAdminDemoSession() {
-  const cookieStore = await cookies();
-  const expiresAt = Date.now() + sessionDurationMs;
-
-  cookieStore.set(adminSessionCookieName, createSessionValue(), getCookieOptions(expiresAt));
-}
-
-export async function clearAdminDemoSession() {
-  const cookieStore = await cookies();
-
-  cookieStore.set(adminSessionCookieName, "", {
-    ...getCookieOptions(),
-    expires: new Date(0),
-    maxAge: 0
-  });
-}
-
-export function isValidAdminDemoPassword(password: string) {
-  const expectedPassword = getAdminDemoPassword();
-
-  if (!expectedPassword) {
-    return false;
+export async function requireAdminSession() {
+  const state = await getAdminAuthState();
+  if (state.status !== "authenticated") {
+    throw new Error("Owner authentication required.");
   }
-
-  return safeCompare(password, expectedPassword);
+  return state;
 }

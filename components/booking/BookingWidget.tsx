@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import Link from "next/link";
 import { submitRealBookingRequest } from "@/app/booking/actions";
 import { BookingRepository } from "@/lib/repositories";
 import { buildBookingWhatsAppMessage, calculateBookingDraft } from "@/lib/booking";
@@ -215,7 +216,12 @@ export function BookingWidget({ propertyName, propertySlug, propertyId, partnerI
       <div className="bookingWidgetGrid">
         <div className="bookingWidgetForm">
           <BookingCalendar checkIn={checkIn} checkOut={checkOut} onCheckInChange={setCheckIn} onCheckOutChange={setCheckOut} />
-          <GuestForm adults={adults} children={children} onAdultsChange={setAdults} onChildrenChange={setChildren} />
+          <GuestForm
+            adults={adults}
+            childCount={children}
+            onAdultsChange={setAdults}
+            onChildrenChange={setChildren}
+          />
           <div className="bookingFormGrid">
             <label className="bookingField">
               <span>Guest name</span>
@@ -280,9 +286,9 @@ export function BookingWidget({ propertyName, propertySlug, propertyId, partnerI
             <div className="bookingValidationPanel" role="alert">
               <strong>Booking could not be submitted</strong>
               <p>{submitMessage}</p>
-              <a className="adminPropertyActionLink" href="/booking/failure">
+              <Link className="adminPropertyActionLink" href="/booking/failure">
                 View failure page
-              </a>
+              </Link>
             </div>
           ) : null}
 

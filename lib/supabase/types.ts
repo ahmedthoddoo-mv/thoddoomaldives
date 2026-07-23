@@ -31,6 +31,7 @@ export type Database = {
           category: string;
         };
         Update: Partial<Database["public"]["Tables"]["partners"]["Row"]>;
+        Relationships: [];
       };
       properties: {
         Row: {
@@ -73,6 +74,7 @@ export type Database = {
           hero_image_path: string;
         };
         Update: Partial<Database["public"]["Tables"]["properties"]["Row"]>;
+        Relationships: [];
       };
       rooms: {
         Row: {
@@ -97,6 +99,7 @@ export type Database = {
           price_per_night: number;
         };
         Update: Partial<Database["public"]["Tables"]["rooms"]["Row"]>;
+        Relationships: [];
       };
       guests: {
         Row: {
@@ -110,6 +113,7 @@ export type Database = {
         };
         Insert: Partial<Database["public"]["Tables"]["guests"]["Row"]> & { full_name: string };
         Update: Partial<Database["public"]["Tables"]["guests"]["Row"]>;
+        Relationships: [];
       };
       bookings: {
         Row: {
@@ -144,6 +148,7 @@ export type Database = {
           check_out: string;
         };
         Update: Partial<Database["public"]["Tables"]["bookings"]["Row"]>;
+        Relationships: [];
       };
       media_assets: {
         Row: {
@@ -168,6 +173,7 @@ export type Database = {
           file_type: string;
         };
         Update: Partial<Database["public"]["Tables"]["media_assets"]["Row"]>;
+        Relationships: [];
       };
       restaurants: {
         Row: {
@@ -192,6 +198,7 @@ export type Database = {
           image_path: string;
         };
         Update: Partial<Database["public"]["Tables"]["restaurants"]["Row"]>;
+        Relationships: [];
       };
       experiences: {
         Row: {
@@ -217,6 +224,7 @@ export type Database = {
           image_path: string;
         };
         Update: Partial<Database["public"]["Tables"]["experiences"]["Row"]>;
+        Relationships: [];
       };
       transfers: {
         Row: {
@@ -245,6 +253,7 @@ export type Database = {
           image_path: string;
         };
         Update: Partial<Database["public"]["Tables"]["transfers"]["Row"]>;
+        Relationships: [];
       };
       crm_tasks: {
         Row: {
@@ -261,6 +270,7 @@ export type Database = {
         };
         Insert: Partial<Database["public"]["Tables"]["crm_tasks"]["Row"]> & { title: string; task_type: string };
         Update: Partial<Database["public"]["Tables"]["crm_tasks"]["Row"]>;
+        Relationships: [];
       };
       crm_notes: {
         Row: {
@@ -273,6 +283,111 @@ export type Database = {
         };
         Insert: Partial<Database["public"]["Tables"]["crm_notes"]["Row"]> & { author: string; body: string };
         Update: Partial<Database["public"]["Tables"]["crm_notes"]["Row"]>;
+        Relationships: [];
+      };
+      partner_applications: {
+        Row: {
+          id: string;
+          application_reference: string | null;
+          business_name: string;
+          business_type: string;
+          contact_person: string;
+          whatsapp: string;
+          email: string;
+          island: string;
+          address: string | null;
+          google_maps_link: string | null;
+          website: string | null;
+          instagram: string | null;
+          facebook: string | null;
+          short_description: string;
+          registration_number: string | null;
+          membership_plan: string;
+          status: string;
+          metadata: Json;
+          notes: string | null;
+          missing_information: string[];
+          review_notes: string[];
+          partner_id: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          submitted_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["partner_applications"]["Row"]> & {
+          business_name: string;
+          business_type: string;
+          contact_person: string;
+          whatsapp: string;
+          email: string;
+          short_description: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["partner_applications"]["Row"]>;
+        Relationships: [];
+      };
+      partner_application_prices: {
+        Row: {
+          id: string;
+          application_id: string;
+          item_name: string;
+          description: string | null;
+          price: number | null;
+          currency: string;
+          unit: string;
+          child_price: number | null;
+          notes: string | null;
+          active: boolean;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["partner_application_prices"]["Row"]> & {
+          application_id: string;
+          item_name: string;
+          unit: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["partner_application_prices"]["Row"]>;
+        Relationships: [];
+      };
+      partner_application_media: {
+        Row: {
+          id: string;
+          application_id: string;
+          media_type: string;
+          label: string;
+          path_or_note: string | null;
+          file_name: string | null;
+          status: string;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["partner_application_media"]["Row"]> & {
+          application_id: string;
+          media_type: string;
+          label: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["partner_application_media"]["Row"]>;
+        Relationships: [];
+      };
+      partner_application_services: {
+        Row: {
+          id: string;
+          application_id: string;
+          service_type: string;
+          title: string;
+          details: string | null;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["partner_application_services"]["Row"]> & {
+          application_id: string;
+          service_type: string;
+          title: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["partner_application_services"]["Row"]>;
+        Relationships: [];
       };
       partner_application_verification_documents: {
         Row: {
@@ -299,6 +414,7 @@ export type Database = {
           document_label: string;
         };
         Update: Partial<Database["public"]["Tables"]["partner_application_verification_documents"]["Row"]>;
+        Relationships: [];
       };
       partner_service_items: {
         Row: {
@@ -321,6 +437,7 @@ export type Database = {
         };
         Insert: Partial<Database["public"]["Tables"]["partner_service_items"]["Row"]> & { title: string };
         Update: Partial<Database["public"]["Tables"]["partner_service_items"]["Row"]>;
+        Relationships: [];
       };
       partner_documents: {
         Row: {
@@ -349,6 +466,7 @@ export type Database = {
           document_label: string;
         };
         Update: Partial<Database["public"]["Tables"]["partner_documents"]["Row"]>;
+        Relationships: [];
       };
       partner_notifications: {
         Row: {
@@ -368,6 +486,7 @@ export type Database = {
           body: string;
         };
         Update: Partial<Database["public"]["Tables"]["partner_notifications"]["Row"]>;
+        Relationships: [];
       };
       partner_audit_events: {
         Row: {
@@ -382,12 +501,14 @@ export type Database = {
           event_type: string;
         };
         Update: Partial<Database["public"]["Tables"]["partner_audit_events"]["Row"]>;
+        Relationships: [];
       };
       partner_account_invitations: {
         Row: {
           id: string;
           partner_id: string;
           application_id: string | null;
+          auth_user_id: string | null;
           email: string;
           status: string;
           invitation_url: string | null;
@@ -402,6 +523,23 @@ export type Database = {
           email: string;
         };
         Update: Partial<Database["public"]["Tables"]["partner_account_invitations"]["Row"]>;
+        Relationships: [];
+      };
+      admin_users: {
+        Row: {
+          auth_user_id: string;
+          email: string;
+          role: "owner" | "admin";
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["admin_users"]["Row"]> & {
+          auth_user_id: string;
+          email: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["admin_users"]["Row"]>;
+        Relationships: [];
       };
       membership_plans: {
         Row: {
@@ -416,11 +554,12 @@ export type Database = {
         };
         Insert: Partial<Database["public"]["Tables"]["membership_plans"]["Row"]> & { name: string; price_label: string };
         Update: Partial<Database["public"]["Tables"]["membership_plans"]["Row"]>;
+        Relationships: [];
       };
-      property_experiences: { Row: { property_id: string; experience_id: string; created_at: string }; Insert: { property_id: string; experience_id: string }; Update: never };
-      property_transfers: { Row: { property_id: string; transfer_id: string; created_at: string }; Insert: { property_id: string; transfer_id: string }; Update: never };
-      property_media: { Row: { property_id: string; media_asset_id: string; usage: string; sort_order: number; created_at: string }; Insert: { property_id: string; media_asset_id: string; usage?: string; sort_order?: number }; Update: Partial<{ usage: string; sort_order: number }> };
-      partner_media: { Row: { partner_id: string; media_asset_id: string; usage: string; sort_order: number; created_at: string }; Insert: { partner_id: string; media_asset_id: string; usage?: string; sort_order?: number }; Update: Partial<{ usage: string; sort_order: number }> };
+      property_experiences: { Row: { property_id: string; experience_id: string; created_at: string }; Insert: { property_id: string; experience_id: string }; Update: never; Relationships: [] };
+      property_transfers: { Row: { property_id: string; transfer_id: string; created_at: string }; Insert: { property_id: string; transfer_id: string }; Update: never; Relationships: [] };
+      property_media: { Row: { property_id: string; media_asset_id: string; usage: string; sort_order: number; created_at: string }; Insert: { property_id: string; media_asset_id: string; usage?: string; sort_order?: number }; Update: Partial<{ usage: string; sort_order: number }>; Relationships: [] };
+      partner_media: { Row: { partner_id: string; media_asset_id: string; usage: string; sort_order: number; created_at: string }; Insert: { partner_id: string; media_asset_id: string; usage?: string; sort_order?: number }; Update: Partial<{ usage: string; sort_order: number }>; Relationships: [] };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

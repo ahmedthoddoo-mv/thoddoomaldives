@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export function PartnerCTA() {
   return (
     <section className="partnerCta">
@@ -8,7 +10,7 @@ export function PartnerCTA() {
           The first version focuses on clean partner data, service structure, content quality, and verification readiness.
         </p>
       </div>
-      <a className="primaryButton" href="/partners/onboarding">Start partner review</a>
+      <Link className="primaryButton" href="/partners/onboarding">Start partner review</Link>
     </section>
   );
 }

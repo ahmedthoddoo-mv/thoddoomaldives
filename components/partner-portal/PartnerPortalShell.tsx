@@ -1,4 +1,5 @@
-import { partnerNavigation, partnerProfile } from "@/data/partnerPortal";
+import Link from "next/link";
+import { partnerNavigation } from "@/data/partnerPortal";
 import { signOutPartner } from "@/app/partner/auth/actions";
 import type { PartnerPortalData } from "@/lib/partner-portal/partnerAccess";
 
@@ -10,7 +11,7 @@ type PartnerPortalShellProps = {
 };
 
 export function PartnerPortalShell({ children, title, subtitle, portalData }: PartnerPortalShellProps) {
-  const businessName = portalData?.profile.businessName ?? partnerProfile.businessName;
+  const businessName = portalData?.profile.businessName ?? "Partner account";
   const setupRequired = portalData?.source === "setup_required";
   const logo =
     businessName
@@ -18,16 +19,16 @@ export function PartnerPortalShell({ children, title, subtitle, portalData }: Pa
       .filter(Boolean)
       .slice(0, 2)
       .map((part) => part[0]?.toUpperCase())
-      .join("") || partnerProfile.logo;
+      .join("") || "IP";
 
   return (
     <main className="partnerPortal">
       <div className="partnerPortalFrame">
         <aside className="partnerPortalSidebar" aria-label="Partner portal navigation">
-          <a className="partnerPortalBrand" href="/partner/dashboard" aria-label="Partner dashboard home">
+          <Link className="partnerPortalBrand" href="/partner/dashboard" aria-label="Partner dashboard home">
             <span>{logo}</span>
             <strong>Partner Portal</strong>
-          </a>
+          </Link>
           <nav>
             {partnerNavigation.map((item) => (
               <a href={item.href} key={item.label}>
@@ -44,9 +45,9 @@ export function PartnerPortalShell({ children, title, subtitle, portalData }: Pa
               <p>{subtitle}</p>
             </div>
             <div className="partnerPortalHeaderBadges">
-              <span>{portalData?.membership.plan ?? partnerProfile.membershipPlan}</span>
-              <span>{portalData?.verification.status ?? partnerProfile.verificationStatus}</span>
-              <span>{portalData?.source ?? "mock"}</span>
+              <span>{portalData?.membership.plan ?? "Free"}</span>
+              <span>{portalData?.verification.status ?? "Missing"}</span>
+              <span>{portalData?.source === "supabase" ? "Live" : "Setup required"}</span>
               <form action={signOutPartner}>
                 <button type="submit">Sign out</button>
               </form>
@@ -60,7 +61,7 @@ export function PartnerPortalShell({ children, title, subtitle, portalData }: Pa
                 Ask the iThoddoo Maldives admin team to link this Supabase Auth user to the correct partner record before
                 managing business data.
               </p>
-              <a href="/partner/support">Contact support</a>
+              <Link href="/partner/support">Contact support</Link>
             </section>
           ) : children}
         </div>

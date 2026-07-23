@@ -2,11 +2,12 @@
 
 import { createBookingEmailPreviews } from "@/lib/bookings/bookingEmails";
 import { calculateCommission, calculateNights } from "@/lib/booking";
-import { hasAdminDemoSession } from "@/lib/admin/adminAuth";
+import { hasAdminSession } from "@/lib/admin/adminAuth";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
+import type { SupabaseDatabaseClient } from "@/lib/supabase/server";
 import { getDataMode } from "@/lib/supabase/status";
 import { mapBookingRowToDomain } from "@/lib/supabase/mappers";
-import type { Tables } from "@/lib/supabase/types";
+import type { Database, Tables } from "@/lib/supabase/types";
 import type { ContactPreference, BookingEmailPreview } from "@/types/booking-workflow";
 import type { Booking, BookingStatus, PaymentStatus } from "@/types/booking";
 
@@ -109,7 +110,7 @@ function validateBookingInput(input: RealBookingInput, room?: Tables<"rooms">) {
   };
 }
 
-async function createBookingReference(db: any) {
+async function createBookingReference(db: SupabaseDatabaseClient) {
   const year = new Date().getFullYear();
   const startOfYear = `${year}-01-01T00:00:00.000Z`;
   const { count } = await db
@@ -133,7 +134,11 @@ function createEmailPreviewsFromBooking(booking: Booking): BookingEmailPreview[]
   });
 }
 
-async function saveBookingCrmPlaceholders(db: any, booking: Booking, partnerId?: string | null) {
+async function saveBookingCrmPlaceholders(
+  db: SupabaseDatabaseClient,
+  booking: Booking,
+  partnerId?: string | null
+) {
   if (!partnerId) return;
 
   await db.from("crm_notes").insert({
@@ -172,11 +177,13 @@ export async function submitRealBookingRequest(input: RealBookingInput): Promise
     };
   }
 
-  const db = supabase as any;
+  const db = supabase;
+  const lookupById = isUuid(input.propertyId);
+  const propertyLookupValue = lookupById ? input.propertyId! : input.propertySlug!;
   const propertyQuery = db
     .from("properties")
     .select("*, partners(*)")
-    .eq(isUuid(input.propertyId) ? "id" : "slug", isUuid(input.propertyId) ? input.propertyId : input.propertySlug)
+    .eq(lookupById ? "id" : "slug", propertyLookupValue)
     .eq("publication_status", "published")
     .maybeSingle();
   const { data: propertyData, error: propertyError } = await propertyQuery;
@@ -194,7 +201,7 @@ export async function submitRealBookingRequest(input: RealBookingInput): Promise
   const { data: roomData, error: roomError } = await db
     .from("rooms")
     .select("*")
-    .eq("id", input.roomId)
+    .eq("id", input.roomId!)
     .eq("property_id", property.id)
     .eq("active", true)
     .maybeSingle();
@@ -312,11 +319,11 @@ export async function updateRealBookingStatus(params: {
   }
 
   const actor = params.actor ?? "admin";
-  if (actor === "admin" && !(await hasAdminDemoSession())) {
+  if (actor === "admin" && !(await hasAdminSession())) {
     return { ok: false, mode: "supabase" as const, message: "Admin session is required." };
   }
 
-  const db = supabase as any;
+  const db = supabase;
   const { data: existingBooking, error: existingError } = await db
     .from("bookings")
     .select("id, partner_id")
@@ -331,7 +338,7 @@ export async function updateRealBookingStatus(params: {
     return { ok: false, mode: "supabase" as const, message: "Partner booking access is not valid for this record." };
   }
 
-  const payload: Record<string, string | boolean | null> = {};
+  const payload: Database["public"]["Tables"]["bookings"]["Update"] = {};
   if (status) payload.booking_status = status;
   if (paymentStatus) payload.payment_status = paymentStatus === "demo-only" ? "demo_only" : paymentStatus;
   if (typeof roomPrepared === "boolean") payload.room_prepared = roomPrepared;

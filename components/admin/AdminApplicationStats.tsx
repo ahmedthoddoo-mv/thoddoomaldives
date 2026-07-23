@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import {
   PartnerApplicationRepository,
   subscribeToPartnerApplications
@@ -9,18 +10,15 @@ import type { PartnerApplicationRecord } from "@/types/partner-application";
 
 export function AdminApplicationStats({ initialApplications }: { initialApplications?: PartnerApplicationRecord[] }) {
   const hasServerApplications = Boolean(initialApplications);
-  const [applications, setApplications] = useState<PartnerApplicationRecord[]>(() =>
-    initialApplications ?? PartnerApplicationRepository.findAll()
+  const [storedApplications, setStoredApplications] = useState<PartnerApplicationRecord[]>(() =>
+    PartnerApplicationRepository.findAll()
   );
+  const applications = initialApplications ?? storedApplications;
 
   useEffect(() => {
-    if (hasServerApplications) {
-      setApplications(initialApplications ?? []);
-      return () => undefined;
-    }
-
-    return subscribeToPartnerApplications(() => setApplications(PartnerApplicationRepository.findAll()));
-  }, [hasServerApplications, initialApplications]);
+    if (hasServerApplications) return;
+    return subscribeToPartnerApplications(() => setStoredApplications(PartnerApplicationRepository.findAll()));
+  }, [hasServerApplications]);
 
   const stats = useMemo(() => {
     const applicationsWithDocuments = applications.filter(
@@ -51,7 +49,7 @@ export function AdminApplicationStats({ initialApplications }: { initialApplicat
       <div className="adminSectionHeader">
         <p className="eyebrow">Applications</p>
         <h2>Partner approval workflow</h2>
-        <a href="/admin/applications">Open queue</a>
+        <Link href="/admin/applications">Open queue</Link>
       </div>
       <div className="applicationStatsGrid">
         {stats.map((stat) => (

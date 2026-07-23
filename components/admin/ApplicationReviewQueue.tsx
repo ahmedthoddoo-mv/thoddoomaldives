@@ -55,19 +55,16 @@ export function ApplicationReviewQueue({
   readError?: string;
 }) {
   const hasServerApplications = Boolean(initialApplications);
-  const [applications, setApplications] = useState<PartnerApplicationRecord[]>(() =>
-    initialApplications ?? PartnerApplicationRepository.findAll()
+  const [storedApplications, setStoredApplications] = useState<PartnerApplicationRecord[]>(() =>
+    PartnerApplicationRepository.findAll()
   );
+  const applications = initialApplications ?? storedApplications;
   const [filters, setFilters] = useState<PartnerApplicationFilters>(defaultFilters);
 
   useEffect(() => {
-    if (hasServerApplications) {
-      setApplications(initialApplications ?? []);
-      return () => undefined;
-    }
-
-    return subscribeToPartnerApplications(() => setApplications(PartnerApplicationRepository.findAll()));
-  }, [hasServerApplications, initialApplications]);
+    if (hasServerApplications) return;
+    return subscribeToPartnerApplications(() => setStoredApplications(PartnerApplicationRepository.findAll()));
+  }, [hasServerApplications]);
 
   const filteredApplications = useMemo(() => filterApplications(applications, filters), [applications, filters]);
   const reviewCount = applications.filter((application) =>

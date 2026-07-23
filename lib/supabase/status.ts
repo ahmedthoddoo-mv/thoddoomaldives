@@ -1,13 +1,11 @@
-import { isSupabaseServerConfigured, isSupabaseServiceRoleConfigured, logSupabaseEnvDiagnostics } from "@/lib/supabase/server";
+import { isSupabaseServerConfigured, isSupabaseServiceRoleConfigured } from "@/lib/supabase/server";
 
 export const SUPABASE_MIGRATION_VERSION = "202607110001";
 
 export function getDataMode() {
-  logSupabaseEnvDiagnostics("getDataMode");
+  const requestedMode = process.env.NEXT_PUBLIC_DATA_MODE;
 
-  const requestedMode = process.env.DATA_MODE;
-
-  if (requestedMode === "supabase") {
+  if (requestedMode !== "mock" && isSupabaseServerConfigured()) {
     return "supabase";
   }
 

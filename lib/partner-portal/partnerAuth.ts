@@ -100,7 +100,7 @@ export async function logPartnerAuditEvent(
   const serviceRole = createSupabaseServiceRoleClient();
   if (!serviceRole) return;
 
-  await (serviceRole as any).from("partner_audit_events").insert({
+  await serviceRole.from("partner_audit_events").insert({
     partner_id: partnerId ?? null,
     auth_user_id: authUserId ?? null,
     event_type: eventType,

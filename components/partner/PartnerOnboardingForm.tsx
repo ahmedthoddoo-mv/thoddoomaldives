@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
+import Link from "next/link";
 import { submitSmartPartnerApplication } from "@/app/partners/onboarding/actions";
 import { PricingEditor, createPricingRow } from "@/components/partner/PricingEditor";
 import { membershipPlans } from "@/data/membershipPlans";
@@ -14,7 +15,6 @@ import {
   validatePricingRows
 } from "@/lib/partner-onboarding/onboardingSchemas";
 import { getBusinessTypeSchemaKind, normalizeBusinessType } from "@/types/business-type";
-import type { PartnerCategoryDefinition } from "@/types/partner";
 import type {
   PartnerApplicationMediaInput,
   SmartBusinessType,
@@ -26,10 +26,6 @@ import {
   getVerificationRequirements
 } from "@/types/verification-documents";
 import type { PartnerVerificationDocumentInput } from "@/types/verification-documents";
-
-type PartnerOnboardingFormProps = {
-  categories: PartnerCategoryDefinition[];
-};
 
 const draftKey = "ithoddoo.smart-partner-onboarding.v1";
 
@@ -136,23 +132,23 @@ function buildMockApplication(input: SmartPartnerApplicationInput) {
     photoNotes: input.media.map((media) => `${media.label}: ${media.pathOrNote || media.fileName}`).filter(Boolean).join("\n"),
     membershipInterest: input.membershipPlan,
     rooms: String(input.categoryAnswers.roomCount ?? ""),
-    checkInOut: input.categoryAnswers.checkInOut ? String(input.categoryAnswers.checkInOut) : [input.categoryAnswers.checkInTime, input.categoryAnswers.checkOutTime].filter(Boolean).join(" / "),
-    amenities: String(input.categoryAnswers.amenities ?? input.categoryAnswers.facilities ?? ""),
+    checkInOut: [input.categoryAnswers.checkInTime, input.categoryAnswers.checkOutTime].filter(Boolean).join(" / "),
+    amenities: String(input.categoryAnswers.amenities ?? ""),
     cuisine: String(input.categoryAnswers.cuisine ?? ""),
     openingHours: String(input.categoryAnswers.openingHours ?? ""),
-    menuNotes: String(input.categoryAnswers.menuHighlights ?? input.categoryAnswers.menuUpload ?? input.categoryAnswers.menuItems ?? ""),
+    menuNotes: String(input.categoryAnswers.menuUpload ?? input.categoryAnswers.menuItems ?? ""),
     boatName: "",
-    capacity: String(input.categoryAnswers.seatingCapacity ?? input.categoryAnswers.maxParticipants ?? input.categoryAnswers.vesselCapacity ?? input.categoryAnswers.maxGuests ?? input.categoryAnswers.roomCapacity ?? ""),
+    capacity: String(input.categoryAnswers.vesselCapacity ?? input.categoryAnswers.maxGuests ?? input.categoryAnswers.roomCapacity ?? ""),
     departureTimes: String(input.categoryAnswers.schedule ?? ""),
     airportTransferSupport: String(input.categoryAnswers.airportRep ?? input.categoryAnswers.airportTransfer ?? ""),
-    activityType: String(input.categoryAnswers.activityType ?? input.categoryAnswers.activityName ?? input.categoryAnswers.activities ?? input.categoryAnswers.tourTypes ?? input.categoryAnswers.treatments ?? ""),
-    duration: String(input.categoryAnswers.sessionDuration ?? input.categoryAnswers.duration ?? ""),
-    includedItems: String(input.categoryAnswers.includedItems ?? input.categoryAnswers.equipment ?? input.categoryAnswers.safetyRequirements ?? input.categoryAnswers.safetyInformation ?? input.categoryAnswers.therapists ?? ""),
+    activityType: String(input.categoryAnswers.activityName ?? input.categoryAnswers.activities ?? input.categoryAnswers.tourTypes ?? ""),
+    duration: String(input.categoryAnswers.duration ?? ""),
+    includedItems: String(input.categoryAnswers.includedItems ?? input.categoryAnswers.equipment ?? input.categoryAnswers.safetyInformation ?? ""),
     notes: input.notes
   };
 }
 
-export function PartnerOnboardingForm(_props: PartnerOnboardingFormProps) {
+export function PartnerOnboardingForm() {
   const [application, setApplication] = useState<SmartPartnerApplicationInput>(() => createInitialApplication());
   const [currentStep, setCurrentStep] = useState(0);
   const [errors, setErrors] = useState<string[]>([]);
@@ -165,26 +161,34 @@ export function PartnerOnboardingForm(_props: PartnerOnboardingFormProps) {
   const fields = schema.fields;
 
   useEffect(() => {
+    let restoreTimer: number | undefined;
     try {
       const raw = window.localStorage.getItem(draftKey);
       if (raw) {
         const savedApplication = JSON.parse(raw) as Partial<SmartPartnerApplicationInput>;
         const nextBusinessType = normalizeBusinessType(savedApplication.businessType ?? "guesthouse");
-        setApplication({
-          ...createInitialApplication(),
-          ...savedApplication,
-          businessType: nextBusinessType,
-          categoryAnswers:
-            nextBusinessType === normalizeBusinessType(savedApplication.businessType)
-              ? savedApplication.categoryAnswers ?? {}
-              : {},
-          verificationDocuments: mergeVerificationDocuments(nextBusinessType, savedApplication.verificationDocuments)
-        });
+        restoreTimer = window.setTimeout(() => {
+          setApplication({
+            ...createInitialApplication(),
+            ...savedApplication,
+            businessType: nextBusinessType,
+            categoryAnswers:
+              nextBusinessType === normalizeBusinessType(savedApplication.businessType)
+                ? savedApplication.categoryAnswers ?? {}
+                : {},
+            verificationDocuments: mergeVerificationDocuments(
+              nextBusinessType,
+              savedApplication.verificationDocuments
+            )
+          });
+        }, 0);
       }
-      setCurrentStep(0);
     } catch {
       // Draft restore is best-effort only.
     }
+    return () => {
+      if (restoreTimer !== undefined) window.clearTimeout(restoreTimer);
+    };
   }, []);
 
   useEffect(() => {
@@ -314,8 +318,7 @@ export function PartnerOnboardingForm(_props: PartnerOnboardingFormProps) {
     });
   }
 
-  const reviewRows = useMemo(
-    () => [
+  const reviewRows = [
       ["Business type", schema.label],
       ["Business name", application.businessName],
       ["Owner/contact", application.contactPerson],
@@ -337,9 +340,7 @@ export function PartnerOnboardingForm(_props: PartnerOnboardingFormProps) {
           .map((document) => document.label)
           .join(", ") || "None yet"
       ]
-    ],
-    [application]
-  );
+    ];
 
   return (
     <section className="smartOnboarding">
@@ -587,9 +588,9 @@ export function PartnerOnboardingForm(_props: PartnerOnboardingFormProps) {
                 Continue to WhatsApp
               </a>
             ) : null}
-            <a className="adminContentAddButton adminContentSecondaryButton" href="/partners">
+            <Link className="adminContentAddButton adminContentSecondaryButton" href="/partners">
               Back to partner program
-            </a>
+            </Link>
           </div>
         </div>
       ) : null}

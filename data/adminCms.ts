@@ -493,7 +493,9 @@ export const adminCmsSections: Record<AdminCmsSectionSlug, AdminCmsSectionConfig
   }
 };
 
-export const mediaAssets: MediaAsset[] = [
+// Legacy design-reference assets are intentionally not exposed in the production
+// dashboard. Real uploads will come from Supabase Storage.
+const legacyMediaAssets: MediaAsset[] = [
   {
     id: "media-hero-thoddoo",
     filename: "hero-thoddoo.jpg",
@@ -736,6 +738,14 @@ export const mediaAssets: MediaAsset[] = [
     rightsStatus: "Internal demo asset"
   }
 ];
+
+void legacyMediaAssets;
+
+Object.values(adminCmsSections).forEach((section) => {
+  section.records = [];
+});
+
+export const mediaAssets: MediaAsset[] = [];
 
 export function getMediaAssetById(id: string) {
   return mediaAssets.find((asset) => asset.id === id);

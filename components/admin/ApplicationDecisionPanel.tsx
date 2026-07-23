@@ -20,7 +20,7 @@ type ApplicationDecisionPanelProps = {
 };
 
 function getTimelineType(action: AdminApplicationDecisionAction): PartnerApplicationTimelineType {
-  if (action === "mark_under_review") return "review_started";
+  if (action === "start_review") return "review_started";
   if (action === "request_changes") return "changes_requested";
   if (action === "reject") return "rejected";
   if (action === "reopen") return "reopened";
@@ -50,7 +50,7 @@ export function ApplicationDecisionPanel({ application, onChange, dataSource }: 
     );
   }
 
-  function applySupabaseResult(action: AdminApplicationDecisionAction, status: PartnerApplicationStatus, responseMessage: string, linkedPartnerId?: string) {
+  function applySupabaseResult(action: AdminApplicationDecisionAction, status: PartnerApplicationStatus, responseMessage: string) {
     const verificationDocuments = application.verificationDocuments?.map((document) => {
       if (action === "approve_draft" || action === "approve_publish") {
         return document.status === "missing" ? document : { ...document, status: "approved" as const };
@@ -70,7 +70,6 @@ export function ApplicationDecisionPanel({ application, onChange, dataSource }: 
       assignedReviewer: reviewer || "Admin",
       requestedChanges: action === "request_changes" ? selectedChanges : [],
       adminNotes: note ? [note, ...application.adminNotes] : application.adminNotes,
-      linkedPartnerId: linkedPartnerId ?? application.linkedPartnerId,
       listingPublicationStatus:
         action === "approve_publish"
           ? "published"
@@ -101,21 +100,18 @@ export function ApplicationDecisionPanel({ application, onChange, dataSource }: 
   }
 
   function decide(action: AdminApplicationDecisionAction) {
+    if (action === "request_changes" && !note.trim()) {
+      setMessage("Add a note before requesting changes.");
+      return;
+    }
+
     if (dataSource !== "supabase") {
-      if (action === "mark_under_review") applyResult(PartnerApplicationRepository.startReview(application.id, reviewer || "Admin"));
+      if (action === "start_review") applyResult(PartnerApplicationRepository.startReview(application.id, reviewer || "Admin"));
       if (action === "approve_draft") applyResult(PartnerApplicationRepository.approve(application.id, false));
       if (action === "approve_publish") applyResult(PartnerApplicationRepository.approve(application.id, true));
       if (action === "request_changes") applyResult(PartnerApplicationRepository.requestChanges(application.id, selectedChanges, note));
       if (action === "reject") applyResult(PartnerApplicationRepository.reject(application.id, note));
       if (action === "reopen") applyResult(PartnerApplicationRepository.reopen(application.id));
-      return;
-    }
-
-    if (action === "reject" && !window.confirm("Reject this application?")) {
-      return;
-    }
-
-    if (action === "approve_publish" && !window.confirm("Approve and publish this application?")) {
       return;
     }
 
@@ -133,16 +129,9 @@ export function ApplicationDecisionPanel({ application, onChange, dataSource }: 
         return;
       }
 
-      applySupabaseResult(action, result.status, result.message, result.linkedPartnerId);
+      applySupabaseResult(action, result.status, result.message);
     });
   }
-
-  const actionMap = {
-    mark_under_review: application.status !== "approved" && application.status !== "rejected" && application.status !== "withdrawn",
-    approve_publish: application.status !== "approved" && application.status !== "rejected" && application.status !== "withdrawn",
-    request_changes: application.status !== "approved" && application.status !== "rejected" && application.status !== "withdrawn",
-    reject: application.status !== "approved" && application.status !== "rejected" && application.status !== "withdrawn"
-  };
 
   return (
     <section className="adminPanel applicationDecisionPanel">
@@ -157,11 +146,18 @@ export function ApplicationDecisionPanel({ application, onChange, dataSource }: 
       </label>
 
       <div className="applicationDecisionActions">
-        <button type="button" disabled={isPending || !actionMap.mark_under_review} onClick={() => decide("mark_under_review")}>
-          Mark under review
+        <button
+          type="button"
+          disabled={isPending}
+          onClick={() => decide("start_review")}
+        >
+          Start review
         </button>
-        <button type="button" disabled={isPending || !actionMap.approve_publish} onClick={() => decide("approve_publish")}>
-          Approve & publish
+        <button type="button" disabled={isPending} onClick={() => decide("approve_draft")}>
+          Approve and draft listing
+        </button>
+        <button type="button" disabled={isPending} onClick={() => decide("approve_publish")}>
+          Approve and publish listing
         </button>
       </div>
 
@@ -180,14 +176,23 @@ export function ApplicationDecisionPanel({ application, onChange, dataSource }: 
 
       <label>
         Internal note or partner feedback
-        <textarea value={note} rows={4} onChange={(event) => setNote(event.target.value)} />
+        <textarea
+          value={note}
+          rows={4}
+          onChange={(event) => setNote(event.target.value)}
+          aria-required="true"
+        />
       </label>
 
       <div className="applicationDecisionActions">
-        <button type="button" disabled={isPending || !actionMap.request_changes} onClick={() => decide("request_changes")}>
+        <button
+          type="button"
+          disabled={isPending}
+          onClick={() => decide("request_changes")}
+        >
           Request changes
         </button>
-        <button type="button" disabled={isPending || !actionMap.reject} onClick={() => decide("reject")}>
+        <button type="button" disabled={isPending} onClick={() => decide("reject")}>
           Reject
         </button>
         <button type="button" disabled={isPending} onClick={() => decide("reopen")}>

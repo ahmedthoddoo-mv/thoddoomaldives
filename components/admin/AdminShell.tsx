@@ -1,4 +1,4 @@
-import { logoutAdminDemo } from "@/app/admin/actions";
+import { logoutAdmin } from "@/app/admin/actions";
 
 type AdminShellProps = {
   children: React.ReactNode;
@@ -11,8 +11,8 @@ export function AdminShell({ children, sidebar }: AdminShellProps) {
       <div className="adminAppFrame">
         {sidebar}
         <div className="adminMainSurface">
-          <form action={logoutAdminDemo} className="adminLogoutBar">
-            <span>Admin demo session</span>
+          <form action={logoutAdmin} className="adminLogoutBar">
+            <span>Secure owner session</span>
             <button type="submit">Log out</button>
           </form>
           {children}

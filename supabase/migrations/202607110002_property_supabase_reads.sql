@@ -3,6 +3,5 @@
 
 alter table public.properties
   add column if not exists amenities text[] not null default '{}';
-
 alter table public.properties
   add column if not exists policies text[] not null default '{}';

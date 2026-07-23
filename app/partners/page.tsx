@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { membershipFeatures, membershipPlans, partnerOnboardingSteps } from "@/data/membershipPlans";
 
 const successStats = [
@@ -76,9 +77,9 @@ export default function PartnersPage() {
             media, and a cleaner path from traveler discovery to WhatsApp intent.
           </p>
           <div className="partnerHeroActions">
-            <a className="partnerPrimaryButton" href="/partners/onboarding">
+            <Link className="partnerPrimaryButton" href="/partners/onboarding">
               Apply Now
-            </a>
+            </Link>
             <a className="partnerGhostButton" href="#plans">
               View partner plans
             </a>
@@ -246,9 +247,9 @@ export default function PartnersPage() {
           <p className="eyebrow">Apply today</p>
           <h2>Ready to become an iThoddoo Growth Partner?</h2>
           <p>Submit your business details through the WhatsApp-only onboarding flow. No login, database, or payments.</p>
-          <a className="partnerPrimaryButton" href="/partners/onboarding">
+          <Link className="partnerPrimaryButton" href="/partners/onboarding">
             Apply Now
-          </a>
+          </Link>
         </div>
       </section>
     </main>

@@ -189,7 +189,7 @@ export async function getPartnerApplicationsForAdmin(): Promise<PartnerApplicati
   }
 
   try {
-    const db = supabase as any;
+    const db = supabase;
     const { data: applicationRows, error: applicationError } = await db
       .from("partner_applications")
       .select("*")
@@ -203,8 +203,17 @@ export async function getPartnerApplicationsForAdmin(): Promise<PartnerApplicati
       return { applications: [], source: "supabase" };
     }
 
-    async function readChildRows<T>(table: string) {
-      const result = await db.from(table).select("*").in("application_id", applicationIds);
+    const [priceResult, mediaResult, serviceResult, verificationResult] = await Promise.all([
+      db.from("partner_application_prices").select("*").in("application_id", applicationIds),
+      db.from("partner_application_media").select("*").in("application_id", applicationIds),
+      db.from("partner_application_services").select("*").in("application_id", applicationIds),
+      db.from("partner_application_verification_documents").select("*").in("application_id", applicationIds)
+    ]);
+
+    function readResultRows<T>(
+      table: string,
+      result: { data: unknown[] | null; error: { code?: string; message: string } | null }
+    ) {
       if (result.error) {
         console.error("[admin-applications-read]", {
           table,
@@ -216,12 +225,13 @@ export async function getPartnerApplicationsForAdmin(): Promise<PartnerApplicati
       return (result.data ?? []) as T[];
     }
 
-    const [prices, media, services, verificationDocuments] = await Promise.all([
-      readChildRows<PartnerApplicationPriceRow>("partner_application_prices"),
-      readChildRows<PartnerApplicationMediaRow>("partner_application_media"),
-      readChildRows<PartnerApplicationServiceRow>("partner_application_services"),
-      readChildRows<PartnerApplicationVerificationDocumentRow>("partner_application_verification_documents")
-    ]);
+    const prices = readResultRows<PartnerApplicationPriceRow>("partner_application_prices", priceResult);
+    const media = readResultRows<PartnerApplicationMediaRow>("partner_application_media", mediaResult);
+    const services = readResultRows<PartnerApplicationServiceRow>("partner_application_services", serviceResult);
+    const verificationDocuments = readResultRows<PartnerApplicationVerificationDocumentRow>(
+      "partner_application_verification_documents",
+      verificationResult
+    );
 
     return {
       applications: applications.map((application) =>

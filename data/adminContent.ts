@@ -79,11 +79,7 @@ export const adminSidebarItems = [
   { label: "Applications", href: "/admin/applications" },
   { label: "Bookings", href: "/admin/bookings" },
   { label: "CRM", href: "/admin/crm" },
-  { label: "Guesthouses", href: "/admin/guesthouses" },
-  { label: "Restaurants", href: "/admin/restaurants" },
-  { label: "Experiences", href: "/admin/experiences" },
-  { label: "Transfers", href: "/admin/transfers" },
-  { label: "Partners", href: "/admin/properties" },
+  { label: "Businesses", href: "/admin/properties" },
   { label: "Media", href: "/admin/media" },
   { label: "Reports", href: "/admin/property-dashboard" },
   { label: "Settings", href: "/admin#status" },
@@ -91,27 +87,18 @@ export const adminSidebarItems = [
 ];
 
 export const adminQuickActions = [
-  { label: "Add Property", href: "/admin/properties/new", variant: "primary" as const },
+  { label: "Add Real Business", href: "/admin/properties/new", variant: "primary" as const },
   { label: "Review Applications", href: "/admin/applications", variant: "primary" as const },
   { label: "New Booking", href: "/admin/bookings", variant: "primary" as const },
   { label: "Open CRM", href: "/admin/crm", variant: "primary" as const },
-  { label: "Add Guesthouse", href: "/admin/guesthouses/new", variant: "primary" as const },
-  { label: "Add Restaurant", href: "/admin/restaurants/new" },
-  { label: "Add Excursion", href: "/admin/experiences/new" },
-  { label: "Add Transfer Company", href: "/admin/transfers/new" },
   { label: "Upload Photos", href: "/admin/media" }
 ];
 
 export const adminPropertyActions: AdminPropertyAction[] = [
-  "Add Property",
-  "Edit Property",
-  "Delete Property",
-  "Verify Property",
-  "Feature Property",
-  "Suspend Property"
+  "Add Property"
 ];
 
-export const adminManagedProperties: AdminManagedProperty[] = [
+const legacyDemoAdminManagedProperties: AdminManagedProperty[] = [
   {
     id: "property-thoddoo-sun-sky",
     name: "Thoddoo Sun Sky Inn",
@@ -233,6 +220,11 @@ export const adminManagedProperties: AdminManagedProperty[] = [
     updated: "Jul 5, 2026"
   }
 ];
+void legacyDemoAdminManagedProperties;
+
+// Production starts empty. Real businesses are created through the admin form
+// and persisted in Supabase; legacy showcase records are intentionally hidden.
+export const adminManagedProperties: AdminManagedProperty[] = [];
 
 export function getAdminManagedPropertyById(id: string) {
   return adminManagedProperties.find((property) => property.id === id);

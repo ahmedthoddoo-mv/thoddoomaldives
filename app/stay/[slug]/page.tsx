@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { StayPropertyDetailClient } from "@/components/property/StayPropertyDetailClient";
 import { getPublishedStayPropertyBySlug } from "@/lib/properties/propertyReads";
-import { PropertyRepository } from "@/lib/repositories";
 import {
   SITE_NAME,
   SITE_URL,
@@ -18,11 +17,7 @@ type GuesthousePageProps = {
 };
 
 export function generateStaticParams() {
-  const guesthouses = PropertyRepository.findPublicAll();
-
-  return guesthouses.map((guesthouse) => ({
-    slug: guesthouse.slug,
-  }));
+  return [];
 }
 
 export async function generateMetadata({

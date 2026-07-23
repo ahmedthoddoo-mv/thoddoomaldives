@@ -216,10 +216,9 @@ export function subscribeToPropertyStore(callback: () => void) {
 }
 
 export function useAdminProperties() {
-  const [properties, setProperties] = useState<AdminManagedProperty[]>(() => getDefaultAdminProperties());
+  const [properties, setProperties] = useState<AdminManagedProperty[]>(getAdminProperties);
 
   useEffect(() => {
-    setProperties(getAdminProperties());
     return subscribeToPropertyStore(() => setProperties(getAdminProperties()));
   }, []);
 
@@ -227,10 +226,9 @@ export function useAdminProperties() {
 }
 
 export function usePublicStayProperties() {
-  const [properties, setProperties] = useState<Guesthouse[]>(() => PropertyRepository.findPublicAll());
+  const [properties, setProperties] = useState<Guesthouse[]>(getPublicStayProperties);
 
   useEffect(() => {
-    setProperties(getPublicStayProperties());
     return subscribeToPropertyStore(() => setProperties(getPublicStayProperties()));
   }, []);
 

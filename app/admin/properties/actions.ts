@@ -1,6 +1,6 @@
 "use server";
 import type { AdminManagedProperty } from "@/data/adminContent";
-import { hasAdminDemoSession } from "@/lib/admin/adminAuth";
+import { hasAdminSession } from "@/lib/admin/adminAuth";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 
@@ -76,7 +76,7 @@ export async function saveAdminPropertyToSupabase({
   property,
   publish = false
 }: SaveAdminPropertyInput): Promise<SaveAdminPropertyResult> {
-  const hasAccess = await hasAdminDemoSession();
+  const hasAccess = await hasAdminSession();
   if (!hasAccess) {
     return {
       ok: false,
@@ -94,7 +94,7 @@ export async function saveAdminPropertyToSupabase({
     };
   }
 
-  const db = supabase as any;
+  const db = supabase;
   const { latitude, longitude } = parseGpsLocation(property.gpsLocation);
   const membershipPlanId = await findMembershipPlanId(property.membershipPlan);
   const propertyIdIsUuid = uuidPattern.test(property.id);
@@ -194,7 +194,7 @@ export async function saveAdminPropertyToSupabase({
     file_type: "image/jpeg",
     alt_text: `${property.name} image ${index + 1}`,
     caption: index === 0 ? `${property.name} hero image` : `${property.name} gallery image`,
-    rights_status: "internal_demo_asset",
+    rights_status: "permission_confirmed",
     archived: false
   }));
 

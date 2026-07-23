@@ -1,11 +1,11 @@
 type GuestFormProps = {
   adults: number;
-  children: number;
+  childCount: number;
   onAdultsChange: (value: number) => void;
   onChildrenChange: (value: number) => void;
 };
 
-export function GuestForm({ adults, children, onAdultsChange, onChildrenChange }: GuestFormProps) {
+export function GuestForm({ adults, childCount, onAdultsChange, onChildrenChange }: GuestFormProps) {
   return (
     <div className="bookingFormGrid">
       <label className="bookingField">
@@ -14,7 +14,7 @@ export function GuestForm({ adults, children, onAdultsChange, onChildrenChange }
       </label>
       <label className="bookingField">
         <span>Children</span>
-        <input min="0" type="number" value={children} onChange={(event) => onChildrenChange(Number(event.target.value))} />
+        <input min="0" type="number" value={childCount} onChange={(event) => onChildrenChange(Number(event.target.value))} />
       </label>
     </div>
   );

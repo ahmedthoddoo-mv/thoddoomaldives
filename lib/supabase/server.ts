@@ -1,18 +1,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
 
-export function logSupabaseEnvDiagnostics(context: string) {
-  const snapshot = {
-    context,
-    hasUrl: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL),
-    hasAnon: Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
-    hasServiceRole: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
-    dataMode: process.env.DATA_MODE ?? "unset"
-  };
-
-  console.info("[supabase-env-diagnostic]", snapshot);
-  return snapshot;
-}
+export type SupabaseDatabaseClient = SupabaseClient<Database>;
 
 export function isSupabaseServerConfigured() {
   return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
@@ -39,8 +28,6 @@ export function createSupabaseServerClient(): SupabaseClient<Database> | null {
 }
 
 export function createSupabaseServiceRoleClient(): SupabaseClient<Database> | null {
-  logSupabaseEnvDiagnostics("createSupabaseServiceRoleClient");
-
   if (!isSupabaseServiceRoleConfigured()) {
     return null;
   }

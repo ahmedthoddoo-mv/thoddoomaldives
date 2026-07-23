@@ -26,7 +26,6 @@ create table if not exists public.partner_applications (
   submitted_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-
 create table if not exists public.partner_application_prices (
   id uuid primary key default gen_random_uuid(),
   application_id uuid not null references public.partner_applications(id) on delete cascade,
@@ -42,7 +41,6 @@ create table if not exists public.partner_application_prices (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-
 create table if not exists public.partner_application_media (
   id uuid primary key default gen_random_uuid(),
   application_id uuid not null references public.partner_applications(id) on delete cascade,
@@ -55,7 +53,6 @@ create table if not exists public.partner_application_media (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-
 create table if not exists public.partner_application_services (
   id uuid primary key default gen_random_uuid(),
   application_id uuid not null references public.partner_applications(id) on delete cascade,
@@ -66,7 +63,6 @@ create table if not exists public.partner_application_services (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-
 create index if not exists partner_applications_status_idx on public.partner_applications(status);
 create index if not exists partner_applications_business_type_idx on public.partner_applications(business_type);
 create index if not exists partner_applications_email_idx on public.partner_applications(email);
@@ -74,7 +70,6 @@ create index if not exists partner_applications_whatsapp_idx on public.partner_a
 create index if not exists partner_application_prices_application_id_idx on public.partner_application_prices(application_id);
 create index if not exists partner_application_media_application_id_idx on public.partner_application_media(application_id);
 create index if not exists partner_application_services_application_id_idx on public.partner_application_services(application_id);
-
 do $$
 begin
   if not exists (select 1 from pg_constraint where conname = 'partner_applications_status_check') then
@@ -92,27 +87,22 @@ begin
       check (unit in ('per night', 'per person', 'per trip', 'per hour', 'per transfer', 'per package'));
   end if;
 end $$;
-
 drop trigger if exists partner_applications_set_updated_at on public.partner_applications;
 drop trigger if exists partner_application_prices_set_updated_at on public.partner_application_prices;
 drop trigger if exists partner_application_media_set_updated_at on public.partner_application_media;
 drop trigger if exists partner_application_services_set_updated_at on public.partner_application_services;
-
 create trigger partner_applications_set_updated_at before update on public.partner_applications for each row execute function public.set_updated_at();
 create trigger partner_application_prices_set_updated_at before update on public.partner_application_prices for each row execute function public.set_updated_at();
 create trigger partner_application_media_set_updated_at before update on public.partner_application_media for each row execute function public.set_updated_at();
 create trigger partner_application_services_set_updated_at before update on public.partner_application_services for each row execute function public.set_updated_at();
-
 alter table public.partner_applications enable row level security;
 alter table public.partner_application_prices enable row level security;
 alter table public.partner_application_media enable row level security;
 alter table public.partner_application_services enable row level security;
-
 drop policy if exists "Service role can manage partner applications" on public.partner_applications;
 drop policy if exists "Service role can manage partner application prices" on public.partner_application_prices;
 drop policy if exists "Service role can manage partner application media" on public.partner_application_media;
 drop policy if exists "Service role can manage partner application services" on public.partner_application_services;
-
 create policy "Service role can manage partner applications" on public.partner_applications
   for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
 create policy "Service role can manage partner application prices" on public.partner_application_prices

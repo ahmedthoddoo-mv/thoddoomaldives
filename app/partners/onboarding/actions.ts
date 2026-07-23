@@ -3,7 +3,9 @@
 import { platformConfig } from "@/lib/config/platform";
 import { validateCategoryAnswers, validatePricingRows } from "@/lib/partner-onboarding/onboardingSchemas";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
+import type { SupabaseDatabaseClient } from "@/lib/supabase/server";
 import { getDataMode } from "@/lib/supabase/status";
+import type { Tables } from "@/lib/supabase/types";
 import type { PartnerApplicationRecord, PartnerApplicationBusinessType } from "@/types/partner-application";
 import type { SmartPartnerApplicationInput } from "@/types/partner-smart-onboarding";
 import { getBusinessTypeListingWorkflow, normalizeBusinessType } from "@/types/business-type";
@@ -86,7 +88,7 @@ function checkSubmissionRateLimit(input: SmartPartnerApplicationInput) {
   return true;
 }
 
-async function createApplicationReference(db: any) {
+async function createApplicationReference(db: SupabaseDatabaseClient) {
   const year = new Date().getFullYear();
   const { count, error } = await db
     .from("partner_applications")
@@ -125,7 +127,10 @@ function buildApplicationSummary(input: SmartPartnerApplicationInput, reference:
   ].join("\n");
 }
 
-function mapSavedApplication(row: any, input: SmartPartnerApplicationInput): PartnerApplicationRecord {
+function mapSavedApplication(
+  row: Tables<"partner_applications">,
+  input: SmartPartnerApplicationInput
+): PartnerApplicationRecord {
   const businessType = normalizeBusinessType(input.businessType);
   const timelineDate = row.submitted_at ?? new Date().toISOString();
 
@@ -141,11 +146,11 @@ function mapSavedApplication(row: any, input: SmartPartnerApplicationInput): Par
     description: row.short_description,
     services: input.prices.map((price) => `${price.itemName} ${price.currency} ${price.price} ${price.unit}`).join(", "),
     websiteOrSocial: [row.website, row.instagram, row.facebook].filter(Boolean).join(" · "),
-    requestedMembershipTier: row.membership_plan,
+    requestedMembershipTier: input.membershipPlan,
     mediaNotes: input.media.map((media) => `${media.label}: ${media.pathOrNote || media.fileName || "metadata only"}`).join("\n"),
     submittedDate: timelineDate,
     updatedDate: row.updated_at ?? timelineDate,
-    status: row.status,
+    status: "submitted",
     assignedReviewer: "Unassigned",
     adminNotes: row.notes ? [row.notes] : [],
     requestedChanges: row.missing_information ?? [],
@@ -201,7 +206,7 @@ export async function submitSmartPartnerApplication(input: SmartPartnerApplicati
     };
   }
 
-  const db = supabase as any;
+  const db = supabase;
   const businessType = normalizeBusinessType(canonicalInput.businessType);
   let reference = "";
   try {
@@ -276,10 +281,11 @@ export async function submitSmartPartnerApplication(input: SmartPartnerApplicati
       errors: ["Please try again or contact iThoddoo Maldives."]
     };
   }
+  const savedApplicationId = applicationRow.id;
 
   async function failAfterPartialWrite(stage: string, error: unknown, message: string): Promise<SmartPartnerApplicationResult> {
     logSupabaseWriteError(stage, error);
-    const rollback = await db.from("partner_applications").delete().eq("id", applicationRow.id);
+    const rollback = await db.from("partner_applications").delete().eq("id", savedApplicationId);
     if (rollback.error) logSupabaseWriteError(`${stage}_rollback`, rollback.error);
     return {
       ok: false,

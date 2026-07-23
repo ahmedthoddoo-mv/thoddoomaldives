@@ -10,17 +10,18 @@ type AdminSidebarProps = {
 export function AdminSidebar({ items }: AdminSidebarProps) {
   return (
     <aside className="adminSidebar" aria-label="Admin navigation">
-      <a className="adminBrandMark" href="/admin" aria-label="iThoddoo Maldives Admin home">
+      <Link className="adminBrandMark" href="/admin" aria-label="iThoddoo Maldives Admin home">
         <span>iT</span>
         <strong>Admin</strong>
-      </a>
+      </Link>
       <nav>
         {items.map((item) => (
-          <a href={item.href} key={item.label}>
+          <Link href={item.href} key={item.label}>
             {item.label}
-          </a>
+          </Link>
         ))}
       </nav>
     </aside>
   );
 }
+import Link from "next/link";

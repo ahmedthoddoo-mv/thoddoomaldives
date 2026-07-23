@@ -1,5 +1,4 @@
 import { PartnerOnboardingForm } from "@/components/partner/PartnerOnboardingForm";
-import { partnerCategories } from "@/data/partners";
 
 export default function PartnerOnboardingPage() {
   return (
@@ -20,7 +19,7 @@ export default function PartnerOnboardingPage() {
       </section>
 
       <div className="pageContent">
-        <PartnerOnboardingForm categories={partnerCategories} />
+        <PartnerOnboardingForm />
       </div>
     </main>
   );

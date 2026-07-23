@@ -1,19 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import Badge from "@/components/ui/Badge";
 import type { AdminManagedProperty, AdminPropertyAction } from "@/data/adminContent";
 import { platformLinkedProperties } from "@/data/platformIntegration";
-import {
-  archiveAdminProperty,
-  featureAdminProperty,
-  publishAdminProperty,
-  resetDemoProperties,
-  suspendAdminProperty,
-  unpublishAdminProperty,
-  useAdminProperties,
-  verifyAdminProperty
-} from "@/lib/properties/propertyStore";
 
 type AdminPropertyManagerProps = {
   actions: AdminPropertyAction[];
@@ -101,8 +92,7 @@ function searchableText(property: AdminManagedProperty) {
 }
 
 export function AdminPropertyManager({ actions, properties }: AdminPropertyManagerProps) {
-  const storedItems = useAdminProperties();
-  const items = storedItems.length > 0 ? storedItems : properties;
+  const items = properties;
   const [query, setQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<PropertyFilter>("All");
   const [previewPropertyId, setPreviewPropertyId] = useState(properties[0]?.id ?? "");
@@ -120,67 +110,21 @@ export function AdminPropertyManager({ actions, properties }: AdminPropertyManag
 
   const previewProperty = items.find((property) => property.id === previewPropertyId) ?? filteredProperties[0] ?? items[0];
 
-  function handlePublishToggle(id: string) {
-    const property = items.find((item) => item.id === id);
-
-    if (property?.isPublished) {
-      unpublishAdminProperty(id);
-      return;
-    }
-
-    publishAdminProperty(id);
-  }
-
-  function handleVerify(id: string) {
-    verifyAdminProperty(id);
-  }
-
-  function handleFeatureToggle(id: string) {
-    const property = items.find((item) => item.id === id);
-    featureAdminProperty(id, !property?.isFeatured);
-  }
-
-  function handleSuspend(id: string) {
-    const property = items.find((item) => item.id === id);
-    if (!property) {
-      return;
-    }
-
-    if (property.verificationStatus === "Suspended") {
-      verifyAdminProperty(id);
-      return;
-    }
-
-    suspendAdminProperty(id);
-  }
-
-  function handleArchive(id: string) {
-    const property = items.find((item) => item.id === id);
-    archiveAdminProperty(id, !property?.isArchived);
-  }
-
   return (
     <div className="adminPropertyManager">
       <section className="adminContentHero">
         <div>
-          <Badge>Property CMS</Badge>
-          <h1>Partner Property Management</h1>
+          <Badge>Business directory</Badge>
+          <h1>Businesses</h1>
           <p>
-            Add, edit, preview, publish, verify, feature, suspend, and archive demo property records from a
-            database-ready admin model. Demo storage only: saved records live in this browser until reset or a production database replaces it.
+            Add verified businesses one by one, review their details, and control exactly what is published.
+            This dashboard shows live database records only.
           </p>
         </div>
-        <a className="adminContentAddButton" href="/admin/properties/new">
+        <Link className="adminContentAddButton" href="/admin/properties/new">
           <span aria-hidden="true">+</span>
-          Add Property
-        </a>
-      </section>
-
-      <section className="adminPanel adminPropertyEditorNotice">
-        <strong>Demo storage only. Data is saved in this browser and will be replaced by the production database later.</strong>
-        <button className="adminPropertyResetButton" onClick={resetDemoProperties} type="button">
-          Reset demo property data
-        </button>
+          Add Real Business
+        </Link>
       </section>
 
       <section className="adminPanel">
@@ -213,9 +157,9 @@ export function AdminPropertyManager({ actions, properties }: AdminPropertyManag
           {actions.map((action) => {
             if (action === "Add Property") {
               return (
-                <a className="adminPropertyActionPrimary" href="/admin/properties/new" key={action}>
+                <Link className="adminPropertyActionPrimary" href="/admin/properties/new" key={action}>
                   {action}
-                </a>
+                </Link>
               );
             }
 
@@ -372,21 +316,6 @@ export function AdminPropertyManager({ actions, properties }: AdminPropertyManag
                 <a href={`/stay/${property.slug}?preview=admin`} target="_blank" rel="noopener noreferrer">
                   Open Preview
                 </a>
-                <button onClick={() => handlePublishToggle(property.id)} type="button">
-                  {property.isPublished ? "Unpublish" : "Publish"}
-                </button>
-                <button onClick={() => handleVerify(property.id)} type="button">
-                  Verify
-                </button>
-                <button onClick={() => handleFeatureToggle(property.id)} type="button">
-                  {property.isFeatured ? "Unfeature" : "Feature"}
-                </button>
-                <button onClick={() => handleSuspend(property.id)} type="button">
-                  {property.verificationStatus === "Suspended" ? "Unsuspend" : "Suspend"}
-                </button>
-                <button onClick={() => handleArchive(property.id)} type="button">
-                  {property.isArchived ? "Restore" : "Archive"}
-                </button>
               </div>
             </div>
           </article>
@@ -395,8 +324,9 @@ export function AdminPropertyManager({ actions, properties }: AdminPropertyManag
 
       {filteredProperties.length === 0 ? (
         <section className="adminEmptyState">
-          <strong>No properties found</strong>
-          <p>Clear search or filters to return to the demo property inventory.</p>
+          <strong>No real businesses added yet</strong>
+          <p>Use “Add Real Business” to create the first verified listing. Nothing will appear publicly until you approve and publish it.</p>
+          <Link className="adminContentAddButton" href="/admin/properties/new">Add Real Business</Link>
         </section>
       ) : null}
     </div>

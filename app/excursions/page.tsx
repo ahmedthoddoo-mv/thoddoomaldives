@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import ExperienceCard from "@/components/ExperienceCard";
 import ExcursionInquiryForm from "@/components/ExcursionInquiryForm";
 import {
@@ -221,9 +222,9 @@ export default async function ExcursionsPage() {
               </li>
               <li>
                 Need an airport transfer too?{" "}
-                <a href="/transfer" className="font-semibold text-cyan-700">
+                <Link href="/transfer" className="font-semibold text-cyan-700">
                   View transfer options
-                </a>
+                </Link>
                 .
               </li>
             </ul>

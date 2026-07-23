@@ -9,10 +9,11 @@ import type {
   PartnerPortalServiceItem
 } from "@/lib/partner-portal/partnerAccess";
 import type { BookingStatus } from "@/types/booking";
+import type { Database } from "@/lib/supabase/types";
 
 export type PartnerPortalActionResult = {
   ok: boolean;
-  mode: "mock" | "supabase";
+  mode: "supabase";
   message: string;
 };
 
@@ -43,10 +44,6 @@ function sanitizeFileName(value: string, fallback: string) {
 
 async function getScopedSupabase() {
   const scope = await getAuthorizedPartnerScope();
-  if (scope.mode === "mock") {
-    return { scope, supabase: null, mode: "mock" as const };
-  }
-
   if (scope.mode !== "supabase") {
     return { scope, supabase: null, mode: "supabase" as const };
   }
@@ -57,7 +54,6 @@ async function getScopedSupabase() {
 
 export async function savePartnerBusinessProfile(profile: PartnerPortalProfileForm): Promise<PartnerPortalActionResult> {
   const { scope, supabase, mode } = await getScopedSupabase();
-  if (mode === "mock") return { ok: true, mode, message: "Mock profile saved in local portal state." };
   if (!supabase || scope.mode !== "supabase") return { ok: false, mode, message: "Partner access is not available." };
 
   const payload = {
@@ -81,7 +77,7 @@ export async function savePartnerBusinessProfile(profile: PartnerPortalProfileFo
     seo_description: sanitizeText(profile.seoDescription, 260)
   };
 
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from("properties")
     .update(payload)
     .eq("id", scope.propertyId)
@@ -89,7 +85,7 @@ export async function savePartnerBusinessProfile(profile: PartnerPortalProfileFo
 
   if (error) return { ok: false, mode, message: error.message };
 
-  await (supabase as any)
+  await supabase
     .from("partners")
     .update({
       business_name: payload.name,
@@ -107,10 +103,9 @@ export async function savePartnerBusinessProfile(profile: PartnerPortalProfileFo
 
 export async function savePartnerServices(services: PartnerPortalServiceItem[]): Promise<PartnerPortalActionResult> {
   const { scope, supabase, mode } = await getScopedSupabase();
-  if (mode === "mock") return { ok: true, mode, message: "Mock services saved in local portal state." };
   if (!supabase || scope.mode !== "supabase") return { ok: false, mode, message: "Partner access is not available." };
 
-  const db = supabase as any;
+  const db = supabase;
   const serviceRows = services.map((service, index) => ({
     partner_id: scope.partnerId,
     property_id: scope.propertyId,
@@ -157,10 +152,9 @@ export async function savePartnerServices(services: PartnerPortalServiceItem[]):
 
 export async function savePartnerGallery(gallery: PartnerPortalGalleryItem[]): Promise<PartnerPortalActionResult> {
   const { scope, supabase, mode } = await getScopedSupabase();
-  if (mode === "mock") return { ok: true, mode, message: "Mock gallery saved in local portal state." };
   if (!supabase || scope.mode !== "supabase") return { ok: false, mode, message: "Partner access is not available." };
 
-  const db = supabase as any;
+  const db = supabase;
   const normalized = gallery.filter((item) => item.path.trim());
   const hero = normalized.find((item) => item.usage === "hero") ?? normalized[0];
   if (hero) {
@@ -202,7 +196,6 @@ export async function savePartnerGallery(gallery: PartnerPortalGalleryItem[]): P
 
 export async function savePartnerDocuments(documents: PartnerPortalDocument[]): Promise<PartnerPortalActionResult> {
   const { scope, supabase, mode } = await getScopedSupabase();
-  if (mode === "mock") return { ok: true, mode, message: "Mock documents saved in local portal state." };
   if (!supabase || scope.mode !== "supabase") return { ok: false, mode, message: "Partner access is not available." };
 
   const rows = documents.map((document) => {
@@ -226,7 +219,7 @@ export async function savePartnerDocuments(documents: PartnerPortalDocument[]): 
     };
   });
 
-  const { error } = await (supabase as any).from("partner_documents").upsert(rows, { onConflict: "partner_id,document_key" });
+  const { error } = await supabase.from("partner_documents").upsert(rows, { onConflict: "partner_id,document_key" });
   if (error) return { ok: false, mode, message: error.message };
 
   await logPartnerAuditEvent("document_update", { documentCount: rows.length }, scope.partnerId);
@@ -239,15 +232,14 @@ export async function updatePartnerBooking(params: {
   internalNotes?: string;
 }) {
   const { scope, supabase, mode } = await getScopedSupabase();
-  if (mode === "mock") return { ok: true, mode, message: "Mock booking updated." };
   if (!supabase || scope.mode !== "supabase") return { ok: false, mode, message: "Partner access is not available." };
 
-  const payload: Record<string, string | null> = {};
+  const payload: Database["public"]["Tables"]["bookings"]["Update"] = {};
   if (params.status) payload.booking_status = params.status;
   if (typeof params.internalNotes === "string") payload.internal_notes = sanitizeText(params.internalNotes, 1200) || null;
   if (Object.keys(payload).length === 0) return { ok: true, mode, message: "No booking changes to save." };
 
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from("bookings")
     .update(payload)
     .eq("id", params.bookingId)
@@ -260,10 +252,9 @@ export async function updatePartnerBooking(params: {
 
 export async function markPartnerNotificationRead(notificationId: string): Promise<PartnerPortalActionResult> {
   const { scope, supabase, mode } = await getScopedSupabase();
-  if (mode === "mock") return { ok: true, mode, message: "Mock notification marked read." };
   if (!supabase || scope.mode !== "supabase") return { ok: false, mode, message: "Partner access is not available." };
 
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from("partner_notifications")
     .update({ status: "read", read_at: new Date().toISOString() })
     .eq("id", notificationId)

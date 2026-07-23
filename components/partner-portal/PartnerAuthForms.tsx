@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useMemo } from "react";
+import Link from "next/link";
 import {
   requestPartnerPasswordReset,
   resetPartnerPassword,
@@ -29,7 +30,7 @@ export function PartnerLoginForm({ next }: { next?: string }) {
       </label>
       <button disabled={pending} type="submit">{pending ? "Signing in..." : "Sign in"}</button>
       {state.message ? <p className={state.ok ? "propertySaveStatus propertySaveStatusSuccess" : "bookingValidationPanel"}>{state.message}</p> : null}
-      <a href="/partner/forgot-password">Forgot password?</a>
+      <Link href="/partner/forgot-password">Forgot password?</Link>
     </form>
   );
 }
@@ -45,7 +46,7 @@ export function PartnerForgotPasswordForm() {
       </label>
       <button disabled={pending} type="submit">{pending ? "Requesting..." : "Send reset email"}</button>
       {state.message ? <p className={state.ok ? "propertySaveStatus propertySaveStatusSuccess" : "bookingValidationPanel"}>{state.message}</p> : null}
-      <a href="/partner/login">Back to sign in</a>
+      <Link href="/partner/login">Back to sign in</Link>
     </form>
   );
 }
@@ -76,7 +77,7 @@ export function PartnerResetPasswordForm() {
       </label>
       <button disabled={pending} type="submit">{pending ? "Updating..." : "Update password"}</button>
       {state.message ? <p className={state.ok ? "propertySaveStatus propertySaveStatusSuccess" : "bookingValidationPanel"}>{state.message}</p> : null}
-      {state.ok ? <a href="/partner/dashboard">Continue to dashboard</a> : null}
+      {state.ok ? <Link href="/partner/dashboard">Continue to dashboard</Link> : null}
     </form>
   );
 }

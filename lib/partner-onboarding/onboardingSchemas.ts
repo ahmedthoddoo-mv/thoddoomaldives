@@ -118,20 +118,6 @@ const shopPricing: PricingEditorCopy = {
   defaultUnit: "per package"
 };
 
-const photographerPricing: PricingEditorCopy = {
-  heading: "Package pricing",
-  helper: "Add each photo, video, drone, or event coverage package.",
-  rowLabel: "Package",
-  itemLabel: "Package name",
-  itemPlaceholder: "Couple shoot, family session, drone add-on...",
-  descriptionPlaceholder: "Duration, edited photos, delivery time, locations",
-  priceLabel: "Starting price",
-  childPriceLabel: "Add-on price",
-  notesPlaceholder: "Extra hour, video option, travel, delivery notes...",
-  addLabel: "Add package",
-  defaultUnit: "per package"
-};
-
 const wellnessPricing: PricingEditorCopy = {
   heading: "Treatment pricing",
   helper: "Add each treatment, session, class, or wellness package.",
@@ -144,20 +130,6 @@ const wellnessPricing: PricingEditorCopy = {
   notesPlaceholder: "Advance booking, credentials, location, seasonal notes...",
   addLabel: "Add treatment",
   defaultUnit: "per hour"
-};
-
-const guidePricing: PricingEditorCopy = {
-  heading: "Tour pricing",
-  helper: "Add guided walks, farm visits, cultural tours, or custom guide packages.",
-  rowLabel: "Tour",
-  itemLabel: "Tour/activity name",
-  itemPlaceholder: "Island history walk, farm tour, local food walk...",
-  descriptionPlaceholder: "Duration, languages, meeting point, included items",
-  priceLabel: "Tour price",
-  childPriceLabel: "Child price",
-  notesPlaceholder: "Maximum guests, pickup, seasonality, private tour notes...",
-  addLabel: "Add tour price",
-  defaultUnit: "per person"
 };
 
 const otherPricing: PricingEditorCopy = {
@@ -177,24 +149,21 @@ const otherPricing: PricingEditorCopy = {
 const accommodationFields: OnboardingFieldDefinition[] = [
   { key: "roomCount", label: "Number of rooms", placeholder: "Example: 8 rooms", required: true },
   { key: "roomTypes", label: "Room types", placeholder: "Deluxe Double, Family Room, Suite", type: "textarea", required: true },
-  { key: "checkInOut", label: "Check-in/out", placeholder: "Check-in: 14:00 / Check-out: 12:00", required: true },
-  { key: "amenities", label: "Amenities", placeholder: "Wi-Fi, breakfast, bicycles, beach towels...", type: "textarea", required: true }
-];
-
-const excursionFields: OnboardingFieldDefinition[] = [
-  { key: "activityType", label: "Activity type", placeholder: "Manta snorkeling, sandbank trip, sunset cruise...", required: true },
-  { key: "duration", label: "Duration", placeholder: "2 hours, half-day, full-day", required: true },
-  { key: "includedItems", label: "Included items", placeholder: "Guide, water, life jackets, GoPro photos...", type: "textarea", required: true },
-  { key: "meetingPoint", label: "Meeting point", placeholder: "Harbour, hotel reception, beach...", required: true },
-  { key: "maxGuests", label: "Max guests", placeholder: "Example: 12", required: true }
-];
-
-const watersportsFields: OnboardingFieldDefinition[] = [
-  { key: "equipment", label: "Equipment", placeholder: "Jet ski, kayak, paddleboard, life jacket...", type: "textarea", required: true },
-  { key: "duration", label: "Duration", placeholder: "15 minutes, 1 hour, rental period...", required: true },
-  { key: "safetyRequirements", label: "Safety requirements", placeholder: "Life jacket mandatory, swim ability, safety briefing...", type: "textarea", required: true },
-  { key: "ageLimits", label: "Age limits", placeholder: "Minimum age: 8 years, under 18 with adult...", required: true },
-  { key: "maxParticipants", label: "Max participants", placeholder: "Example: 2 per jet ski, group limits...", required: true }
+  { key: "bedTypes", label: "Bed types", placeholder: "Queen, twin, king, extra bed...", required: true },
+  { key: "roomCapacity", label: "Room capacity", placeholder: "Example: 2 adults + 1 child", required: true },
+  { key: "adults", label: "Adults", placeholder: "Maximum adults per room" },
+  { key: "children", label: "Children", placeholder: "Maximum children per room" },
+  { key: "breakfastIncluded", label: "Breakfast included", placeholder: "", type: "checkbox" },
+  { key: "amenities", label: "Amenities", placeholder: "Wi-Fi, breakfast, bicycles, beach towels...", type: "textarea", required: true },
+  { key: "checkInTime", label: "Check-in", placeholder: "14:00", required: true },
+  { key: "checkOutTime", label: "Check-out", placeholder: "12:00", required: true },
+  { key: "childPolicy", label: "Child policy", placeholder: "Children welcome, ages, charges..." },
+  { key: "extraBedPolicy", label: "Extra bed policy", placeholder: "Available on request, fee..." },
+  { key: "cancellationPolicy", label: "Cancellation policy", placeholder: "Free cancellation until..." },
+  { key: "airportTransfer", label: "Airport transfer assistance", placeholder: "Public speedboat, private transfer..." },
+  { key: "bikiniBeachDistance", label: "Bikini beach distance", placeholder: "Example: 7 minutes walk" },
+  { key: "roomPhotos", label: "Room photos", placeholder: "Paste image paths or describe required photos", type: "textarea" },
+  { key: "availabilityMethod", label: "Availability update method", placeholder: "WhatsApp, Google Sheet, portal..." }
 ];
 
 const activityFields: OnboardingFieldDefinition[] = [
@@ -220,10 +189,20 @@ const activityFields: OnboardingFieldDefinition[] = [
 ];
 
 const diningFields: OnboardingFieldDefinition[] = [
-  { key: "cuisine", label: "Cuisine", placeholder: "Maldivian, seafood, international...", required: true },
+  { key: "cuisine", label: "Cuisine type", placeholder: "Maldivian, seafood, international...", required: true },
   { key: "openingHours", label: "Opening hours", placeholder: "Daily 08:00-22:30", required: true },
-  { key: "seatingCapacity", label: "Seating capacity", placeholder: "Example: 35 seats", required: true },
-  { key: "menuHighlights", label: "Menu highlights", placeholder: "Grilled reef fish, local tuna curry, fresh juices...", type: "textarea", required: true }
+  { key: "seatingCapacity", label: "Seating capacity", placeholder: "Example: 35 seats" },
+  { key: "averagePrice", label: "Average price range", placeholder: "USD 8-20 per person", required: true },
+  { key: "menuItems", label: "Menu items", placeholder: "Breakfast, lunch, dinner, drinks...", type: "textarea", required: true },
+  { key: "menuUpload", label: "Menu upload or link", placeholder: "Paste menu link, file name, or storage path" },
+  { key: "delivery", label: "Delivery available", placeholder: "", type: "checkbox" },
+  { key: "reservation", label: "Reservation available", placeholder: "", type: "checkbox" },
+  { key: "halal", label: "Halal", placeholder: "", type: "checkbox" },
+  { key: "vegetarian", label: "Vegetarian options", placeholder: "", type: "checkbox" },
+  { key: "vegan", label: "Vegan options", placeholder: "", type: "checkbox" },
+  { key: "cardPayment", label: "Card payment", placeholder: "", type: "checkbox" },
+  { key: "featuredDishes", label: "Featured dishes", placeholder: "Tuna curry, grilled reef fish...", type: "textarea" },
+  { key: "foodPhotos", label: "Food photos", placeholder: "Paste image paths or describe required photos", type: "textarea" }
 ];
 
 const transferFields: OnboardingFieldDefinition[] = [
@@ -251,40 +230,12 @@ const shopFields: OnboardingFieldDefinition[] = [
   { key: "featuredProducts", label: "Featured products", placeholder: "Local gifts, beach items, snacks...", type: "textarea" }
 ];
 
-const photographerFields: OnboardingFieldDefinition[] = [
-  { key: "packages", label: "Packages", placeholder: "Couple, family, island shoot...", type: "textarea", required: true },
-  { key: "duration", label: "Duration", placeholder: "1 hour, half-day...", required: true },
-  { key: "photoCount", label: "Number of photos", placeholder: "50 edited photos", required: true },
-  { key: "video", label: "Video option", placeholder: "", type: "checkbox" },
-  { key: "drone", label: "Drone option", placeholder: "", type: "checkbox" },
-  { key: "startingPrice", label: "Starting price", placeholder: "USD 120", required: true },
-  { key: "deliveryTime", label: "Delivery time", placeholder: "3-5 days" },
-  { key: "portfolio", label: "Portfolio", placeholder: "Website, Instagram, or sample gallery link" }
-];
-
 const wellnessFields: OnboardingFieldDefinition[] = [
-  { key: "treatments", label: "Treatments", placeholder: "Balinese massage, body scrub, facial, manicure...", type: "textarea", required: true },
-  { key: "sessionDuration", label: "Session duration", placeholder: "60 minutes, 90 minutes...", required: true },
-  { key: "therapists", label: "Therapists", placeholder: "Licensed international therapists...", required: true },
-  { key: "facilities", label: "Facilities", placeholder: "Steam room, sauna, couple rooms, changing areas...", type: "textarea", required: true }
-];
-
-const farmFields: OnboardingFieldDefinition[] = [
-  { key: "activities", label: "Activities", placeholder: "Farm walk, watermelon tasting...", type: "textarea", required: true },
-  { key: "duration", label: "Duration", placeholder: "1-2 hours", required: true },
-  { key: "prices", label: "Prices", placeholder: "USD 15 per person", required: true },
-  { key: "seasonality", label: "Seasonal availability", placeholder: "Best months, harvest timing..." },
-  { key: "maxGuests", label: "Maximum guests", placeholder: "Example: 10" },
-  { key: "pickupAvailability", label: "Pickup availability", placeholder: "Property pickup, meeting point..." }
-];
-
-const guideFields: OnboardingFieldDefinition[] = [
-  { key: "tourTypes", label: "Tour types", placeholder: "Food walk, island history, farm tour...", type: "textarea", required: true },
-  { key: "languages", label: "Languages", placeholder: "Dhivehi, English...", required: true },
-  { key: "duration", label: "Duration", placeholder: "1 hour, 3 hours...", required: true },
-  { key: "prices", label: "Prices", placeholder: "USD 20 per person", required: true },
-  { key: "maxGuests", label: "Maximum guests", placeholder: "Example: 8" },
-  { key: "pickupAvailability", label: "Pickup availability", placeholder: "Property pickup, harbour meet..." }
+  { key: "treatments", label: "Treatments", placeholder: "Massage, facial, yoga...", type: "textarea", required: true },
+  { key: "duration", label: "Duration", placeholder: "60 minutes, 90 minutes", required: true },
+  { key: "prices", label: "Prices", placeholder: "USD 45-100", required: true },
+  { key: "bookingHours", label: "Booking hours", placeholder: "10:00-20:00", required: true },
+  { key: "therapistCredentials", label: "Therapist credentials", placeholder: "License, certification, experience..." }
 ];
 
 const otherFields: OnboardingFieldDefinition[] = [
@@ -320,8 +271,8 @@ export const businessTypeSchemas: Record<SmartBusinessType, BusinessTypeSchema> 
     description: "Water activities, equipment, safety, and add-ons.",
     schemaKind: "activity-service",
     sectionTitle: "Watersports services",
-    sectionDescription: "Add equipment, duration, safety requirements, age limits, and participant capacity.",
-    fields: watersportsFields,
+    sectionDescription: "Add activities, equipment, safety information, operating hours, and trip options.",
+    fields: activityFields,
     pricing: activityPricing
   },
   "excursion-operator": {
@@ -330,8 +281,8 @@ export const businessTypeSchemas: Record<SmartBusinessType, BusinessTypeSchema> 
     description: "Tours, activities, inclusions, and schedules.",
     schemaKind: "activity-service",
     sectionTitle: "Excursions and inclusions",
-    sectionDescription: "Add activity type, duration, included items, meeting points, and guest limits.",
-    fields: excursionFields,
+    sectionDescription: "Add tours, durations, meeting points, inclusions, guest limits, and weather policies.",
+    fields: activityFields,
     pricing: activityPricing
   },
   "dive-center": {

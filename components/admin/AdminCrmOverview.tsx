@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Badge from "@/components/ui/Badge";
 import { AdminCrmApplicationTimeline } from "@/components/admin/AdminCrmApplicationTimeline";
 import { AdminCrmBookingTimeline } from "@/components/admin/AdminCrmBookingTimeline";
@@ -17,9 +18,9 @@ export function AdminCrmOverview() {
           <h1>Project Atlas CRM</h1>
           <p>Internal partner pipeline for follow-ups, verification, onboarding readiness, and membership growth.</p>
         </div>
-        <a className="adminContentAddButton" href="/admin/crm/partners">
+        <Link className="adminContentAddButton" href="/admin/crm/partners">
           Open Partners
-        </a>
+        </Link>
       </section>
 
       <section className="adminStatsGrid" aria-label="CRM summary">

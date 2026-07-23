@@ -1,8 +1,6 @@
 import "server-only";
 
 import { redirect } from "next/navigation";
-import { adminManagedProperties } from "@/data/adminContent";
-import { partnerBookings, partnerGallery, partnerProfile, partnerRooms } from "@/data/partnerPortal";
 import { createVerificationDocuments } from "@/types/verification-documents";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
 import { getDataMode } from "@/lib/supabase/status";
@@ -10,13 +8,6 @@ import { mapBookingRowToDomain } from "@/lib/supabase/mappers";
 import { getPartnerAuthState } from "@/lib/partner-portal/partnerAuth";
 import type { Booking } from "@/types/booking";
 import type { Tables } from "@/lib/supabase/types";
-
-const mockPartnerScope = {
-  partnerId: "10000000-0000-0000-0000-000000000001",
-  partnerSlug: "thoddoo-sun-sky-inn",
-  propertyId: "20000000-0000-0000-0000-000000000001",
-  propertySlug: "thoddoo-sun-sky-inn"
-};
 
 export type PartnerPortalProfileForm = {
   businessName: string;
@@ -112,135 +103,45 @@ type BookingWithRelations = Tables<"bookings"> & {
   rooms?: Tables<"rooms"> | null;
 };
 
+type PropertyMediaWithAsset = {
+  usage: string;
+  sort_order: number;
+  media_assets: Tables<"media_assets"> | null;
+};
+
+type PartnerPropertyWithRelations = Tables<"properties"> & {
+  partners: Tables<"partners"> | null;
+  rooms: Tables<"rooms">[];
+  property_media: PropertyMediaWithAsset[];
+};
+
 function parseJsonRecord(value: unknown): Record<string, string> {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, string>) : {};
 }
 
-function priceToNumber(value: string) {
-  const match = value.match(/[\d.]+/);
-  return match ? Number(match[0]) : 0;
-}
-
-function getMockPortalData(): PartnerPortalData {
-  const property = adminManagedProperties[0];
-  const documents: PartnerPortalDocument[] = createVerificationDocuments("guesthouse").map((document, index) => ({
-    id: document.key,
-    key: document.key,
-    label: document.label,
-    required: document.required,
-    fileName: index < 4 ? `${document.key}.pdf` : "",
-    storagePath: index < 4 ? `partner-verification-documents/${property.slug}/${document.key}.pdf` : "",
-    status: index < 4 ? ("approved" as const) : ("missing" as const),
-    expiryDate: "",
-    adminNote: index < 4 ? "Approved in demo workflow." : "Upload required before renewal."
-  }));
-  const required = documents.filter((document) => document.required);
-  const approved = required.filter((document) => document.status === "approved" || document.status === "uploaded");
-
-  return {
-    source: "mock",
-    partnerId: "partner-thoddoo-sun-sky",
-    propertyId: property.id,
-    businessType: "guesthouse",
-    profile: {
-      businessName: property.name,
-      shortDescription: property.shortDescription,
-      description: property.fullDescription,
-      address: property.address,
-      googleMaps: property.googleMapsLink,
-      whatsapp: property.whatsapp,
-      email: property.email,
-      website: property.website,
-      instagram: "instagram.com/thoddoosunsky",
-      facebook: "facebook.com/thoddoosunsky",
-      operatingHours: "Daily, guest support by WhatsApp",
-      languages: partnerProfile.languages,
-      amenities: property.amenities,
-      policies: property.policies,
-      seoTitle: property.seo.title,
-      seoDescription: property.seo.description
-    },
-    membership: {
-      plan: property.membershipPlan,
-      renewalDate: "2026-08-01",
-      status: partnerProfile.renewalStatus
-    },
-    verification: {
-      status: property.verificationStatus === "Verified" ? "Verified" : "Pending",
-      completion: Math.round((approved.length / Math.max(1, required.length)) * 100),
-      missingDocuments: required.filter((document) => document.status === "missing").map((document) => document.label),
-      adminNotes: ["Local team approved core documents in demo mode."]
-    },
-    services: partnerRooms.map((room, index) => ({
-      id: room.id,
-      title: room.name,
-      description: room.amenities.join(", "),
-      price: String(priceToNumber(room.price)),
-      currency: "USD",
-      unit: "per night",
-      childPrice: "",
-      notes: `${room.seasonalPrice}. ${room.discount}`,
-      active: room.availability !== "Blocked",
-      sortOrder: index,
-      metadata: {
-        capacity: room.capacity,
-        availability: room.availability,
-        breakfast: room.amenities.includes("Breakfast") ? "Included" : "Confirm"
-      }
-    })),
-    gallery: partnerGallery.map((image, index) => ({
-      id: image.id,
-      path: image.path,
-      caption: image.caption,
-      altText: image.caption,
-      usage: image.isHero ? "hero" : "gallery",
-      sortOrder: index
-    })),
-    documents,
-    bookings: [],
-    notifications: [
-      {
-        id: "notification-approved",
-        title: "Application approved",
-        body: "Your business is verified and visible on iThoddoo Maldives.",
-        type: "verification",
-        status: "unread",
-        createdAt: "2026-07-14T10:00:00.000Z",
-        actionHref: "/partner/verification"
-      },
-      {
-        id: "notification-booking",
-        title: "Booking received",
-        body: `${partnerBookings[1]?.guest ?? "Guest"} has a pending family booking request.`,
-        type: "booking",
-        status: "unread",
-        createdAt: "2026-07-15T09:00:00.000Z",
-        actionHref: "/partner/bookings"
-      },
-      {
-        id: "notification-invoice",
-        title: "Invoice due",
-        body: "Premium membership invoice placeholder is ready for review.",
-        type: "membership",
-        status: "read",
-        createdAt: "2026-07-10T09:00:00.000Z",
-        actionHref: "/partner/membership"
-      }
-    ]
-  };
-}
-
 function getAccountSetupPortalData(email: string | null): PartnerPortalData {
-  const mock = getMockPortalData();
   return {
-    ...mock,
     source: "setup_required",
     partnerId: "",
     propertyId: "",
+    businessType: "guesthouse",
     profile: {
-      ...mock.profile,
       businessName: "Account setup required",
-      email: email ?? ""
+      shortDescription: "",
+      description: "",
+      address: "",
+      googleMaps: "",
+      whatsapp: "",
+      email: email ?? "",
+      website: "",
+      instagram: "",
+      facebook: "",
+      operatingHours: "",
+      languages: [],
+      amenities: [],
+      policies: [],
+      seoTitle: "",
+      seoDescription: ""
     },
     membership: {
       plan: "Free",
@@ -251,7 +152,7 @@ function getAccountSetupPortalData(email: string | null): PartnerPortalData {
       status: "Missing",
       completion: 0,
       missingDocuments: ["Linked partner record"],
-      adminNotes: ["Your authenticated account is not linked to a partner record yet."]
+      adminNotes: ["This authenticated account is not linked to an approved business yet."]
     },
     services: [],
     gallery: [],
@@ -314,7 +215,7 @@ function mapNotification(row: Tables<"partner_notifications">): PartnerPortalNot
 
 export async function getCurrentPartnerPortalData(): Promise<PartnerPortalData> {
   if (getDataMode() !== "supabase") {
-    return getMockPortalData();
+    return getAccountSetupPortalData(null);
   }
 
   const authState = await getPartnerAuthState();
@@ -330,12 +231,12 @@ export async function getCurrentPartnerPortalData(): Promise<PartnerPortalData> 
 
   const supabase = createSupabaseServiceRoleClient();
   if (!supabase) {
-    return { ...getMockPortalData(), source: "fallback" };
+    return getAccountSetupPortalData(authState.email);
   }
 
   try {
-    const db = supabase as any;
-    const { data: property, error: propertyError } = await db
+    const db = supabase;
+    const { data: propertyData, error: propertyError } = await db
       .from("properties")
       .select("*, partners(*), rooms(*), property_media(usage, sort_order, media_assets(*))")
       .eq("partner_id", authState.partner.id)
@@ -344,6 +245,7 @@ export async function getCurrentPartnerPortalData(): Promise<PartnerPortalData> 
       .maybeSingle();
 
     if (propertyError) throw propertyError;
+    const property = propertyData as unknown as PartnerPropertyWithRelations | null;
     if (!property) return getAccountSetupPortalData(authState.email);
     if (property.partner_id !== authState.partner.id) throw new Error("Partner property scope mismatch.");
 
@@ -356,7 +258,7 @@ export async function getCurrentPartnerPortalData(): Promise<PartnerPortalData> 
 
     const socialLinks = parseJsonRecord(property.social_links);
     const propertyMedia = Array.isArray(property.property_media) ? property.property_media : [];
-    const gallery = propertyMedia.map((item: any, index: number) => ({
+    const gallery = propertyMedia.map((item: PropertyMediaWithAsset, index: number) => ({
       id: item.media_assets?.id ?? `${property.id}-media-${index}`,
       path: item.media_assets?.path ?? property.hero_image_path,
       caption: item.media_assets?.caption ?? item.usage,
@@ -370,7 +272,7 @@ export async function getCurrentPartnerPortalData(): Promise<PartnerPortalData> 
       title: item.title,
       description: item.description ?? "",
       price: item.price === null ? "" : String(item.price),
-      currency: item.currency === "MVR" ? "MVR" : "USD",
+      currency: (item.currency === "MVR" ? "MVR" : "USD") as PartnerPortalServiceItem["currency"],
       unit: item.unit as PartnerPortalServiceItem["unit"],
       childPrice: item.child_price === null ? "" : String(item.child_price),
       notes: item.notes ?? "",
@@ -448,23 +350,23 @@ export async function getCurrentPartnerPortalData(): Promise<PartnerPortalData> 
 
 export async function getAuthorizedPartnerScope() {
   if (getDataMode() !== "supabase") {
-    return { mode: "mock" as const, ...mockPartnerScope };
+    return { mode: "setup_required" as const, partnerId: "", partnerSlug: "", propertyId: "", propertySlug: "" };
   }
 
   const authState = await getPartnerAuthState();
   if (authState.status !== "authenticated") {
-    return { mode: "unauthenticated" as const, ...mockPartnerScope };
+    return { mode: "unauthenticated" as const, partnerId: "", partnerSlug: "", propertyId: "", propertySlug: "" };
   }
   if (!authState.partner) {
-    return { mode: "setup_required" as const, ...mockPartnerScope, authUserId: authState.userId };
+    return { mode: "setup_required" as const, partnerId: "", partnerSlug: "", propertyId: "", propertySlug: "", authUserId: authState.userId };
   }
 
   const supabase = createSupabaseServiceRoleClient();
   if (!supabase) {
-    return { mode: "unavailable" as const, ...mockPartnerScope };
+    return { mode: "unavailable" as const, partnerId: "", partnerSlug: "", propertyId: "", propertySlug: "" };
   }
 
-  const { data: property } = await (supabase as any)
+  const { data: property } = await supabase
     .from("properties")
     .select("id, slug, partner_id")
     .eq("partner_id", authState.partner.id)

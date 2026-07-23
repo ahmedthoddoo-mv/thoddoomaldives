@@ -3,11 +3,6 @@
 	"main": ".open-next/worker.js",
 	"name": "thoddoomaldives",
 	"keep_vars": true,
-	"vars": {
-		"DATA_MODE": "supabase",
-		"NEXT_PUBLIC_SUPABASE_URL": "https://gmalzloyjsalsvtczbbt.supabase.co",
-		"NEXT_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_rzdcksWOq5Wjw_Xvm-fN3A_HTSgzAMH"
-	},
 	"compatibility_date": "2026-07-15",
 	"compatibility_flags": [
 		"nodejs_compat",

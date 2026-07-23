@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { getPartnerApplicationBusinessTypeLabel } from "@/data/partnerApplications";
 import { ApplicationDecisionPanel } from "@/components/admin/ApplicationDecisionPanel";
 import { ApplicationMessagePreview } from "@/components/admin/ApplicationMessagePreview";
@@ -34,23 +35,17 @@ export function ApplicationDetailPanel({
   readError?: string;
 }) {
   const useMockStore = !dataSource || dataSource === "mock";
-  const [application, setApplication] = useState<PartnerApplicationRecord | undefined>(() =>
-    initialApplication ?? (useMockStore ? PartnerApplicationRepository.findById(applicationId) : undefined)
+  const [storedApplication, setStoredApplication] = useState<PartnerApplicationRecord | undefined>(() =>
+    useMockStore ? PartnerApplicationRepository.findById(applicationId) : undefined
   );
+  const [applicationOverride, setApplicationOverride] = useState<PartnerApplicationRecord>();
+  const application = applicationOverride ?? initialApplication ?? (useMockStore ? storedApplication : undefined);
 
   useEffect(() => {
-    if (initialApplication) {
-      setApplication(initialApplication);
-      return () => undefined;
-    }
-
-    if (!useMockStore) {
-      setApplication(undefined);
-      return () => undefined;
-    }
-
-    setApplication(PartnerApplicationRepository.findById(applicationId));
-    return subscribeToPartnerApplications(() => setApplication(PartnerApplicationRepository.findById(applicationId)));
+    if (!useMockStore || initialApplication) return;
+    return subscribeToPartnerApplications(() =>
+      setStoredApplication(PartnerApplicationRepository.findById(applicationId))
+    );
   }, [applicationId, initialApplication, useMockStore]);
 
   if (!application) {
@@ -58,9 +53,9 @@ export function ApplicationDetailPanel({
       <section className="adminPanel">
         <h1>Application not found</h1>
         <p className="mutedText">The application may be stored in another browser session or has been reset.</p>
-        <a className="adminContentAddButton" href="/admin/applications">
+        <Link className="adminContentAddButton" href="/admin/applications">
           Back to applications
-        </a>
+        </Link>
       </section>
     );
   }
@@ -78,9 +73,9 @@ export function ApplicationDetailPanel({
             <p className="bookingValidationPanel">Data source: Supabase unavailable. {readError ?? "Check migrations and service role configuration."}</p>
           ) : null}
         </div>
-        <a className="adminContentAddButton" href="/admin/applications">
+        <Link className="adminContentAddButton" href="/admin/applications">
           Back to queue
-        </a>
+        </Link>
       </section>
 
       <div className="adminTwoColumn">
@@ -147,7 +142,11 @@ export function ApplicationDetailPanel({
           <RequestedChangesList changes={application.requestedChanges} />
         </section>
 
-        <ApplicationDecisionPanel application={application} onChange={setApplication} dataSource={dataSource} />
+        <ApplicationDecisionPanel
+          application={application}
+          onChange={setApplicationOverride}
+          dataSource={dataSource}
+        />
       </div>
 
       <ApplicationVerificationChecklist application={application} />

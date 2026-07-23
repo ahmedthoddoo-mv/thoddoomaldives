@@ -1,5 +1,4 @@
 create extension if not exists pgcrypto;
-
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
@@ -9,7 +8,6 @@ begin
   return new;
 end;
 $$;
-
 create table if not exists public.membership_plans (
   id uuid primary key default gen_random_uuid(),
   name text not null unique,
@@ -20,7 +18,6 @@ create table if not exists public.membership_plans (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-
 create table if not exists public.partners (
   id uuid primary key default gen_random_uuid(),
   business_name text not null,
@@ -41,7 +38,6 @@ create table if not exists public.partners (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-
 create table if not exists public.properties (
   id uuid primary key default gen_random_uuid(),
   partner_id uuid references public.partners(id) on delete set null,
@@ -68,7 +64,6 @@ create table if not exists public.properties (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-
 create table if not exists public.rooms (
   id uuid primary key default gen_random_uuid(),
   property_id uuid not null references public.properties(id) on delete cascade,
@@ -84,7 +79,6 @@ create table if not exists public.rooms (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-
 create table if not exists public.guests (
   id uuid primary key default gen_random_uuid(),
   full_name text not null,
@@ -94,7 +88,6 @@ create table if not exists public.guests (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-
 create table if not exists public.bookings (
   id uuid primary key default gen_random_uuid(),
   guest_id uuid not null references public.guests(id) on delete restrict,
@@ -115,7 +108,6 @@ create table if not exists public.bookings (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-
 create table if not exists public.media_assets (
   id uuid primary key default gen_random_uuid(),
   filename text not null,
@@ -131,7 +123,6 @@ create table if not exists public.media_assets (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-
 create table if not exists public.restaurants (
   id uuid primary key default gen_random_uuid(),
   slug text not null unique,
@@ -147,7 +138,6 @@ create table if not exists public.restaurants (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-
 create table if not exists public.experiences (
   id uuid primary key default gen_random_uuid(),
   slug text not null unique,
@@ -163,7 +153,6 @@ create table if not exists public.experiences (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-
 create table if not exists public.transfers (
   id uuid primary key default gen_random_uuid(),
   slug text not null unique,
@@ -182,7 +171,6 @@ create table if not exists public.transfers (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-
 create table if not exists public.crm_tasks (
   id uuid primary key default gen_random_uuid(),
   partner_id uuid references public.partners(id) on delete cascade,
@@ -195,7 +183,6 @@ create table if not exists public.crm_tasks (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-
 create table if not exists public.crm_notes (
   id uuid primary key default gen_random_uuid(),
   partner_id uuid references public.partners(id) on delete cascade,
@@ -204,21 +191,18 @@ create table if not exists public.crm_notes (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-
 create table if not exists public.property_experiences (
   property_id uuid not null references public.properties(id) on delete cascade,
   experience_id uuid not null references public.experiences(id) on delete cascade,
   created_at timestamptz not null default now(),
   primary key (property_id, experience_id)
 );
-
 create table if not exists public.property_transfers (
   property_id uuid not null references public.properties(id) on delete cascade,
   transfer_id uuid not null references public.transfers(id) on delete cascade,
   created_at timestamptz not null default now(),
   primary key (property_id, transfer_id)
 );
-
 create table if not exists public.property_media (
   property_id uuid not null references public.properties(id) on delete cascade,
   media_asset_id uuid not null references public.media_assets(id) on delete cascade,
@@ -227,7 +211,6 @@ create table if not exists public.property_media (
   created_at timestamptz not null default now(),
   primary key (property_id, media_asset_id, usage)
 );
-
 create table if not exists public.partner_media (
   partner_id uuid not null references public.partners(id) on delete cascade,
   media_asset_id uuid not null references public.media_assets(id) on delete cascade,
@@ -236,7 +219,6 @@ create table if not exists public.partner_media (
   created_at timestamptz not null default now(),
   primary key (partner_id, media_asset_id, usage)
 );
-
 do $$
 begin
   if not exists (select 1 from pg_constraint where conname = 'partners_status_check') then
@@ -323,7 +305,6 @@ begin
       check (priority in ('low', 'medium', 'high', 'urgent'));
   end if;
 end $$;
-
 create index if not exists partners_category_idx on public.partners(category);
 create index if not exists partners_slug_idx on public.partners(slug);
 create index if not exists partners_verification_status_idx on public.partners(verification_status);
@@ -348,7 +329,6 @@ create index if not exists transfers_publication_status_idx on public.transfers(
 create index if not exists crm_tasks_partner_id_idx on public.crm_tasks(partner_id);
 create index if not exists crm_tasks_status_idx on public.crm_tasks(status);
 create index if not exists crm_notes_partner_id_idx on public.crm_notes(partner_id);
-
 drop trigger if exists membership_plans_set_updated_at on public.membership_plans;
 drop trigger if exists partners_set_updated_at on public.partners;
 drop trigger if exists properties_set_updated_at on public.properties;
@@ -361,7 +341,6 @@ drop trigger if exists experiences_set_updated_at on public.experiences;
 drop trigger if exists transfers_set_updated_at on public.transfers;
 drop trigger if exists crm_tasks_set_updated_at on public.crm_tasks;
 drop trigger if exists crm_notes_set_updated_at on public.crm_notes;
-
 create trigger membership_plans_set_updated_at before update on public.membership_plans for each row execute function public.set_updated_at();
 create trigger partners_set_updated_at before update on public.partners for each row execute function public.set_updated_at();
 create trigger properties_set_updated_at before update on public.properties for each row execute function public.set_updated_at();
@@ -374,7 +353,6 @@ create trigger experiences_set_updated_at before update on public.experiences fo
 create trigger transfers_set_updated_at before update on public.transfers for each row execute function public.set_updated_at();
 create trigger crm_tasks_set_updated_at before update on public.crm_tasks for each row execute function public.set_updated_at();
 create trigger crm_notes_set_updated_at before update on public.crm_notes for each row execute function public.set_updated_at();
-
 alter table public.membership_plans enable row level security;
 alter table public.partners enable row level security;
 alter table public.properties enable row level security;
@@ -391,7 +369,6 @@ alter table public.property_experiences enable row level security;
 alter table public.property_transfers enable row level security;
 alter table public.property_media enable row level security;
 alter table public.partner_media enable row level security;
-
 create policy "public read active membership plans" on public.membership_plans for select using (active = true);
 create policy "public read published properties" on public.properties for select using (publication_status = 'published');
 create policy "public read active rooms for published properties" on public.rooms for select using (
@@ -420,7 +397,6 @@ create policy "public read media linked to published properties" on public.media
       and properties.publication_status = 'published'
   )
 );
-
 -- Service role bypasses RLS automatically in Supabase. Admin dashboard writes should use server-side
 -- service role functions only after real authentication is added.
--- Future partner ownership policies should restrict partner reads/writes to auth.uid()-owned partner rows.
+-- Future partner ownership policies should restrict partner reads/writes to auth.uid()-owned partner rows.;

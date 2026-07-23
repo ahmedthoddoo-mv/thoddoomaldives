@@ -1,4 +1,3 @@
-import { PropertyRepository, RestaurantRepository, ExperienceRepository, TransferRepository, BookingRepository } from "@/lib/repositories";
 import { getRepositoryProvider } from "@/lib/repositories/provider";
 import type { AdminManagedProperty } from "@/data/adminContent";
 import type { Booking } from "@/types/booking";
@@ -55,7 +54,7 @@ export async function getLiveAdminProperties(): Promise<LiveReadResult<AdminMana
   return safeRead({
     source,
     read: () => provider.properties.findAll(),
-    fallback: () => PropertyRepository.findAll()
+    fallback: () => []
   });
 }
 
@@ -69,7 +68,7 @@ export async function getLivePublishedGuesthouses(): Promise<LiveReadResult<Gues
       const properties = await provider.properties.findPublished();
       return properties.map(adminPropertyToGuesthouse);
     },
-    fallback: () => PropertyRepository.findPublicAll()
+    fallback: () => []
   });
 }
 
@@ -80,7 +79,7 @@ export async function getLiveRestaurants(): Promise<LiveReadResult<Restaurant[]>
   return safeRead({
     source,
     read: () => provider.restaurants.findAll(),
-    fallback: () => RestaurantRepository.findAll()
+    fallback: () => []
   });
 }
 
@@ -91,7 +90,7 @@ export async function getLiveExperiences(): Promise<LiveReadResult<Experience[]>
   return safeRead({
     source,
     read: () => provider.experiences.findAll(),
-    fallback: () => ExperienceRepository.findAll()
+    fallback: () => []
   });
 }
 
@@ -102,7 +101,7 @@ export async function getLiveTransfers(): Promise<LiveReadResult<Transfer[]>> {
   return safeRead({
     source,
     read: () => provider.transfers.findAll(),
-    fallback: () => TransferRepository.findAll()
+    fallback: () => []
   });
 }
 
@@ -113,6 +112,6 @@ export async function getLiveBookings(): Promise<LiveReadResult<Booking[]>> {
   return safeRead({
     source,
     read: () => provider.bookings.findAll(),
-    fallback: () => BookingRepository.findAll()
+    fallback: () => []
   });
 }

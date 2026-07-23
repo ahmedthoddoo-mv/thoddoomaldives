@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import Badge from "@/components/ui/Badge";
 import { AdminCrmStatusBadge } from "@/components/admin/AdminCrmStatusBadge";
 import type { CrmTaskStatus } from "@/data/adminCrm";
@@ -21,7 +22,7 @@ export function AdminCrmTasks() {
     return crmTasks.filter((task) =>
       [task.title, task.partnerBusiness, task.type, task.owner, task.status, task.priority].join(" ").toLowerCase().includes(normalizedQuery)
     );
-  }, [query]);
+  }, [crmTasks, query]);
 
   return (
     <div className="adminCrmStack">
@@ -31,9 +32,9 @@ export function AdminCrmTasks() {
           <h1>CRM Task Management</h1>
           <p>Track calls, missing media, logo requests, pricing follow-ups, waiting responses, verification, and completed work.</p>
         </div>
-        <a className="adminContentAddButton" href="/admin/crm/notes">
+        <Link className="adminContentAddButton" href="/admin/crm/notes">
           View Notes
-        </a>
+        </Link>
       </section>
 
       <section className="adminPanel">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import Badge from "@/components/ui/Badge";
 import type { MediaAsset } from "@/data/adminCms";
 
@@ -21,9 +22,9 @@ export function AdminMediaDetail({ asset }: AdminMediaDetailProps) {
           <h1>{currentAsset.filename}</h1>
           <p>{currentAsset.caption}</p>
         </div>
-        <a className="adminContentAddButton adminContentSecondaryButton" href="/admin/media">
+        <Link className="adminContentAddButton adminContentSecondaryButton" href="/admin/media">
           Back to media
-        </a>
+        </Link>
       </section>
 
       <section className="adminMediaDetailLayout">

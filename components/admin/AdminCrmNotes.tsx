@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import Badge from "@/components/ui/Badge";
 import { CRMRepository } from "@/lib/repositories";
 
@@ -20,7 +21,7 @@ export function AdminCrmNotes() {
         [note.partnerBusiness, note.author, note.date, note.body].join(" ").toLowerCase().includes(normalizedQuery);
       return partnerMatch && searchMatch;
     });
-  }, [partnerId, query]);
+  }, [crmNotes, partnerId, query]);
 
   return (
     <div className="adminCrmStack">
@@ -30,9 +31,9 @@ export function AdminCrmNotes() {
           <h1>Partner Notes</h1>
           <p>Internal CRM notes for owner interest, content gaps, callbacks, and follow-up context.</p>
         </div>
-        <a className="adminContentAddButton" href="/admin/crm/partners">
+        <Link className="adminContentAddButton" href="/admin/crm/partners">
           View Partners
-        </a>
+        </Link>
       </section>
 
       <section className="adminPanel adminCrmNoteFilters">
