@@ -26,8 +26,8 @@
 --     constraint names partners_slug_key and properties_slug_key; slug retries
 --     deliberately rethrow every other unique violation.
 
-set local lock_timeout = '10s';
-set local statement_timeout = '15min';
+set lock_timeout = '10s';
+set statement_timeout = '15min';
 
 alter table public.partner_applications
   add column if not exists property_id uuid references public.properties(id) on delete set null,
@@ -94,6 +94,19 @@ alter table public.partner_account_invitations
 alter table public.partner_account_invitations
   drop constraint if exists partner_account_invitations_status_check;
 
+alter table public.bookings
+  alter column booking_total drop not null,
+  alter column booking_total drop default,
+  alter column company_revenue drop not null,
+  alter column company_revenue drop default,
+  alter column partner_revenue drop not null,
+  alter column partner_revenue drop default,
+  add column if not exists nights integer,
+  add column if not exists source text not null default 'website_enquiry',
+  add column if not exists selected_service_ids uuid[] not null default '{}'::uuid[],
+  add column if not exists quoted_amount numeric(12, 2),
+  add column if not exists quote_currency text;
+
 -- Preflight/normalize all values governed by constraints introduced below.
 -- Unknown non-positive prices and quotes become NULL; identity/contact counts and
 -- invitation workflow states fail closed because guessing would alter meaning.
@@ -144,19 +157,6 @@ end $$;
 alter table public.partner_account_invitations
   add constraint partner_account_invitations_status_check
   check (status in ('preview', 'sending', 'sent', 'accepted', 'expired', 'cancelled'));
-
-alter table public.bookings
-  alter column booking_total drop not null,
-  alter column booking_total drop default,
-  alter column company_revenue drop not null,
-  alter column company_revenue drop default,
-  alter column partner_revenue drop not null,
-  alter column partner_revenue drop default,
-  add column if not exists nights integer,
-  add column if not exists source text not null default 'website_enquiry',
-  add column if not exists selected_service_ids uuid[] not null default '{}'::uuid[],
-  add column if not exists quoted_amount numeric(12, 2),
-  add column if not exists quote_currency text;
 
 create index if not exists partner_applications_property_id_idx on public.partner_applications(property_id);
 create index if not exists partner_applications_approved_by_user_id_idx
