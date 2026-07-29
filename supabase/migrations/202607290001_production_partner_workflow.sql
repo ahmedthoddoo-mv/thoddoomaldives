@@ -1,5 +1,33 @@
 -- Phase 1 production partner/property/enquiry foundation.
 -- Additive and data-preserving. Historical migrations are intentionally untouched.
+--
+-- Production assumptions:
+-- 1. This migration is applied once by the Supabase CLI in timestamp order after
+--    all earlier repository migrations.
+-- 2. public.admin_users.auth_user_id, public.properties.id, public.partners.id,
+--    public.partner_applications.id, and public.rooms.id are unique referenced keys.
+-- 3. gen_random_uuid() is available in the Supabase PostgreSQL environment.
+-- 4. Existing zero/non-positive accommodation prices and enquiry quotes represent
+--    unknown amounts and may be normalized to NULL without losing a real quote.
+-- 5. Existing booking adults/children values are business records and must not be
+--    silently rewritten; invalid values abort this migration during preflight.
+-- 6. Invitation states outside the documented workflow are not safe to guess and
+--    abort this migration during preflight.
+-- 7. Existing unclassified media must remain private.
+-- 8. Referenced partner/property/room deletion must preserve media audit metadata;
+--    media ownership links therefore use ON DELETE SET NULL, not CASCADE.
+-- 9. Existing unique constraints used by ON CONFLICT (room name, media path,
+--    document key, and property-media link) were created by earlier migrations.
+-- 10. This file must be applied by Supabase CLI migration commands. The CLI runs
+--     each MigrationFile.ExecBatch, including its migration-history insert, as one
+--     implicit PostgreSQL transaction. Do not add an explicit COMMIT here because
+--     it would split schema changes from the migration-history write.
+-- 11. Earlier table-level UNIQUE declarations retain PostgreSQL's generated
+--     constraint names partners_slug_key and properties_slug_key; slug retries
+--     deliberately rethrow every other unique violation.
+
+set local lock_timeout = '10s';
+set local statement_timeout = '15min';
 
 alter table public.partner_applications
   add column if not exists property_id uuid references public.properties(id) on delete set null,
@@ -49,9 +77,9 @@ alter table public.partner_service_items
 
 alter table public.media_assets
   add column if not exists application_id uuid references public.partner_applications(id) on delete set null,
-  add column if not exists partner_id uuid references public.partners(id) on delete cascade,
-  add column if not exists property_id uuid references public.properties(id) on delete cascade,
-  add column if not exists room_id uuid references public.rooms(id) on delete cascade,
+  add column if not exists partner_id uuid references public.partners(id) on delete set null,
+  add column if not exists property_id uuid references public.properties(id) on delete set null,
+  add column if not exists room_id uuid references public.rooms(id) on delete set null,
   add column if not exists storage_bucket text,
   add column if not exists storage_path text,
   add column if not exists media_type text,
@@ -65,6 +93,54 @@ alter table public.partner_account_invitations
 
 alter table public.partner_account_invitations
   drop constraint if exists partner_account_invitations_status_check;
+
+-- Preflight/normalize all values governed by constraints introduced below.
+-- Unknown non-positive prices and quotes become NULL; identity/contact counts and
+-- invitation workflow states fail closed because guessing would alter meaning.
+update public.properties
+set starting_price = null
+where starting_price is not null and starting_price <= 0;
+
+update public.bookings
+set nights = null
+where nights is not null and nights <= 0;
+
+update public.bookings
+set quoted_amount = null
+where quoted_amount is not null and quoted_amount <= 0;
+
+update public.media_assets
+set visibility = 'private'
+where visibility is null or visibility not in ('public', 'private');
+
+do $$
+declare
+  invalid_booking_count bigint;
+  invalid_invitation_count bigint;
+  invalid_invitation_statuses text;
+begin
+  select count(*) into invalid_booking_count
+  from public.bookings
+  where adults < 1 or children < 0;
+  if invalid_booking_count > 0 then
+    raise exception
+      'Migration preflight failed: % booking row(s) have adults < 1 or children < 0; correct them explicitly before applying',
+      invalid_booking_count;
+  end if;
+
+  select count(*), string_agg(distinct coalesce(status, '<NULL>'), ', ' order by coalesce(status, '<NULL>'))
+  into invalid_invitation_count, invalid_invitation_statuses
+  from public.partner_account_invitations
+  where status is null
+     or status not in ('preview', 'sending', 'sent', 'accepted', 'expired', 'cancelled');
+  if invalid_invitation_count > 0 then
+    raise exception
+      'Migration preflight failed: % invitation row(s) have unsupported status(es): %',
+      invalid_invitation_count,
+      invalid_invitation_statuses;
+  end if;
+end $$;
+
 alter table public.partner_account_invitations
   add constraint partner_account_invitations_status_check
   check (status in ('preview', 'sending', 'sent', 'accepted', 'expired', 'cancelled'));
@@ -128,19 +204,35 @@ create unique index if not exists partner_service_items_property_source_key
 
 do $$
 begin
-  if not exists (select 1 from pg_constraint where conname = 'properties_starting_price_positive_check') then
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.properties'::regclass
+      and conname = 'properties_starting_price_positive_check'
+  ) then
     alter table public.properties add constraint properties_starting_price_positive_check
       check (starting_price is null or starting_price > 0);
   end if;
-  if not exists (select 1 from pg_constraint where conname = 'rooms_price_positive_or_unknown_check') then
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.rooms'::regclass
+      and conname = 'rooms_price_positive_or_unknown_check'
+  ) then
     alter table public.rooms add constraint rooms_price_positive_or_unknown_check
       check (price_per_night is null or price_per_night > 0);
   end if;
-  if not exists (select 1 from pg_constraint where conname = 'media_assets_visibility_check') then
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.media_assets'::regclass
+      and conname = 'media_assets_visibility_check'
+  ) then
     alter table public.media_assets add constraint media_assets_visibility_check
       check (visibility in ('public', 'private'));
   end if;
-  if not exists (select 1 from pg_constraint where conname = 'bookings_enquiry_values_check') then
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.bookings'::regclass
+      and conname = 'bookings_enquiry_values_check'
+  ) then
     alter table public.bookings add constraint bookings_enquiry_values_check
       check (
         (nights is null or nights > 0)
@@ -236,6 +328,7 @@ declare
   logo_path_value text;
   gallery_value text[];
   result jsonb;
+  conflict_constraint text;
 begin
   if not exists (
     select 1
@@ -299,21 +392,42 @@ begin
   end loop;
 
   if partner_row.id is null then
-    insert into public.partners (
-      application_id, business_name, slug, owner_name, category, status,
-      membership_plan_id, verification_status, whatsapp, email, website, address,
-      island, google_maps_link, instagram, facebook, short_description,
-      full_description, registration_number, lead_source, priority, metadata,
-      approved_at, approved_by_user_id
-    ) values (
-      app.id, app.business_name, candidate_slug, app.contact_person, app.business_type, 'verified',
-      membership_uuid, 'verified', app.whatsapp, lower(app.email), app.website, app.address,
-      app.island, app.google_maps_link, app.instagram, app.facebook, app.short_description,
-      nullif(app.metadata->>'fullDescription', ''), app.registration_number,
-      'Application ' || coalesce(app.application_reference, app.id::text), 'high',
-      jsonb_build_object('applicationSnapshot', app.metadata, 'membership', app.membership_plan),
-      now_value, reviewer_user_id
-    ) returning * into partner_row;
+    loop
+      begin
+        insert into public.partners (
+          application_id, business_name, slug, owner_name, category, status,
+          membership_plan_id, verification_status, whatsapp, email, website, address,
+          island, google_maps_link, instagram, facebook, short_description,
+          full_description, registration_number, lead_source, priority, metadata,
+          approved_at, approved_by_user_id
+        ) values (
+          app.id, app.business_name, candidate_slug, app.contact_person, app.business_type, 'verified',
+          membership_uuid, 'verified', app.whatsapp, lower(app.email), app.website, app.address,
+          app.island, app.google_maps_link, app.instagram, app.facebook, app.short_description,
+          nullif(app.metadata->>'fullDescription', ''), app.registration_number,
+          'Application ' || coalesce(app.application_reference, app.id::text), 'high',
+          jsonb_build_object('applicationSnapshot', app.metadata, 'membership', app.membership_plan),
+          now_value, reviewer_user_id
+        ) returning * into partner_row;
+        exit;
+      exception when unique_violation then
+        get stacked diagnostics conflict_constraint = constraint_name;
+        -- A concurrent retry may already have created this application's partner.
+        select * into partner_row
+        from public.partners
+        where application_id = app.id
+        limit 1;
+        if partner_row.id is not null then
+          exit;
+        end if;
+        if conflict_constraint <> 'partners_slug_key' then
+          raise;
+        end if;
+        -- Otherwise the candidate slug was claimed concurrently; try the next one.
+        candidate_slug := base_slug || '-' || suffix;
+        suffix := suffix + 1;
+      end;
+    end loop;
   else
     update public.partners set
       application_id = coalesce(application_id, app.id),
@@ -421,28 +535,49 @@ begin
     ], null);
 
     if property_row.id is null then
-      insert into public.properties (
-        application_id, partner_id, name, slug, island, address, whatsapp, email, website,
-        google_maps_link, short_description, full_description, hero_image_path, logo_path,
-        amenities, policies, check_in_time, check_out_time, operating_hours,
-        membership_plan_id, verification_status, publication_status, room_count,
-        starting_price, currency, metadata, approved_at, approved_by_user_id, published_at
-      ) values (
-        app.id, partner_row.id, app.business_name, candidate_slug, app.island, app.address,
-        app.whatsapp, lower(app.email), app.website, app.google_maps_link, app.short_description,
-        nullif(app.metadata->>'fullDescription', ''), coalesce(hero_path, ''),
-        logo_path_value, amenities_value, policies_value,
-        case when coalesce(answers->>'checkInTime', answers->>'checkInOut', '') ~ '([01][0-9]|2[0-3]):[0-5][0-9]'
-          then substring(coalesce(answers->>'checkInTime', answers->>'checkInOut') from '([01][0-9]|2[0-3]):[0-5][0-9]')::time end,
-        case when coalesce(answers->>'checkOutTime', answers->>'checkInOut', '') ~ '([01][0-9]|2[0-3]):[0-5][0-9]'
-          then substring(coalesce(answers->>'checkOutTime', answers->>'checkInOut') from '.*?([01][0-9]|2[0-3]):[0-5][0-9]')::time end,
-        coalesce(nullif(answers->>'receptionHours', ''), nullif(answers->>'openingHours', '')),
-        membership_uuid, 'verified', case when publish_listing then 'published' else 'draft' end,
-        nullif(regexp_replace(coalesce(answers->>'roomCount', ''), '\D', '', 'g'), '')::integer,
-        first_price, first_currency,
-        jsonb_build_object('categoryAnswers', answers, 'applicationId', app.id, 'membership', app.membership_plan),
-        now_value, reviewer_user_id, case when publish_listing then now_value else null end
-      ) returning * into property_row;
+      loop
+        begin
+          insert into public.properties (
+            application_id, partner_id, name, slug, island, address, whatsapp, email, website,
+            google_maps_link, short_description, full_description, hero_image_path, logo_path,
+            amenities, policies, check_in_time, check_out_time, operating_hours,
+            membership_plan_id, verification_status, publication_status, room_count,
+            starting_price, currency, metadata, approved_at, approved_by_user_id, published_at
+          ) values (
+            app.id, partner_row.id, app.business_name, candidate_slug, app.island, app.address,
+            app.whatsapp, lower(app.email), app.website, app.google_maps_link, app.short_description,
+            nullif(app.metadata->>'fullDescription', ''), coalesce(hero_path, ''),
+            logo_path_value, amenities_value, policies_value,
+            case when coalesce(answers->>'checkInTime', answers->>'checkInOut', '') ~ '([01][0-9]|2[0-3]):[0-5][0-9]'
+              then substring(coalesce(answers->>'checkInTime', answers->>'checkInOut') from '([01][0-9]|2[0-3]):[0-5][0-9]')::time end,
+            case when coalesce(answers->>'checkOutTime', answers->>'checkInOut', '') ~ '([01][0-9]|2[0-3]):[0-5][0-9]'
+              then substring(coalesce(answers->>'checkOutTime', answers->>'checkInOut') from '.*?([01][0-9]|2[0-3]):[0-5][0-9]')::time end,
+            coalesce(nullif(answers->>'receptionHours', ''), nullif(answers->>'openingHours', '')),
+            membership_uuid, 'verified', case when publish_listing then 'published' else 'draft' end,
+            nullif(regexp_replace(coalesce(answers->>'roomCount', ''), '\D', '', 'g'), '')::integer,
+            first_price, first_currency,
+            jsonb_build_object('categoryAnswers', answers, 'applicationId', app.id, 'membership', app.membership_plan),
+            now_value, reviewer_user_id, case when publish_listing then now_value else null end
+          ) returning * into property_row;
+          exit;
+        exception when unique_violation then
+          get stacked diagnostics conflict_constraint = constraint_name;
+          -- A concurrent retry may already have created this application's property.
+          select * into property_row
+          from public.properties
+          where application_id = app.id
+          limit 1;
+          if property_row.id is not null then
+            exit;
+          end if;
+          if conflict_constraint <> 'properties_slug_key' then
+            raise;
+          end if;
+          -- Otherwise the candidate slug was claimed concurrently; try the next one.
+          candidate_slug := base_slug || '-' || suffix;
+          suffix := suffix + 1;
+        end;
+      end loop;
     else
       update public.properties set
         application_id = coalesce(application_id, app.id),
