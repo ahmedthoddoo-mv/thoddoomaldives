@@ -69,6 +69,9 @@ export type PartnerApplicationRecord = {
   verificationStatus: "unverified" | "pending" | "verified" | "rejected";
   verificationDocuments?: PartnerVerificationDocumentInput[];
   verificationCompletion?: number;
+  submittedFields?: Array<{ label: string; value: string }>;
+  pricingRows?: Array<{ name: string; price: string; unit: string }>;
+  publicMedia?: Array<{ label: string; status: string }>;
   timeline: PartnerApplicationTimelineEvent[];
 };
 

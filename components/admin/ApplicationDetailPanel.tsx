@@ -136,6 +136,40 @@ export function ApplicationDetailPanel({
           </dl>
           <h3>Services</h3>
           <p>{application.services}</p>
+          {application.submittedFields?.length ? (
+            <>
+              <h3>Category details</h3>
+              <dl className="applicationDetailGrid">
+                {application.submittedFields.map((field) => (
+                  <div key={field.label}>
+                    <dt>{field.label}</dt>
+                    <dd>{field.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </>
+          ) : null}
+          {application.pricingRows?.length ? (
+            <>
+              <h3>Submitted pricing</h3>
+              <dl className="applicationDetailGrid">
+                {application.pricingRows.map((price) => (
+                  <div key={`${price.name}-${price.unit}`}>
+                    <dt>{price.name}</dt>
+                    <dd>{price.price} · {price.unit}</dd>
+                  </div>
+                ))}
+              </dl>
+            </>
+          ) : null}
+          {application.publicMedia?.length ? (
+            <>
+              <h3>Submitted public media</h3>
+              <ul>
+                {application.publicMedia.map((media) => <li key={media.label}>{media.label}: {media.status}</li>)}
+              </ul>
+            </>
+          ) : null}
           <h3>Media notes</h3>
           <p>{application.mediaNotes || "No media notes submitted."}</p>
           <h3>Requested changes</h3>

@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test tests/*.test.mts",
     "supabase:login": "supabase login",
     "supabase:link": "supabase link",
     "supabase:migrations": "supabase migration list",
@@ -15,6 +17,7 @@
     "supabase:seed": "supabase db reset",
     "supabase:reset-and-seed": "supabase db reset",
     "supabase:status": "supabase status",
+    "repair:partners": "node --env-file=.env.local scripts/repair-approved-applications.mjs",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "opennextjs-cloudflare build && wrangler deploy"
   },

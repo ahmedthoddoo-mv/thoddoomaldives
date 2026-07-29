@@ -3,7 +3,6 @@
 import { platformConfig } from "@/lib/config/platform";
 import { validateCategoryAnswers, validatePricingRows } from "@/lib/partner-onboarding/onboardingSchemas";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
-import type { SupabaseDatabaseClient } from "@/lib/supabase/server";
 import { getDataMode } from "@/lib/supabase/status";
 import type { Tables } from "@/lib/supabase/types";
 import type { PartnerApplicationRecord, PartnerApplicationBusinessType } from "@/types/partner-application";
@@ -86,17 +85,6 @@ function checkSubmissionRateLimit(input: SmartPartnerApplicationInput) {
 
   submissionAttempts.set(key, [...recentAttempts, now]);
   return true;
-}
-
-async function createApplicationReference(db: SupabaseDatabaseClient) {
-  const year = new Date().getFullYear();
-  const { count, error } = await db
-    .from("partner_applications")
-    .select("id", { count: "exact", head: true })
-    .gte("submitted_at", `${year}-01-01T00:00:00.000Z`);
-
-  if (error) throw error;
-  return `ITM-APP-${year}-${String((count ?? 0) + 1).padStart(6, "0")}`;
 }
 
 function buildApplicationSummary(input: SmartPartnerApplicationInput, reference: string) {
@@ -210,7 +198,9 @@ export async function submitSmartPartnerApplication(input: SmartPartnerApplicati
   const businessType = normalizeBusinessType(canonicalInput.businessType);
   let reference = "";
   try {
-    reference = await createApplicationReference(db);
+    const { data, error } = await db.rpc("next_partner_application_reference");
+    if (error || typeof data !== "string") throw error ?? new Error("Reference function returned no value.");
+    reference = data;
   } catch (error) {
     logSupabaseWriteError("create_application_reference", error);
     return {
@@ -234,6 +224,14 @@ export async function submitSmartPartnerApplication(input: SmartPartnerApplicati
   }
 
   const metadata = {
+    schemaVersion: 1,
+    common: {
+      phone: normalizePhone(canonicalInput.phone),
+      googleMapsLocation: sanitizeText(canonicalInput.googleMapsLink, 600),
+      registrationNumber: sanitizeText(canonicalInput.registrationNumber, 160),
+      fullDescription: sanitizeText(canonicalInput.fullDescription, 2400),
+      membershipNotes: sanitizeText(canonicalInput.notes, 1200)
+    },
     googleMapsLink: sanitizeText(canonicalInput.googleMapsLink, 600),
     registrationNumber: sanitizeText(canonicalInput.registrationNumber, 160),
     fullDescription: sanitizeText(canonicalInput.fullDescription, 2400),

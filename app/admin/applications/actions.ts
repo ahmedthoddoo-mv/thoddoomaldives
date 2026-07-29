@@ -4,7 +4,6 @@ import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
 import type { SupabaseDatabaseClient } from "@/lib/supabase/server";
 import { requireAdminSession } from "@/lib/admin/adminAuth";
 import { getDataMode } from "@/lib/supabase/status";
-import { createPropertySlug } from "@/lib/properties/propertySlug";
 import { logPartnerAuditEvent } from "@/lib/partner-portal/partnerAuth";
 import type { PartnerApplicationStatus } from "@/types/partner-application";
 
@@ -52,64 +51,81 @@ function getDecisionMessage(action: AdminApplicationDecisionAction) {
   return "Application reopened";
 }
 
-async function ensurePartnerAndInvitation(db: SupabaseDatabaseClient, applicationId: string, reviewer: string) {
-  const { data: application, error } = await db
+async function findAuthUserByEmail(db: SupabaseDatabaseClient, email: string) {
+  const normalizedEmail = email.toLowerCase();
+  for (let page = 1; page <= 100; page += 1) {
+    const { data, error } = await db.auth.admin.listUsers({ page, perPage: 1000 });
+    if (error) throw new Error(`Auth user lookup failed: ${error.message}`);
+    const match = data.users.find((user) => user.email?.toLowerCase() === normalizedEmail);
+    if (match) return match;
+    if (data.users.length < 1000) return null;
+  }
+  throw new Error("Auth user lookup exceeded the supported pagination limit.");
+}
+
+async function deliverPartnerInvitation(
+  db: SupabaseDatabaseClient,
+  applicationId: string,
+  reviewer: string,
+  partnerId: string
+) {
+  const { data: application } = await db
     .from("partner_applications")
-    .select("*")
+    .select("business_name, email")
     .eq("id", applicationId)
     .maybeSingle();
-
-  if (error || !application) {
-    return;
-  }
-
-  const baseSlug = createPropertySlug(application.business_name, "partner");
-  const { data: existingByEmail } = await db
-    .from("partners")
-    .select("id, slug")
-    .eq("email", application.email)
+  const { data: invitationRecord } = await db
+    .from("partner_account_invitations")
+    .select("id, status, auth_user_id, idempotency_key, delivery_attempted_at")
+    .eq("application_id", applicationId)
+    .neq("status", "cancelled")
     .maybeSingle();
-
-  let partner = existingByEmail;
-  if (!partner) {
-    const { data: existingSlugRows } = await db
-      .from("partners")
-      .select("slug")
-      .ilike("slug", `${baseSlug}%`);
-    const existingSlugs = new Set((existingSlugRows ?? []).map((row: { slug: string }) => row.slug));
-    let slug = baseSlug;
-    let suffix = 2;
-    while (existingSlugs.has(slug)) {
-      slug = `${baseSlug}-${suffix}`;
-      suffix += 1;
-    }
-
-    const { data: insertedPartner } = await db
-      .from("partners")
-      .insert({
-        business_name: application.business_name,
-        slug,
-        owner_name: application.contact_person,
-        category: application.business_type,
-        status: "pending",
-        verification_status: "pending",
-        whatsapp: application.whatsapp,
-        email: application.email,
-        website: application.website,
-        address: application.address,
-        lead_source: `Application ${application.application_reference ?? application.id}`,
-        priority: "high"
-      })
-      .select("id, slug")
-      .single();
-    partner = insertedPartner;
-  }
-
-  if (!partner?.id) {
+  if (!application || !invitationRecord || invitationRecord.status === "sent" || invitationRecord.status === "accepted") return;
+  if (
+    invitationRecord.status === "sending"
+    && invitationRecord.delivery_attempted_at
+    && Date.now() - new Date(invitationRecord.delivery_attempted_at).getTime() < 10 * 60 * 1000
+  ) {
     return;
   }
 
-  await db.from("partner_applications").update({ partner_id: partner.id }).eq("id", applicationId);
+  const existingUser = await findAuthUserByEmail(db, application.email);
+  if (existingUser) {
+    const { error: partnerLinkError } = await db.from("partners").update({ auth_user_id: existingUser.id }).eq("id", partnerId);
+    if (partnerLinkError) throw new Error(`Partner Auth link failed: ${partnerLinkError.message}`);
+    const { error: reconcileError } = await db.from("partner_account_invitations").update({
+      auth_user_id: existingUser.id,
+      status: "sent",
+      invitation_url: `${(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, "")}/partner/login`,
+      notes: "Existing Supabase Auth account linked without sending a duplicate invitation.",
+      delivery_error: null,
+      sent_at: invitationRecord.status === "sending" ? new Date().toISOString() : undefined
+    }).eq("id", invitationRecord.id).in("status", ["preview", "sending"]);
+    if (reconcileError) throw new Error(`Invitation reconciliation failed: ${reconcileError.message}`);
+    return;
+  }
+
+  if (invitationRecord.status === "sending") {
+    const { error: releaseError } = await db.from("partner_account_invitations").update({
+      status: "preview",
+      delivery_error: "Previous delivery did not produce a recoverable Auth user."
+    }).eq("id", invitationRecord.id).eq("status", "sending");
+    if (releaseError) throw new Error(`Invitation retry release failed: ${releaseError.message}`);
+  }
+
+  const { data: claimed, error: claimError } = await db
+    .from("partner_account_invitations")
+    .update({
+      status: "sending",
+      delivery_attempted_at: new Date().toISOString(),
+      delivery_error: null
+    })
+    .eq("id", invitationRecord.id)
+    .eq("status", "preview")
+    .select("id, idempotency_key")
+    .maybeSingle();
+  if (claimError) throw new Error(`Invitation claim failed: ${claimError.message}`);
+  if (!claimed) return;
 
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, "");
   const { data: invitation, error: invitationError } = await db.auth.admin.inviteUserByEmail(
@@ -117,22 +133,21 @@ async function ensurePartnerAndInvitation(db: SupabaseDatabaseClient, applicatio
     {
       redirectTo: `${siteUrl}/partner/reset-password`,
       data: {
-        partner_id: partner.id,
+        partner_id: partnerId,
         application_id: applicationId,
-        business_name: application.business_name
+        business_name: application.business_name,
+        invitation_idempotency_key: claimed.idempotency_key
       }
     }
   );
 
   const authUserId = invitation?.user?.id ?? null;
   if (authUserId) {
-    await db.from("partners").update({ auth_user_id: authUserId }).eq("id", partner.id);
+    const { error: partnerLinkError } = await db.from("partners").update({ auth_user_id: authUserId }).eq("id", partnerId);
+    if (partnerLinkError) throw new Error(`Partner Auth link failed: ${partnerLinkError.message}`);
   }
 
-  await db.from("partner_account_invitations").insert({
-    partner_id: partner.id,
-    application_id: applicationId,
-    email: application.email,
+  const { error: finalizeError } = await db.from("partner_account_invitations").update({
     auth_user_id: authUserId,
     status: invitationError ? "preview" : "sent",
     invitation_url: `${siteUrl}/partner/login`,
@@ -140,13 +155,17 @@ async function ensurePartnerAndInvitation(db: SupabaseDatabaseClient, applicatio
       ? `Invitation requires admin follow-up: ${invitationError.message}`
       : "Secure Supabase partner invitation sent.",
     created_by: reviewer,
+    delivery_error: invitationError?.message ?? null,
     sent_at: invitationError ? null : new Date().toISOString()
-  });
+  }).eq("id", invitationRecord.id).eq("status", "sending");
+  if (finalizeError) {
+    throw new Error(`Invitation delivery state could not be finalized: ${finalizeError.message}`);
+  }
 
   await logPartnerAuditEvent(
     "invitation_preview_created",
     { applicationId, email: application.email, sent: !invitationError },
-    partner.id,
+    partnerId,
     authUserId
   );
 }
@@ -154,7 +173,7 @@ async function ensurePartnerAndInvitation(db: SupabaseDatabaseClient, applicatio
 export async function updateSupabasePartnerApplicationDecision(
   input: AdminApplicationDecisionInput
 ): Promise<AdminApplicationDecisionResult> {
-  await requireAdminSession();
+  const admin = await requireAdminSession();
 
   if (getDataMode() !== "supabase") {
     return { ok: false, message: "Mock mode is active." };
@@ -187,28 +206,53 @@ export async function updateSupabasePartnerApplicationDecision(
   const reviewNotes = Array.isArray(existing?.review_notes) ? existing.review_notes : [];
   const requestedChanges = input.action === "request_changes" ? input.requestedChanges.map((change) => sanitizeText(change, 160)) : [];
 
-  const { error: updateError } = await supabase
-    .from("partner_applications")
-    .update({
-      status,
-      missing_information: requestedChanges,
-      review_notes: [reviewNote, ...reviewNotes].filter(Boolean),
-      updated_at: new Date().toISOString()
-    })
-    .eq("id", input.applicationId);
-
-  if (updateError) {
-    return { ok: false, message: updateError.message };
-  }
-
   if (input.action === "approve_draft" || input.action === "approve_publish") {
-    await supabase
-      .from("partner_application_verification_documents")
-      .update({ status: "approved", reviewed_at: new Date().toISOString(), reviewed_by: reviewer })
-      .eq("application_id", input.applicationId)
-      .neq("status", "missing");
-
-    await ensurePartnerAndInvitation(supabase, input.applicationId, reviewer);
+    const { data, error: approvalError } = await supabase.rpc("approve_partner_application", {
+      application_uuid: input.applicationId,
+      reviewer_user_id: admin.userId,
+      reviewer_name: reviewer,
+      publish_listing: input.action === "approve_publish",
+      review_note: reviewNote
+    });
+    if (approvalError) {
+      console.error("[partner-application-approval]", {
+        applicationId: input.applicationId,
+        code: approvalError.code,
+        message: approvalError.message
+      });
+      return { ok: false, message: `Approval failed before completion: ${approvalError.message}` };
+    }
+    const approval = data && typeof data === "object" && !Array.isArray(data)
+      ? data as { partnerId?: string }
+      : {};
+    if (!approval.partnerId) {
+      return { ok: false, message: "Approval transaction did not return a partner link." };
+    }
+    try {
+      await deliverPartnerInvitation(supabase, input.applicationId, reviewer, approval.partnerId);
+    } catch (error) {
+      console.error("[partner-invitation-delivery]", {
+        applicationId: input.applicationId,
+        message: error instanceof Error ? error.message : "Unknown invitation delivery failure"
+      });
+      return {
+        ok: false,
+        message: "Application approval completed, but account invitation delivery needs an administrator retry."
+      };
+    }
+  } else {
+    const { error: updateError } = await supabase
+      .from("partner_applications")
+      .update({
+        status,
+        missing_information: requestedChanges,
+        review_notes: [reviewNote, ...reviewNotes].filter(Boolean),
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: reviewer,
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", input.applicationId);
+    if (updateError) return { ok: false, message: updateError.message };
   }
 
   if (input.action === "reject") {

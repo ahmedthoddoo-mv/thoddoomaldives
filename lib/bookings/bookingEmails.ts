@@ -16,7 +16,7 @@ export function createBookingEmailPreviews(booking: BookingWorkflowRecord): Book
         `Stay dates: ${stayLine}`,
         `Room: ${booking.roomType}`,
         `Guests: ${booking.guest.adults} adults, ${booking.guest.children} children`,
-        `Estimated total: $${booking.estimatedValue}`,
+        `Estimated total: ${booking.estimatedValue === null ? "Price on request" : `$${booking.estimatedValue}`}`,
         "",
         "This is a preview only. No email has been sent."
       ].join("\n")
@@ -30,7 +30,7 @@ export function createBookingEmailPreviews(booking: BookingWorkflowRecord): Book
         `New request from ${booking.guest.name}.`,
         `Dates: ${stayLine}`,
         `Room: ${booking.roomType}`,
-        `Estimated partner revenue: $${booking.commission.partnerRevenue}`,
+        `Estimated partner revenue: ${booking.commission.partnerRevenue === null ? "Not quoted" : `$${booking.commission.partnerRevenue}`}`,
         `Contact preference: ${booking.contactPreference}`,
         "",
         "This is a preview only. No email has been sent."
@@ -45,7 +45,7 @@ export function createBookingEmailPreviews(booking: BookingWorkflowRecord): Book
         `Booking ${booking.id} is pending review.`,
         `Property: ${booking.propertyName}`,
         `Guest: ${booking.guest.name}`,
-        `Commission preview: $${booking.commission.companyRevenue}`,
+        `Commission preview: ${booking.commission.companyRevenue === null ? "Not quoted" : `$${booking.commission.companyRevenue}`}`,
         `CRM record: ${booking.crmRecordId ?? "demo-crm"}`,
         "",
         "This is a preview only. No email has been sent."

@@ -9,6 +9,8 @@ export type Room = {
   image: string;
   amenities: string[];
   breakfast: string;
+  nightlyRate?: number | null;
+  currency?: string;
 };
 
 export type NearbyAttraction = {
@@ -42,4 +44,10 @@ export type Guesthouse = {
   relatedExperienceSlugs: string[];
   testimonialIds: string[];
   rooms: Room[];
+  address?: string;
+  email?: string;
+  website?: string;
+  checkIn?: string;
+  checkOut?: string;
+  services?: Array<{ id: string; name: string; description: string; price: number | null; currency: string; unit: string }>;
 };

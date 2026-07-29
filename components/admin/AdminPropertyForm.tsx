@@ -58,13 +58,13 @@ const emptyPropertyState: PropertyFormState = {
   gpsLocation: "",
   shortDescription: "",
   fullDescription: "",
-  amenities: "Breakfast\nWi-Fi\nAirport transfer support",
-  roomTypes: "Deluxe Double | From $85/night | 2 guests",
-  gallery: "/images/hero-thoddoo.jpg\n/images/homepage/hero-1.jpg",
-  coverImage: "/images/hero-thoddoo.jpg",
-  policies: "Free cancellation until 7 days before arrival\nPassport details required at check-in",
-  checkIn: "14:00",
-  checkOut: "12:00",
+  amenities: "",
+  roomTypes: "",
+  gallery: "",
+  coverImage: "",
+  policies: "",
+  checkIn: "",
+  checkOut: "",
   membershipPlan: "Free",
   verificationStatus: "Draft",
   isPublished: false,
@@ -147,7 +147,7 @@ function createPropertyFromState({
   });
   const slug = createPropertySlug(form.slug || form.name);
   const name = form.name.trim();
-  const heroImage = form.coverImage.trim() || gallery[0] || "/images/hero-thoddoo.jpg";
+  const heroImage = form.coverImage.trim() || gallery[0] || "";
 
   return {
     id: createPropertyId(slug, existingProperties, currentProperty?.id),

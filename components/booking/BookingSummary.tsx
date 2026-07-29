@@ -1,13 +1,12 @@
 import { calculateBookingDraft } from "@/lib/booking";
 import type { BookingDraft } from "@/types/booking";
-import { CommissionCard } from "@/components/booking/CommissionCard";
 
 export function BookingSummary({ draft }: { draft: BookingDraft }) {
   const estimate = calculateBookingDraft(draft);
 
   return (
     <aside className="bookingSummaryCard" aria-live="polite">
-      <p className="eyebrow">Live booking summary</p>
+      <p className="eyebrow">Enquiry summary</p>
       <h3>{draft.propertyName}</h3>
       <dl>
         <div>
@@ -16,30 +15,30 @@ export function BookingSummary({ draft }: { draft: BookingDraft }) {
         </div>
         <div>
           <dt>Price per night</dt>
-          <dd>${draft.roomRate}</dd>
+          <dd>{draft.roomRate ? `$${draft.roomRate}` : "Price on request"}</dd>
         </div>
         <div>
           <dt>Accommodation</dt>
-          <dd>${estimate.accommodation}</dd>
+          <dd>{estimate.accommodation === null ? "To be confirmed" : `$${estimate.accommodation}`}</dd>
         </div>
         <div>
           <dt>Optional services</dt>
-          <dd>${estimate.optionalServices}</dd>
+          <dd>{estimate.optionalServices === null ? "To be confirmed" : `$${estimate.optionalServices}`}</dd>
         </div>
         <div>
           <dt>Subtotal</dt>
-          <dd>${estimate.subtotal}</dd>
+          <dd>{estimate.subtotal === null ? "To be confirmed" : `$${estimate.subtotal}`}</dd>
         </div>
         <div>
           <dt>Taxes/fees</dt>
           <dd>To be confirmed</dd>
         </div>
-        <div className="bookingSummaryTotal">
+        {estimate.total !== null ? <div className="bookingSummaryTotal">
           <dt>Estimated total</dt>
           <dd>${estimate.total}</dd>
-        </div>
+        </div> : null}
       </dl>
-      <CommissionCard commission={estimate.commission} />
+      <p>Your request is not a confirmed booking until the property or iThoddoo Maldives confirms it.</p>
     </aside>
   );
 }

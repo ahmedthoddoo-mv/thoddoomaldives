@@ -14,7 +14,7 @@ export const SupabaseBookingRepository = {
     if (!supabase) return [];
     const { data, error } = await supabase.from("bookings").select("*, guests(*), properties(*), rooms(*)").order("created_at", { ascending: false });
     if (error) throw error;
-    return ((data ?? []) as BookingWithRelations[]).map((booking) =>
+    return ((data ?? []) as unknown as BookingWithRelations[]).map((booking) =>
       mapBookingRowToDomain(booking, booking.guests ?? undefined, booking.properties ?? undefined, booking.rooms ?? undefined)
     );
   },

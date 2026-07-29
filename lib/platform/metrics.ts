@@ -7,8 +7,8 @@ export function calculatePartnerMetrics(partnerId = "partner-thoddoo-sun-sky") {
   const bookings = getBookingsForPartner(partnerId);
   const confirmedBookings = bookings.filter((booking) => booking.status === "confirmed" || booking.status === "new");
   const pendingBookings = bookings.filter((booking) => booking.status === "pending");
-  const revenue = bookings.reduce((total, booking) => total + booking.estimatedValue, 0);
-  const commission = bookings.reduce((total, booking) => total + booking.commission.companyRevenue, 0);
+  const revenue = bookings.reduce((total, booking) => total + (booking.estimatedValue ?? 0), 0);
+  const commission = bookings.reduce((total, booking) => total + (booking.commission.companyRevenue ?? 0), 0);
   const relationshipPropertyId = "property-thoddoo-sun-sky";
 
   return {

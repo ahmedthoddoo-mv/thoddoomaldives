@@ -35,9 +35,9 @@ export function PropertyPublishPanel({
     <section className="adminPanel adminPropertyPublishPanel">
       <div>
         <p className="eyebrow">Publishing</p>
-        <h2>Demo Publish Controls</h2>
+        <h2>Publication controls</h2>
         <p>
-          {isPublished ? "Published to the public Stay directory in this browser." : "Hidden from public Stay directory until published."}
+          {isPublished ? "Published to the public Stay directory." : "Hidden from the public Stay directory until published."}
         </p>
       </div>
       <div className="adminPropertyPreviewMeta">
@@ -65,7 +65,7 @@ export function PropertyPublishPanel({
           {isFeatured ? "Remove featured" : "Mark featured"}
         </button>
         <button disabled={isSaving} onClick={onArchive} type="button">
-          Archive/delete demo
+          Archive and unpublish
         </button>
       </div>
     </section>

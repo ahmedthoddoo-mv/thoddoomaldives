@@ -1,20 +1,21 @@
 "use server";
 
-import { createBookingEmailPreviews } from "@/lib/bookings/bookingEmails";
+import { headers } from "next/headers";
 import { calculateCommission, calculateNights } from "@/lib/booking";
-import { hasAdminSession } from "@/lib/admin/adminAuth";
+import { requireAdminSession } from "@/lib/admin/adminAuth";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
 import type { SupabaseDatabaseClient } from "@/lib/supabase/server";
 import { getDataMode } from "@/lib/supabase/status";
 import { mapBookingRowToDomain } from "@/lib/supabase/mappers";
 import type { Database, Tables } from "@/lib/supabase/types";
-import type { ContactPreference, BookingEmailPreview } from "@/types/booking-workflow";
+import type { ContactPreference } from "@/types/booking-workflow";
 import type { Booking, BookingStatus, PaymentStatus } from "@/types/booking";
 
 export type RealBookingInput = {
   propertyId?: string;
   propertySlug?: string;
   roomId?: string;
+  selectedServiceIds?: string[];
   checkIn: string;
   checkOut: string;
   adults: number;
@@ -24,6 +25,7 @@ export type RealBookingInput = {
   guestWhatsapp: string;
   contactPreference: ContactPreference;
   specialRequests: string;
+  turnstileToken: string;
 };
 
 export type RealBookingResult = {
@@ -31,8 +33,15 @@ export type RealBookingResult = {
   mode: "mock" | "supabase";
   message: string;
   errors?: string[];
-  booking?: Booking;
-  emailPreviews?: BookingEmailPreview[];
+  enquiry?: {
+    id: string;
+    reference: string;
+    propertyId: string;
+    propertyName: string;
+    checkIn: string;
+    checkOut: string;
+    roomName: string;
+  };
 };
 
 type PropertyWithPartner = Tables<"properties"> & {
@@ -61,12 +70,37 @@ function validateContactPreference(value: ContactPreference) {
   return value === "whatsapp" || value === "email" || value === "either";
 }
 
+type TurnstileVerification = {
+  success?: boolean;
+  action?: string;
+  hostname?: string;
+  "error-codes"?: string[];
+};
+
+async function verifyTurnstileToken(token: string) {
+  const secret = process.env.TURNSTILE_SECRET;
+  if (!secret || !token.trim()) return false;
+  const requestHeaders = await headers();
+  const remoteIp = requestHeaders.get("cf-connecting-ip") || requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim();
+  const body = new URLSearchParams({ secret, response: token.trim() });
+  if (remoteIp) body.set("remoteip", remoteIp);
+  const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body,
+    cache: "no-store"
+  });
+  if (!response.ok) return false;
+  const result = await response.json() as TurnstileVerification;
+  return result.success === true && result.action === "turnstile-spin-v2";
+}
+
 function getCapacityLimit(room: Tables<"rooms">) {
   const parsedCapacity = Number.parseInt(room.capacity.match(/\d+/)?.[0] ?? "", 10);
   return Number.isFinite(parsedCapacity) ? parsedCapacity : room.adults + room.children;
 }
 
-function validateBookingInput(input: RealBookingInput, room?: Tables<"rooms">) {
+function validateBookingInput(input: RealBookingInput, room?: Tables<"rooms">, roomRequired = false) {
   const errors: string[] = [];
   const nights = calculateNights(input.checkIn, input.checkOut);
   const today = new Date();
@@ -75,16 +109,17 @@ function validateBookingInput(input: RealBookingInput, room?: Tables<"rooms">) {
   const totalGuests = input.adults + input.children;
 
   if (!input.propertyId && !input.propertySlug) errors.push("Choose a property.");
-  if (!input.roomId) errors.push("Choose a room.");
+  if (roomRequired && !input.roomId) errors.push("Choose a room.");
   if (!input.checkIn) errors.push("Choose a check-in date.");
   if (!input.checkOut) errors.push("Choose a check-out date.");
   if (input.checkIn && Number.isNaN(new Date(`${input.checkIn}T00:00:00`).getTime())) errors.push("Check-in date is invalid.");
   if (input.checkOut && Number.isNaN(new Date(`${input.checkOut}T00:00:00`).getTime())) errors.push("Check-out date is invalid.");
-  if (checkInDate && checkInDate < today) errors.push("Check-in date cannot be in the past.");
+  if (checkInDate && checkInDate <= today) errors.push("Check-in date must be in the future.");
   if (input.checkIn && input.checkOut && nights <= 0) errors.push("Check-out must be after check-in.");
   if (!input.guestName.trim()) errors.push("Guest name is required.");
-  if (!validateEmail(input.guestEmail.trim())) errors.push("A valid email is required.");
-  if (input.guestWhatsapp.replace(/\D/g, "").length < 7) errors.push("A valid WhatsApp number is required.");
+  const hasEmail = validateEmail(input.guestEmail.trim());
+  const hasWhatsapp = input.guestWhatsapp.replace(/\D/g, "").length >= 7;
+  if (!hasEmail && !hasWhatsapp) errors.push("Provide a valid email or WhatsApp number.");
   if (input.adults < 1) errors.push("At least one adult is required.");
   if (input.children < 0) errors.push("Children cannot be negative.");
   if (totalGuests < 1) errors.push("Add at least one guest.");
@@ -110,28 +145,9 @@ function validateBookingInput(input: RealBookingInput, room?: Tables<"rooms">) {
   };
 }
 
-async function createBookingReference(db: SupabaseDatabaseClient) {
+async function createBookingReference() {
   const year = new Date().getFullYear();
-  const startOfYear = `${year}-01-01T00:00:00.000Z`;
-  const { count } = await db
-    .from("bookings")
-    .select("id", { count: "exact", head: true })
-    .gte("created_at", startOfYear);
-  const nextNumber = (count ?? 0) + 1;
-
-  return `ITM-${year}-${String(nextNumber).padStart(6, "0")}`;
-}
-
-function createEmailPreviewsFromBooking(booking: Booking): BookingEmailPreview[] {
-  const now = new Date().toISOString();
-
-  return createBookingEmailPreviews({
-    ...booking,
-    contactPreference: "whatsapp",
-    specialRequests: booking.internalNotes ?? "",
-    createdAt: now,
-    updatedAt: now
-  });
+  return `ITM-${year}-${crypto.randomUUID().replaceAll("-", "").slice(0, 8).toUpperCase()}`;
 }
 
 async function saveBookingCrmPlaceholders(
@@ -167,6 +183,15 @@ export async function submitRealBookingRequest(input: RealBookingInput): Promise
     };
   }
 
+  if (!(await verifyTurnstileToken(input.turnstileToken))) {
+    return {
+      ok: false,
+      mode: "supabase",
+      message: "Enquiry verification failed.",
+      errors: ["Please complete the security check and try again."]
+    };
+  }
+
   const supabase = createSupabaseServiceRoleClient();
   if (!supabase) {
     return {
@@ -185,6 +210,7 @@ export async function submitRealBookingRequest(input: RealBookingInput): Promise
     .select("*, partners(*)")
     .eq(lookupById ? "id" : "slug", propertyLookupValue)
     .eq("publication_status", "published")
+    .eq("verification_status", "verified")
     .maybeSingle();
   const { data: propertyData, error: propertyError } = await propertyQuery;
   const property = propertyData as PropertyWithPartner | null;
@@ -198,21 +224,31 @@ export async function submitRealBookingRequest(input: RealBookingInput): Promise
     };
   }
 
-  const { data: roomData, error: roomError } = await db
+  const { data: availableRooms, error: availableRoomsError } = await db
     .from("rooms")
     .select("*")
-    .eq("id", input.roomId!)
     .eq("property_id", property.id)
-    .eq("active", true)
-    .maybeSingle();
-  const room = roomData as Tables<"rooms"> | null;
-  const validation = validateBookingInput(input, room ?? undefined);
+    .eq("active", true);
+  const rooms = (availableRooms ?? []) as Tables<"rooms">[];
+  const room = input.roomId ? rooms.find((item) => item.id === input.roomId) ?? null : null;
+  const validation = validateBookingInput(input, room ?? undefined, rooms.length > 0);
 
-  if (roomError || !room) {
+  if (availableRoomsError) {
+    validation.errors.push("Room information could not be verified.");
+  } else if (input.roomId && !room) {
     validation.errors.push("Selected room is not available for this property.");
   }
 
-  if (!validation.valid || !room) {
+  const selectedServiceIds = Array.from(new Set(input.selectedServiceIds ?? []));
+  const { data: serviceRows, error: serviceError } = selectedServiceIds.length > 0
+    ? await db.from("partner_service_items").select("id, price, currency")
+      .in("id", selectedServiceIds).eq("property_id", property.id).eq("active", true).eq("public_visible", true)
+    : { data: [], error: null };
+  if (serviceError || (serviceRows?.length ?? 0) !== selectedServiceIds.length) {
+    validation.errors.push("One or more selected services do not belong to this property.");
+  }
+
+  if (validation.errors.length > 0) {
     return {
       ok: false,
       mode: "supabase",
@@ -223,16 +259,21 @@ export async function submitRealBookingRequest(input: RealBookingInput): Promise
 
   const nights = calculateNights(input.checkIn, input.checkOut);
   const taxesFees = 0;
-  const bookingTotal = nights * Number(room.price_per_night) + taxesFees;
-  const commission = calculateCommission(bookingTotal, 0.1);
-  const bookingReference = await createBookingReference(db);
+  const roomRate = room?.price_per_night && room.price_per_night > 0 ? Number(room.price_per_night) : null;
+  const pricedServices = (serviceRows ?? []).every((service) => service.price !== null && Number(service.price) > 0);
+  const servicesTotal = pricedServices
+    ? (serviceRows ?? []).reduce((total, service) => total + Number(service.price), 0)
+    : null;
+  const quotedAmount = roomRate !== null && servicesTotal !== null ? nights * roomRate + servicesTotal : null;
+  const commission = quotedAmount === null ? null : calculateCommission(quotedAmount, 0.1);
+  const bookingReference = await createBookingReference();
 
   const { data: guest, error: guestError } = await db
     .from("guests")
     .insert({
       full_name: input.guestName.trim(),
-      email: input.guestEmail.trim(),
-      whatsapp: input.guestWhatsapp.trim()
+      email: input.guestEmail.trim() || null,
+      whatsapp: input.guestWhatsapp.trim() || null
     })
     .select("*")
     .single();
@@ -252,26 +293,35 @@ export async function submitRealBookingRequest(input: RealBookingInput): Promise
       booking_reference: bookingReference,
       guest_id: guest.id,
       property_id: property.id,
-      room_id: room.id,
+      room_id: room?.id ?? null,
       partner_id: property.partner_id,
       check_in: input.checkIn,
       check_out: input.checkOut,
       adults: input.adults,
       children: input.children,
-      booking_total: bookingTotal,
+      booking_total: quotedAmount,
       taxes_fees: taxesFees,
       commission_percent: 10,
-      company_revenue: commission.companyRevenue,
-      partner_revenue: commission.partnerRevenue,
+      company_revenue: commission?.companyRevenue ?? null,
+      partner_revenue: commission?.partnerRevenue ?? null,
       booking_status: "pending",
       payment_status: "unpaid",
       contact_preference: input.contactPreference,
+      nights,
+      source: "website_enquiry",
+      selected_service_ids: selectedServiceIds,
+      quoted_amount: quotedAmount,
+      quote_currency: quotedAmount !== null ? room?.currency ?? property.currency ?? "USD" : null,
       special_requests: input.specialRequests.trim() || null
     })
     .select("*, guests(*), properties(*), rooms(*)")
     .single();
 
   if (bookingError || !bookingData) {
+    const rollback = await db.from("guests").delete().eq("id", guest.id);
+    if (rollback.error) {
+      console.error("[booking-enquiry-rollback]", { guestId: guest.id, code: rollback.error.code });
+    }
     return {
       ok: false,
       mode: "supabase",
@@ -280,24 +330,28 @@ export async function submitRealBookingRequest(input: RealBookingInput): Promise
     };
   }
 
-  const bookingRow = bookingData as BookingWithRelations;
+  const bookingRow = bookingData as unknown as BookingWithRelations;
   const booking = mapBookingRowToDomain(bookingRow, bookingRow.guests ?? undefined, bookingRow.properties ?? undefined, bookingRow.rooms ?? undefined);
-  const emailPreviews = createEmailPreviewsFromBooking(booking);
   await saveBookingCrmPlaceholders(db, booking, property.partner_id);
 
   return {
     ok: true,
     mode: "supabase",
-    message: `Booking request ${booking.reference ?? booking.id} has been submitted.`,
-    booking,
-    emailPreviews
+    message: `Enquiry ${booking.reference ?? booking.id} has been submitted.`,
+    enquiry: {
+      id: booking.id,
+      reference: booking.reference ?? booking.id,
+      propertyId: property.id,
+      propertyName: property.name,
+      checkIn: input.checkIn,
+      checkOut: input.checkOut,
+      roomName: room?.name ?? "Accommodation enquiry"
+    }
   };
 }
 
-export async function updateRealBookingStatus(params: {
+export async function updateAdminBookingStatus(params: {
   bookingId: string;
-  actor?: "admin" | "partner";
-  partnerId?: string;
   status?: BookingStatus;
   paymentStatus?: PaymentStatus;
   roomPrepared?: boolean;
@@ -309,6 +363,7 @@ export async function updateRealBookingStatus(params: {
     return { ok: false, mode: "mock" as const, message: "Mock mode is active." };
   }
 
+  await requireAdminSession();
   const supabase = createSupabaseServiceRoleClient();
   if (!supabase) {
     return { ok: false, mode: "supabase" as const, message: "Supabase service role is not configured." };
@@ -316,11 +371,6 @@ export async function updateRealBookingStatus(params: {
 
   if (status === "new" || status === "draft") {
     return { ok: false, mode: "supabase" as const, message: "Bookings cannot be moved back to draft or new from this workflow." };
-  }
-
-  const actor = params.actor ?? "admin";
-  if (actor === "admin" && !(await hasAdminSession())) {
-    return { ok: false, mode: "supabase" as const, message: "Admin session is required." };
   }
 
   const db = supabase;
@@ -332,10 +382,6 @@ export async function updateRealBookingStatus(params: {
 
   if (existingError || !existingBooking) {
     return { ok: false, mode: "supabase" as const, message: "Booking was not found." };
-  }
-
-  if (actor === "partner" && (!params.partnerId || existingBooking.partner_id !== params.partnerId)) {
-    return { ok: false, mode: "supabase" as const, message: "Partner booking access is not valid for this record." };
   }
 
   const payload: Database["public"]["Tables"]["bookings"]["Update"] = {};

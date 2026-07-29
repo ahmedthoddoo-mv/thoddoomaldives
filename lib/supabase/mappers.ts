@@ -7,8 +7,8 @@ import type { Restaurant, RestaurantCuisine } from "@/types/restaurant";
 import type { Transfer, TransferType } from "@/types/transfer";
 import type { Tables } from "@/lib/supabase/types";
 
-function formatUsd(value: number | null) {
-  return value ? `From $${Number(value).toFixed(0)}/night` : "Price on request";
+function formatRoomPrice(value: number | null, currency: string | null) {
+  return value && value > 0 ? `${currency ?? "USD"} ${Number(value).toFixed(0)}/night` : "Price on request";
 }
 
 function normalizeVerificationStatus(status: string): AdminManagedProperty["verificationStatus"] {
@@ -22,7 +22,7 @@ export function mapRoomRowToDomain(room: Tables<"rooms">): AdminManagedProperty[
   return {
     id: room.id,
     name: room.name,
-    price: formatUsd(room.price_per_night),
+    price: formatRoomPrice(room.price_per_night, room.currency),
     capacity: room.capacity
   };
 }
@@ -57,8 +57,10 @@ export function mapPropertyRowToDomain(
   const gpsLocation =
     property.latitude !== null && property.longitude !== null ? `${property.latitude}, ${property.longitude}` : "";
   const gallery = getGalleryFromMedia(property, propertyMedia);
-  const partnerName = partner?.business_name ? `Partner: ${partner.business_name}` : "Partner details available on request";
-
+  const metadata = property.metadata && typeof property.metadata === "object" && !Array.isArray(property.metadata)
+    ? property.metadata as { membership?: unknown }
+    : {};
+  const membership = String(metadata.membership ?? "").toLowerCase();
   return {
     id: property.id,
     name: property.name,
@@ -70,10 +72,10 @@ export function mapPropertyRowToDomain(
     gallery,
     description: property.short_description,
     shortDescription: property.short_description,
-    fullDescription: property.full_description ? `${property.full_description}\n\n${partnerName}` : `${property.short_description}\n\n${partnerName}`,
+    fullDescription: property.full_description || property.short_description,
     roomTypes: rooms.map(mapRoomRowToDomain),
-    amenities: property.amenities.length > 0 ? property.amenities : ["Wi-Fi", "Local support", "Direct WhatsApp booking"],
-    policies: property.policies.length > 0 ? property.policies : ["Policies will be confirmed directly with the property."],
+    amenities: property.amenities,
+    policies: property.policies,
     checkIn: property.check_in_time?.slice(0, 5) ?? "",
     checkOut: property.check_out_time?.slice(0, 5) ?? "",
     whatsapp: property.whatsapp ?? partner?.whatsapp ?? "",
@@ -82,7 +84,7 @@ export function mapPropertyRowToDomain(
     googleMaps: property.address ?? "",
     googleMapsLink: gpsLocation ? `https://maps.google.com/?q=${encodeURIComponent(gpsLocation)}` : "",
     gpsLocation,
-    membershipPlan: "Verified",
+    membershipPlan: membership === "premium" ? "Premium" : membership === "free" ? "Free" : "Verified",
     verificationStatus: normalizeVerificationStatus(property.verification_status),
     isPublished: property.publication_status === "published",
     isFeatured: property.featured,
@@ -126,12 +128,12 @@ export function mapBookingRowToDomain(
     roomType: room?.name ?? "Room to be confirmed",
     nights,
     services: [],
-    estimatedValue: booking.booking_total,
+    estimatedValue: booking.quoted_amount,
     commission: {
-      bookingTotal: booking.booking_total,
+      bookingTotal: booking.quoted_amount,
       rate: booking.commission_percent / 100,
-      companyRevenue: booking.company_revenue,
-      partnerRevenue: booking.partner_revenue
+      companyRevenue: booking.quoted_amount === null ? null : booking.company_revenue,
+      partnerRevenue: booking.quoted_amount === null ? null : booking.partner_revenue
     },
     status: booking.booking_status as Booking["status"],
     paymentStatus: booking.payment_status === "demo_only" ? "demo-only" : booking.payment_status === "pending" ? "pending" : (booking.payment_status as Booking["paymentStatus"]),

@@ -47,7 +47,7 @@ export default async function GuesthousePage({ params }: GuesthousePageProps) {
   const guesthouse = propertyRead.data;
 
   const propertyImages =
-    guesthouse && guesthouse.gallery.length > 0 ? guesthouse.gallery : [guesthouse?.heroImage ?? "/images/hero-thoddoo.jpg"];
+    guesthouse ? Array.from(new Set([guesthouse.heroImage, ...guesthouse.gallery].filter(Boolean))) : [];
   const propertyJsonLd = {
     "@context": "https://schema.org",
     "@type": "LodgingBusiness",

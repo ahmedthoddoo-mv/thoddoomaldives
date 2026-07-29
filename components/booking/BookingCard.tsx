@@ -26,8 +26,8 @@ export function BookingCard({ booking, onApprove, onReject, onCancel, onMarkPaid
         <div><dt>Arrival</dt><dd>{booking.arrival}</dd></div>
         <div><dt>Departure</dt><dd>{booking.departure}</dd></div>
         <div><dt>Guests</dt><dd>{booking.guest.adults} adults | {booking.guest.children} children</dd></div>
-        <div><dt>Estimated value</dt><dd>${booking.estimatedValue}</dd></div>
-        <div><dt>Commission</dt><dd>${booking.commission.companyRevenue}</dd></div>
+        <div><dt>Estimated value</dt><dd>{booking.estimatedValue === null ? "Price on request" : `$${booking.estimatedValue}`}</dd></div>
+        <div><dt>Commission</dt><dd>{booking.commission.companyRevenue === null ? "Not quoted" : `$${booking.commission.companyRevenue}`}</dd></div>
         <div><dt>Payment</dt><dd>{booking.paymentStatus}</dd></div>
         <div><dt>Prepared</dt><dd>{booking.roomPrepared ? "Yes" : "No"}</dd></div>
         <div><dt>CRM</dt><dd>{booking.crmRecordId ?? "unlinked"}</dd></div>

@@ -21,7 +21,9 @@ export function createBookingTimelineEvents(booking: BookingWorkflowRecord): Boo
       crmRecordId,
       type: "timeline_event",
       title: "Booking request submitted",
-      body: `Estimated value $${booking.estimatedValue}, commission $${booking.commission.companyRevenue}.`,
+      body: booking.estimatedValue === null
+        ? "Price is on request; no authoritative quote or commission is available."
+        : `Estimated value $${booking.estimatedValue}, commission $${booking.commission.companyRevenue ?? 0}.`,
       createdAt
     },
     {

@@ -3,12 +3,9 @@
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { submitRealBookingRequest } from "@/app/booking/actions";
-import { BookingRepository } from "@/lib/repositories";
-import { buildBookingWhatsAppMessage, calculateBookingDraft } from "@/lib/booking";
-import { validateBookingRequest } from "@/lib/bookings/bookingValidation";
-import { createBookingEmailPreviews } from "@/lib/bookings/bookingEmails";
-import { createBookingRequest } from "@/lib/bookings/bookingWorkflowStore";
-import type { ContactPreference, BookingEmailPreview, BookingWorkflowRecord } from "@/types/booking-workflow";
+import { buildBookingWhatsAppMessage } from "@/lib/booking";
+import { validateEnquiry } from "@/lib/production/workflow.mts";
+import type { ContactPreference } from "@/types/booking-workflow";
 import type { BookingDraft, BookingService, Room } from "@/types/booking";
 import { BookingCalendar } from "@/components/booking/BookingCalendar";
 import { BookingSummary } from "@/components/booking/BookingSummary";
@@ -18,22 +15,22 @@ import { PriceCalculator } from "@/components/booking/PriceCalculator";
 import { PropertyAvailabilityCard } from "@/components/booking/PropertyAvailabilityCard";
 import { RoomSelector } from "@/components/booking/RoomSelector";
 import { TransferSelector } from "@/components/booking/TransferSelector";
+import { TurnstileWidget } from "@/components/booking/TurnstileWidget";
 
 type BookingWidgetProps = {
   propertyName: string;
   propertySlug?: string;
   propertyId?: string;
-  partnerId?: string;
-  crmRecordId?: string;
   whatsapp: string;
   rooms: Room[];
+  optionalServices?: BookingService[];
 };
 
 const transferAndMealTypes = new Set<BookingService["type"]>(["transfer", "meal"]);
 const experienceTypes = new Set<BookingService["type"]>(["experience", "rental", "custom"]);
 
-export function BookingWidget({ propertyName, propertySlug, propertyId, partnerId, crmRecordId, whatsapp, rooms }: BookingWidgetProps) {
-  const bookingOptionalServices = BookingRepository.findOptionalServices();
+export function BookingWidget({ propertyName, propertySlug, propertyId, whatsapp, rooms, optionalServices = [] }: BookingWidgetProps) {
+  const bookingOptionalServices = optionalServices;
   const [isSubmitting, startSubmitting] = useTransition();
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
@@ -47,10 +44,10 @@ export function BookingWidget({ propertyName, propertySlug, propertyId, partnerI
   const [selectedServices, setSelectedServices] = useState<BookingService[]>([]);
   const [specialRequests, setSpecialRequests] = useState("");
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
-  const [savedBooking, setSavedBooking] = useState<BookingWorkflowRecord | null>(null);
-  const [emailPreviews, setEmailPreviews] = useState<BookingEmailPreview[]>([]);
+  const [savedBooking, setSavedBooking] = useState<{ id: string; reference: string } | null>(null);
   const [submitMessage, setSubmitMessage] = useState("");
   const [submitFailed, setSubmitFailed] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState("");
 
   const selectedRoom = rooms.find((room) => room.id === selectedRoomId) ?? rooms[0];
 
@@ -64,7 +61,7 @@ export function BookingWidget({ propertyName, propertySlug, propertyId, partnerI
       children,
       roomType: selectedRoom?.name ?? "Room to be confirmed",
       roomId: selectedRoom?.id,
-      roomRate: selectedRoom?.nightlyRate ?? 0,
+      roomRate: selectedRoom?.nightlyRate ?? null,
       services: selectedServices,
       specialRequests
     }),
@@ -79,58 +76,22 @@ export function BookingWidget({ propertyName, propertySlug, propertyId, partnerI
     );
   }
 
-  function createPayload(status: "draft" | "pending") {
-    const estimate = calculateBookingDraft(draft);
-
-    return {
-      propertyName,
-      propertySlug,
-      propertyId,
-      partnerId,
-      crmRecordId,
-      whatsapp,
+  function validateClientInput() {
+    return validateEnquiry({
+      today: new Date().toISOString().slice(0, 10),
       checkIn,
       checkOut,
       adults,
       children,
       guestName,
-      guestEmail,
-      guestWhatsapp,
-      contactPreference,
-      roomType: selectedRoom?.name ?? "Room to be confirmed",
-      roomId: selectedRoom?.id,
-      roomRate: selectedRoom?.nightlyRate ?? 0,
-      nights: estimate.nights,
-      estimatedValue: estimate.total,
-      commissionRate: estimate.commission.rate,
-      companyRevenue: estimate.commission.companyRevenue,
-      partnerRevenue: estimate.commission.partnerRevenue,
-      specialRequests,
-      status
-    };
-  }
-
-  function handleSave(status: "draft" | "pending") {
-    const payload = createPayload(status);
-    const validation = validateBookingRequest(payload);
-
-    setValidationErrors(validation.errors);
-    setSubmitMessage("");
-    setSubmitFailed(false);
-
-    if (!validation.valid) {
-      return null;
-    }
-
-    const booking = createBookingRequest(payload);
-    setSavedBooking(booking);
-    setEmailPreviews(createBookingEmailPreviews(booking));
-    return booking;
+      email: guestEmail,
+      whatsapp: guestWhatsapp,
+      contactPreference
+    });
   }
 
   function submitBookingRequest() {
-    const payload = createPayload("pending");
-    const validation = validateBookingRequest(payload);
+    const validation = validateClientInput();
 
     setValidationErrors(validation.errors);
     setSubmitMessage("");
@@ -145,6 +106,7 @@ export function BookingWidget({ propertyName, propertySlug, propertyId, partnerI
         propertyId,
         propertySlug,
         roomId: selectedRoom?.id,
+        selectedServiceIds,
         checkIn,
         checkOut,
         adults,
@@ -153,37 +115,20 @@ export function BookingWidget({ propertyName, propertySlug, propertyId, partnerI
         guestEmail,
         guestWhatsapp,
         contactPreference,
-        specialRequests
+        specialRequests,
+        turnstileToken
       });
 
-      if (result.mode === "mock") {
-        const booking = createBookingRequest(payload);
-        setSavedBooking(booking);
-        setEmailPreviews(createBookingEmailPreviews(booking));
-        setSubmitMessage(`${booking.id} saved in the browser demo booking queue.`);
-        setSubmitFailed(false);
-        return;
-      }
-
-      if (!result.ok || !result.booking) {
+      if (!result.ok || !result.enquiry) {
+        window.turnstile?.reset();
+        setTurnstileToken("");
         setValidationErrors(result.errors ?? [result.message]);
         setSubmitMessage(result.message);
         setSubmitFailed(true);
         return;
       }
 
-      const now = new Date().toISOString();
-      const workflowBooking: BookingWorkflowRecord = {
-        ...result.booking,
-        propertySlug,
-        contactPreference,
-        specialRequests,
-        createdAt: now,
-        updatedAt: now
-      };
-
-      setSavedBooking(workflowBooking);
-      setEmailPreviews(result.emailPreviews ?? createBookingEmailPreviews(workflowBooking));
+      setSavedBooking({ id: result.enquiry.id, reference: result.enquiry.reference });
       setSubmitMessage(result.message);
       setSubmitFailed(false);
       setValidationErrors([]);
@@ -191,13 +136,13 @@ export function BookingWidget({ propertyName, propertySlug, propertyId, partnerI
   }
 
   function openWhatsApp(action: string) {
-    const booking = handleSave("pending");
-
-    if (!booking) {
+    const validation = validateClientInput();
+    setValidationErrors(validation.errors);
+    if (!validation.valid) {
       return;
     }
 
-    const message = `${action}\n\n${buildBookingWhatsAppMessage(draft)}\n\nGuest: ${guestName}\nEmail: ${guestEmail}\nWhatsApp: ${guestWhatsapp}\nContact preference: ${contactPreference}\nBooking ID: ${booking.id}`;
+    const message = `${action}\n\n${buildBookingWhatsAppMessage(draft)}\n\nGuest: ${guestName}\nEmail: ${guestEmail || "Not provided"}\nWhatsApp: ${guestWhatsapp || "Not provided"}\nContact preference: ${contactPreference}`;
     window.open(`https://wa.me/${whatsapp}?text=${encodeURIComponent(message)}`, "_blank");
   }
 
@@ -208,9 +153,9 @@ export function BookingWidget({ propertyName, propertySlug, propertyId, partnerI
   return (
     <section className="bookingWidget" id="booking-widget">
       <div className="bookingWidgetHeader">
-        <p className="eyebrow">Booking engine demo</p>
-        <h2>Plan your stay and request a quote</h2>
-        <p>Choose dates, room type, guests, transfers, meals, and local experiences. No payment is collected.</p>
+        <p className="eyebrow">Request availability</p>
+        <h2>Send a booking enquiry</h2>
+        <p>The property will confirm availability and the final price. No payment is collected.</p>
       </div>
 
       <div className="bookingWidgetGrid">
@@ -245,8 +190,8 @@ export function BookingWidget({ propertyName, propertySlug, propertyId, partnerI
             </label>
           </div>
           <RoomSelector rooms={rooms} selectedRoomId={selectedRoomId} onChange={setSelectedRoomId} />
-          <TransferSelector services={transferServices} selectedIds={selectedServiceIds} onToggle={toggleService} />
-          <ExperienceSelector services={experienceServices} selectedIds={selectedServiceIds} onToggle={toggleService} />
+          {transferServices.length > 0 ? <TransferSelector services={transferServices} selectedIds={selectedServiceIds} onToggle={toggleService} /> : null}
+          {experienceServices.length > 0 ? <ExperienceSelector services={experienceServices} selectedIds={selectedServiceIds} onToggle={toggleService} /> : null}
 
           <label className="bookingField">
             <span>Special Requests</span>
@@ -258,6 +203,7 @@ export function BookingWidget({ propertyName, propertySlug, propertyId, partnerI
           </label>
 
           <PriceCalculator draft={draft} />
+          <TurnstileWidget onToken={setTurnstileToken} />
 
           {validationErrors.length > 0 ? (
             <div className="bookingValidationPanel" role="alert">
@@ -272,9 +218,9 @@ export function BookingWidget({ propertyName, propertySlug, propertyId, partnerI
 
           {savedBooking ? (
             <div className="bookingSuccessPanel">
-              <strong>Booking request saved</strong>
+              <strong>Enquiry submitted</strong>
               <p>
-                {savedBooking.reference ?? savedBooking.id} is now visible in Admin Bookings, Partner Dashboard, and CRM follow-up placeholders.
+                Reference: {savedBooking.reference ?? savedBooking.id}. This is not a confirmed booking.
               </p>
               <a className="adminPropertyActionLink" href={`/booking/success?reference=${encodeURIComponent(savedBooking.reference ?? savedBooking.id)}`}>
                 View success page
@@ -293,25 +239,12 @@ export function BookingWidget({ propertyName, propertySlug, propertyId, partnerI
           ) : null}
 
           <div className="bookingActionGrid">
-            <button type="button" onClick={() => openWhatsApp("Book via WhatsApp")}>Book via WhatsApp</button>
-            <button disabled={isSubmitting} type="button" onClick={submitBookingRequest}>
-              {isSubmitting ? "Submitting..." : "Booking Request"}
+            <button type="button" onClick={() => openWhatsApp("Availability enquiry")}>Continue on WhatsApp</button>
+            <button disabled={isSubmitting || !turnstileToken} type="button" onClick={submitBookingRequest}>
+              {isSubmitting ? "Submitting..." : "Send enquiry"}
             </button>
-            <button type="button" onClick={() => openWhatsApp("Request Quote")}>Request Quote</button>
-            <button type="button" onClick={() => handleSave("draft")}>Save Draft (demo)</button>
           </div>
 
-          {emailPreviews.length > 0 ? (
-            <div className="bookingEmailPreviewPanel">
-              <h3>Email previews</h3>
-              {emailPreviews.map((preview) => (
-                <details key={preview.id}>
-                  <summary>{preview.subject}</summary>
-                  <pre>{preview.body}</pre>
-                </details>
-              ))}
-            </div>
-          ) : null}
         </div>
 
         <div className="bookingWidgetSide">

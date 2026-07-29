@@ -297,7 +297,7 @@ export async function getCurrentPartnerPortalData(): Promise<PartnerPortalData> 
           }));
     const requiredDocuments = resolvedDocuments.filter((document) => document.required);
     const completedDocuments = requiredDocuments.filter((document) => document.status === "approved" || document.status === "uploaded");
-    const bookingRows = ((bookings ?? []) as BookingWithRelations[]).map((booking) =>
+    const bookingRows = ((bookings ?? []) as unknown as BookingWithRelations[]).map((booking) =>
       mapBookingRowToDomain(booking, booking.guests ?? undefined, booking.properties ?? undefined, booking.rooms ?? undefined)
     );
 
@@ -390,6 +390,7 @@ export async function getAuthorizedPartnerScope() {
     partnerId: property.partner_id as string,
     propertyId: property.id as string,
     partnerSlug: authState.partner.slug,
-    propertySlug: property.slug as string
+    propertySlug: property.slug as string,
+    authUserId: authState.userId
   };
 }

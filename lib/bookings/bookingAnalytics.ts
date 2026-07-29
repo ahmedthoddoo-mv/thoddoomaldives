@@ -4,8 +4,8 @@ export function calculateBookingAnalytics(bookings: BookingWorkflowRecord[]) {
   const bookingRequests = bookings.length;
   const converted = bookings.filter((booking) => booking.status === "confirmed" || booking.status === "completed").length;
   const totalNights = bookings.reduce((total, booking) => total + booking.nights, 0);
-  const revenueDemo = bookings.reduce((total, booking) => total + booking.estimatedValue, 0);
-  const commissionDemo = bookings.reduce((total, booking) => total + booking.commission.companyRevenue, 0);
+  const revenueDemo = bookings.reduce((total, booking) => total + (booking.estimatedValue ?? 0), 0);
+  const commissionDemo = bookings.reduce((total, booking) => total + (booking.commission.companyRevenue ?? 0), 0);
 
   return {
     bookingRequests,

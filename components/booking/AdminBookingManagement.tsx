@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { updateRealBookingStatus } from "@/app/booking/actions";
+import { updateAdminBookingStatus } from "@/app/booking/actions";
 import { BookingCard } from "@/components/booking/BookingCard";
 import type { Booking, BookingStatus, PaymentStatus } from "@/types/booking";
 import { calculateBookingAnalytics } from "@/lib/bookings/bookingAnalytics";
@@ -61,7 +61,7 @@ export function AdminBookingManagement({ bookings }: { bookings: Booking[] }) {
       updateBookingStatus(id, status);
     }
     setSelectedBookingId(id);
-    const result = await updateRealBookingStatus({ bookingId: id, actor: "admin", status, paymentStatus });
+    const result = await updateAdminBookingStatus({ bookingId: id, status, paymentStatus });
     setActionMessage(result.message);
 
     if (result.ok && result.mode === "supabase") {
@@ -179,8 +179,8 @@ export function AdminBookingManagement({ bookings }: { bookings: Booking[] }) {
             <div><span>Date</span><strong>{selectedBooking.arrival}</strong></div>
             <div><span>Status</span><strong>{selectedBooking.status}</strong></div>
             <div><span>Payment</span><strong>{selectedBooking.paymentStatus}</strong></div>
-            <div><span>Revenue</span><strong>${selectedBooking.estimatedValue}</strong></div>
-            <div><span>Commission</span><strong>${selectedBooking.commission.companyRevenue}</strong></div>
+            <div><span>Revenue</span><strong>{selectedBooking.estimatedValue === null ? "Price on request" : `$${selectedBooking.estimatedValue}`}</strong></div>
+            <div><span>Commission</span><strong>{selectedBooking.commission.companyRevenue === null ? "Not quoted" : `$${selectedBooking.commission.companyRevenue}`}</strong></div>
           </div>
           {selectedEmails.length > 0 ? (
             <div className="bookingEmailPreviewPanel">

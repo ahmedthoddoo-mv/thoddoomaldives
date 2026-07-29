@@ -50,6 +50,7 @@ function createInitialApplication(): SmartPartnerApplicationInput {
     businessType: "guesthouse",
     businessName: "",
     contactPerson: "",
+    phone: "",
     whatsapp: "",
     email: "",
     island: "Thoddoo",
@@ -393,6 +394,7 @@ export function PartnerOnboardingForm() {
           <div className="onboardingGrid">
             <label><span>Business name</span><input value={application.businessName} onChange={(event) => updateApplication({ businessName: event.target.value })} /></label>
             <label><span>Owner/contact person</span><input value={application.contactPerson} onChange={(event) => updateApplication({ contactPerson: event.target.value })} /></label>
+            <label><span>Phone</span><input value={application.phone} onChange={(event) => updateApplication({ phone: event.target.value })} placeholder="+960 ..." /></label>
             <label><span>WhatsApp</span><input value={application.whatsapp} onChange={(event) => updateApplication({ whatsapp: event.target.value })} placeholder="+960 914 2538" /></label>
             <label><span>Email</span><input type="email" value={application.email} onChange={(event) => updateApplication({ email: event.target.value })} /></label>
             <label><span>Island</span><input value={application.island} onChange={(event) => updateApplication({ island: event.target.value })} /></label>

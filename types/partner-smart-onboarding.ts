@@ -38,6 +38,7 @@ export type SmartPartnerApplicationInput = {
   businessType: SmartBusinessType;
   businessName: string;
   contactPerson: string;
+  phone: string;
   whatsapp: string;
   email: string;
   island: string;

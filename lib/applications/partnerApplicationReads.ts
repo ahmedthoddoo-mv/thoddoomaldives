@@ -32,6 +32,9 @@ type PartnerApplicationRow = {
   instagram: string | null;
   facebook: string | null;
   short_description: string;
+  google_maps_link: string | null;
+  registration_number: string | null;
+  metadata: unknown;
   membership_plan: string;
   status: string;
   notes: string | null;
@@ -39,6 +42,15 @@ type PartnerApplicationRow = {
   review_notes: string[] | null;
   submitted_at: string;
   updated_at: string;
+  partner_id: string | null;
+  property_id: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+};
+
+type PropertyPublicationRow = {
+  id: string;
+  publication_status: string;
 };
 
 type PartnerApplicationPriceRow = {
@@ -57,6 +69,8 @@ type PartnerApplicationMediaRow = {
   path_or_note: string | null;
   file_name: string | null;
   sort_order: number;
+  media_type: string;
+  status: string;
 };
 
 type PartnerApplicationServiceRow = {
@@ -114,9 +128,13 @@ function mapApplication(
   prices: PartnerApplicationPriceRow[],
   media: PartnerApplicationMediaRow[],
   services: PartnerApplicationServiceRow[],
-  verificationDocuments: PartnerApplicationVerificationDocumentRow[]
+  verificationDocuments: PartnerApplicationVerificationDocumentRow[],
+  propertyPublicationStatus?: string
 ): PartnerApplicationRecord {
   const businessType = normalizeBusinessType(row.business_type);
+  const metadata = row.metadata && typeof row.metadata === "object" && !Array.isArray(row.metadata)
+    ? row.metadata as { fullDescription?: unknown; categoryAnswers?: Record<string, unknown>; registrationNumber?: unknown }
+    : {};
   const priceSummary = prices
     .filter((price) => price.active)
     .map((price) => `${price.item_name}${price.price ? ` ${price.currency} ${price.price}` : ""} ${price.unit}`.trim())
@@ -153,14 +171,33 @@ function mapApplication(
     submittedDate: row.submitted_at,
     updatedDate: row.updated_at,
     status: normalizeStatus(row.status),
-    assignedReviewer: "Unassigned",
+    assignedReviewer: row.reviewed_by ?? "Unassigned",
     adminNotes: [...(row.review_notes ?? []), row.notes].filter(Boolean) as string[],
     requestedChanges: row.missing_information ?? [],
     listingWorkflow: getListingWorkflow(businessType),
-    listingPublicationStatus: "draft",
+    linkedPartnerId: row.partner_id ?? undefined,
+    linkedListingId: row.property_id ?? undefined,
+    listingPublicationStatus: propertyPublicationStatus
+      && ["draft", "pending", "published", "archived"].includes(propertyPublicationStatus)
+      ? propertyPublicationStatus as PartnerApplicationRecord["listingPublicationStatus"]
+      : "draft",
     verificationStatus: row.status === "approved" ? "verified" : "pending",
     verificationDocuments: documentRecords,
     verificationCompletion: getVerificationCompletion(documentRecords),
+    submittedFields: [
+      { label: "Google Maps", value: row.google_maps_link ?? "" },
+      { label: "Registration / licence", value: row.registration_number ?? String(metadata.registrationNumber ?? "") },
+      { label: "Full description", value: String(metadata.fullDescription ?? "") },
+      ...Object.entries(metadata.categoryAnswers ?? {}).map(([label, value]) => ({ label, value: String(value) }))
+    ].filter((field) => field.value.trim()),
+    pricingRows: prices.filter((price) => price.active).map((price) => ({
+      name: price.item_name,
+      price: price.price && price.price > 0 ? `${price.currency} ${price.price}` : "Price on request",
+      unit: price.unit
+    })),
+    publicMedia: media
+      .filter((item) => !["license", "verification", "registration"].includes(item.media_type))
+      .map((item) => ({ label: item.label, status: item.status })),
     timeline: [
       {
         id: `${row.id}-submitted`,
@@ -198,16 +235,22 @@ export async function getPartnerApplicationsForAdmin(): Promise<PartnerApplicati
     if (applicationError) throw applicationError;
     const applications = (applicationRows ?? []) as PartnerApplicationRow[];
     const applicationIds = applications.map((application) => application.id);
+    const propertyIds = applications
+      .map((application) => application.property_id)
+      .filter((propertyId): propertyId is string => Boolean(propertyId));
 
     if (applicationIds.length === 0) {
       return { applications: [], source: "supabase" };
     }
 
-    const [priceResult, mediaResult, serviceResult, verificationResult] = await Promise.all([
+    const [priceResult, mediaResult, serviceResult, verificationResult, propertyResult] = await Promise.all([
       db.from("partner_application_prices").select("*").in("application_id", applicationIds),
       db.from("partner_application_media").select("*").in("application_id", applicationIds),
       db.from("partner_application_services").select("*").in("application_id", applicationIds),
-      db.from("partner_application_verification_documents").select("*").in("application_id", applicationIds)
+      db.from("partner_application_verification_documents").select("*").in("application_id", applicationIds),
+      propertyIds.length > 0
+        ? db.from("properties").select("id, publication_status").in("id", propertyIds)
+        : Promise.resolve({ data: [], error: null })
     ]);
 
     function readResultRows<T>(
@@ -232,6 +275,10 @@ export async function getPartnerApplicationsForAdmin(): Promise<PartnerApplicati
       "partner_application_verification_documents",
       verificationResult
     );
+    const properties = readResultRows<PropertyPublicationRow>("properties", propertyResult);
+    const publicationStatusByPropertyId = new Map(
+      properties.map((property) => [property.id, property.publication_status])
+    );
 
     return {
       applications: applications.map((application) =>
@@ -240,7 +287,10 @@ export async function getPartnerApplicationsForAdmin(): Promise<PartnerApplicati
           byApplicationId(prices, application.id),
           byApplicationId(media, application.id),
           byApplicationId(services, application.id),
-          verificationDocuments.filter((document) => document.application_id === application.id)
+          verificationDocuments.filter((document) => document.application_id === application.id),
+          application.property_id
+            ? publicationStatusByPropertyId.get(application.property_id)
+            : undefined
         )
       ),
       source: "supabase"

@@ -29,11 +29,13 @@ export function calculateCommission(bookingTotal: number, rate = 0.1): Commissio
 
 export function calculateBookingDraft(draft: BookingDraft) {
   const nights = calculateNights(draft.checkIn, draft.checkOut);
-  const accommodation = nights * draft.roomRate;
-  const optionalServices = draft.services.reduce((total, service) => total + service.price, 0);
-  const subtotal = accommodation + optionalServices;
+  const accommodation = draft.roomRate && draft.roomRate > 0 ? nights * draft.roomRate : null;
+  const optionalServices = draft.services.some((service) => !service.price)
+    ? null
+    : draft.services.reduce((total, service) => total + (service.price ?? 0), 0);
+  const subtotal = accommodation === null || optionalServices === null ? null : accommodation + optionalServices;
   const total = subtotal;
-  const commission = calculateCommission(total);
+  const commission = calculateCommission(total ?? 0);
 
   return {
     nights,
@@ -48,7 +50,7 @@ export function calculateBookingDraft(draft: BookingDraft) {
 export function buildBookingWhatsAppMessage(draft: BookingDraft) {
   const estimate = calculateBookingDraft(draft);
   const serviceLines = draft.services.length
-    ? draft.services.map((service) => `- ${service.name}: $${service.price}`).join("\n")
+    ? draft.services.map((service) => `- ${service.name}: ${service.price ? `$${service.price}` : "Price on request"}`).join("\n")
     : "No optional services selected";
 
   return [
@@ -60,12 +62,12 @@ export function buildBookingWhatsAppMessage(draft: BookingDraft) {
     `Adults: ${draft.adults}`,
     `Children: ${draft.children}`,
     `Room type: ${draft.roomType}`,
-    `Estimated accommodation: $${estimate.accommodation}`,
+    estimate.accommodation === null ? "Price: On request" : `Estimated accommodation: $${estimate.accommodation}`,
     "",
     "Optional services:",
     serviceLines,
     "",
-    `Estimated total: $${estimate.total}`,
+    estimate.total === null ? "Final price: To be confirmed by the property" : `Estimated total: $${estimate.total}`,
     `Special requests: ${draft.specialRequests || "None"}`,
     "",
     "I found this property on iThoddoo Maldives."

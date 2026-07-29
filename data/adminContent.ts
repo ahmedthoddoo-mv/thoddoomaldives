@@ -36,6 +36,7 @@ export type AdminManagedProperty = {
   roomTypes: AdminPropertyRoomType[];
   amenities: string[];
   policies: string[];
+  services?: Array<{ id: string; name: string; description: string; price: number | null; currency: string; unit: string }>;
   checkIn: string;
   checkOut: string;
   whatsapp: string;

@@ -16,7 +16,6 @@ type PartnerBookingsViewProps = {
 
 export function PartnerBookingsView({ selectedPartnerId = "partner-thoddoo-sun-sky", initialBookings: repositoryBookings }: PartnerBookingsViewProps) {
   const router = useRouter();
-  const [notesByBooking, setNotesByBooking] = useState<Record<string, string>>({});
   const [actionMessage, setActionMessage] = useState("");
   const initialBookings = useMemo(
     () => (repositoryBookings && repositoryBookings.length > 0 ? repositoryBookings : getBookingsForPartner(selectedPartnerId)),
@@ -27,11 +26,9 @@ export function PartnerBookingsView({ selectedPartnerId = "partner-thoddoo-sun-s
   async function handlePartnerUpdate({
     bookingId,
     status,
-    internalNotes
   }: {
     bookingId: string;
     status?: Extract<BookingStatus, "confirmed" | "rejected" | "completed" | "cancelled">;
-    internalNotes?: string;
   }) {
     if (status) {
       updateBookingStatus(bookingId, status);
@@ -39,8 +36,7 @@ export function PartnerBookingsView({ selectedPartnerId = "partner-thoddoo-sun-s
 
     const result = await updatePartnerBooking({
       bookingId,
-      status,
-      internalNotes
+      status
     });
 
     setActionMessage(result.message);
@@ -85,9 +81,7 @@ export function PartnerBookingsView({ selectedPartnerId = "partner-thoddoo-sun-s
                   <div>
                     <strong>{booking.guest.name}</strong>
                     <p>{booking.guest.adults + booking.guest.children} guests | CRM {booking.crmRecordId}</p>
-                    <small>
-                      {booking.reference ?? booking.id} | {booking.roomType} | {booking.source} | Commission ${booking.commission.companyRevenue}
-                    </small>
+                    <small>{booking.reference ?? booking.id} | {booking.roomType} | {booking.source}</small>
                     <div className="partnerBookingActions">
                       <button type="button" onClick={() => handlePartnerUpdate({ bookingId: booking.id, status: "confirmed" })}>
                         Confirm
@@ -99,23 +93,8 @@ export function PartnerBookingsView({ selectedPartnerId = "partner-thoddoo-sun-s
                         Complete
                       </button>
                     </div>
-                    <label className="partnerBookingNoteField">
-                      <span>Internal notes</span>
-                      <textarea
-                        onChange={(event) => setNotesByBooking((current) => ({ ...current, [booking.id]: event.target.value }))}
-                        placeholder="Arrival notes, room setup, payment notes..."
-                        value={notesByBooking[booking.id] ?? booking.internalNotes ?? ""}
-                      />
-                    </label>
-                    <button
-                      className="partnerBookingNoteButton"
-                      type="button"
-                      onClick={() => handlePartnerUpdate({ bookingId: booking.id, internalNotes: notesByBooking[booking.id] ?? booking.internalNotes ?? "" })}
-                    >
-                      Save notes
-                    </button>
                   </div>
-                  <span>${booking.estimatedValue}</span>
+                  <span>{booking.estimatedValue === null ? "Price on request" : `$${booking.estimatedValue}`}</span>
                   <small>{booking.arrival} to {booking.departure}</small>
                 </article>
               ))}

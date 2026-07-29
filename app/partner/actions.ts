@@ -105,11 +105,7 @@ export async function savePartnerServices(services: PartnerPortalServiceItem[]):
   const { scope, supabase, mode } = await getScopedSupabase();
   if (!supabase || scope.mode !== "supabase") return { ok: false, mode, message: "Partner access is not available." };
 
-  const db = supabase;
-  const serviceRows = services.map((service, index) => ({
-    partner_id: scope.partnerId,
-    property_id: scope.propertyId,
-    service_type: "room",
+  const items = services.map((service, index) => ({
     title: sanitizeText(service.title, 180),
     description: sanitizeText(service.description, 800),
     price: parsePrice(service.price),
@@ -119,32 +115,20 @@ export async function savePartnerServices(services: PartnerPortalServiceItem[]):
     notes: sanitizeText(service.notes, 800),
     active: service.active,
     sort_order: index,
-    metadata: service.metadata
-  }));
-
-  await db.from("partner_service_items").delete().eq("partner_id", scope.partnerId).eq("property_id", scope.propertyId);
-  if (serviceRows.length > 0) {
-    const { error: serviceError } = await db.from("partner_service_items").insert(serviceRows);
-    if (serviceError) return { ok: false, mode, message: serviceError.message };
-  }
-
-  await db.from("rooms").delete().eq("property_id", scope.propertyId);
-  const roomRows = services.map((service) => ({
-    property_id: scope.propertyId,
-    name: sanitizeText(service.title, 180),
     bed_type: sanitizeText(service.metadata.bedType ?? "", 120) || null,
     capacity: sanitizeText(service.metadata.capacity ?? "2 guests", 80),
     adults: parseCapacity(service.metadata.adults ?? service.metadata.capacity ?? "2"),
     children: parseCapacity(service.metadata.children ?? "0"),
-    price_per_night: parsePrice(service.price) ?? 0,
     breakfast_included: String(service.metadata.breakfast ?? service.notes).toLowerCase().includes("included"),
-    description: sanitizeText(service.description, 800),
-    active: service.active
+    metadata: service.metadata
   }));
-  if (roomRows.length > 0) {
-    const { error: roomError } = await db.from("rooms").insert(roomRows);
-    if (roomError) return { ok: false, mode, message: roomError.message };
-  }
+  const { error } = await supabase.rpc("partner_replace_rooms_services", {
+    actor_user_id: scope.authUserId,
+    partner_uuid: scope.partnerId,
+    property_uuid: scope.propertyId,
+    items
+  });
+  if (error) return { ok: false, mode, message: error.message };
 
   await logPartnerAuditEvent("price_update", { propertyId: scope.propertyId, itemCount: services.length }, scope.partnerId);
   return { ok: true, mode, message: "Rooms and pricing saved to Supabase." };
@@ -154,41 +138,22 @@ export async function savePartnerGallery(gallery: PartnerPortalGalleryItem[]): P
   const { scope, supabase, mode } = await getScopedSupabase();
   if (!supabase || scope.mode !== "supabase") return { ok: false, mode, message: "Partner access is not available." };
 
-  const db = supabase;
   const normalized = gallery.filter((item) => item.path.trim());
-  const hero = normalized.find((item) => item.usage === "hero") ?? normalized[0];
-  if (hero) {
-    await db.from("properties").update({ hero_image_path: hero.path }).eq("id", scope.propertyId).eq("partner_id", scope.partnerId);
-  }
-
-  const mediaRows = normalized.map((item) => ({
+  const items = normalized.map((item) => ({
     filename: item.path.split("/").filter(Boolean).at(-1) ?? "partner-media.jpg",
     path: sanitizeText(item.path, 700),
-    category: item.usage === "hero" || item.usage === "cover" ? "Hero" : "Gallery",
-    file_type: item.usage === "video" ? "video/mp4" : "image/jpeg",
+    usage: item.usage,
     alt_text: sanitizeText(item.altText, 240),
     caption: sanitizeText(item.caption, 240),
-    rights_status: "partner_submitted",
-    archived: false
+    sort_order: item.sortOrder
   }));
-
-  const { data: mediaAssets, error: mediaError } = await db.from("media_assets").upsert(mediaRows, { onConflict: "path" }).select("id, path");
-  if (mediaError) return { ok: false, mode, message: mediaError.message };
-
-  await db.from("property_media").delete().eq("property_id", scope.propertyId);
-  const links = (mediaAssets ?? []).map((asset: { id: string; path: string }) => {
-    const item = normalized.find((entry) => entry.path === asset.path);
-    return {
-      property_id: scope.propertyId,
-      media_asset_id: asset.id,
-      usage: item?.usage === "hero" || item?.usage === "cover" ? "hero" : "gallery",
-      sort_order: item?.sortOrder ?? normalized.findIndex((entry) => entry.path === asset.path)
-    };
+  const { error } = await supabase.rpc("partner_replace_gallery", {
+    actor_user_id: scope.authUserId,
+    partner_uuid: scope.partnerId,
+    property_uuid: scope.propertyId,
+    items
   });
-  if (links.length > 0) {
-    const { error: linkError } = await db.from("property_media").insert(links);
-    if (linkError) return { ok: false, mode, message: linkError.message };
-  }
+  if (error) return { ok: false, mode, message: error.message };
 
   await logPartnerAuditEvent("gallery_update", { propertyId: scope.propertyId, itemCount: normalized.length }, scope.partnerId);
   return { ok: true, mode, message: "Gallery saved to Supabase." };
@@ -229,22 +194,36 @@ export async function savePartnerDocuments(documents: PartnerPortalDocument[]): 
 export async function updatePartnerBooking(params: {
   bookingId: string;
   status?: Extract<BookingStatus, "confirmed" | "rejected" | "completed" | "cancelled">;
-  internalNotes?: string;
 }) {
   const { scope, supabase, mode } = await getScopedSupabase();
   if (!supabase || scope.mode !== "supabase") return { ok: false, mode, message: "Partner access is not available." };
 
+  const allowedStatuses = new Set(["confirmed", "rejected", "completed", "cancelled"]);
+  if (params.status && !allowedStatuses.has(params.status)) {
+    return { ok: false, mode, message: "That booking transition is not available to partners." };
+  }
+
   const payload: Database["public"]["Tables"]["bookings"]["Update"] = {};
   if (params.status) payload.booking_status = params.status;
-  if (typeof params.internalNotes === "string") payload.internal_notes = sanitizeText(params.internalNotes, 1200) || null;
   if (Object.keys(payload).length === 0) return { ok: true, mode, message: "No booking changes to save." };
 
-  const { error } = await supabase
+  const allowedCurrentStatuses: Record<string, string[]> = {
+    confirmed: ["new", "pending"],
+    rejected: ["new", "pending"],
+    completed: ["confirmed"],
+    cancelled: ["new", "pending", "confirmed"]
+  };
+  const { data: updatedBooking, error } = await supabase
     .from("bookings")
     .update(payload)
     .eq("id", params.bookingId)
-    .eq("partner_id", scope.partnerId);
-  if (error) return { ok: false, mode, message: error.message };
+    .eq("partner_id", scope.partnerId)
+    .in("booking_status", allowedCurrentStatuses[params.status ?? ""] ?? [])
+    .select("id")
+    .maybeSingle();
+  if (error || !updatedBooking) {
+    return { ok: false, mode, message: error?.message ?? "Booking transition is not allowed." };
+  }
 
   await logPartnerAuditEvent("booking_update", { bookingId: params.bookingId, status: params.status ?? null }, scope.partnerId);
   return { ok: true, mode, message: "Booking updated." };

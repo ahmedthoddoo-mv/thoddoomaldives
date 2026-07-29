@@ -20,6 +20,15 @@ export type Database = {
           latitude: number | null;
           longitude: number | null;
           auth_user_id: string | null;
+          application_id: string | null;
+          phone: string | null;
+          full_description: string | null;
+          logo_path: string | null;
+          hero_image_path: string | null;
+          gallery_paths: string[];
+          approved_at: string | null;
+          approved_by_user_id: string | null;
+          published_at: string | null;
           lead_source: string | null;
           priority: string | null;
           created_at: string;
@@ -57,6 +66,16 @@ export type Database = {
           operating_hours: string | null;
           languages: string[];
           social_links: Json;
+          application_id: string | null;
+          phone: string | null;
+          logo_path: string | null;
+          room_count: number | null;
+          starting_price: number | null;
+          currency: string | null;
+          metadata: Json;
+          approved_at: string | null;
+          approved_by_user_id: string | null;
+          published_at: string | null;
           membership_plan_id: string | null;
           verification_status: string;
           publication_status: string;
@@ -85,7 +104,12 @@ export type Database = {
           capacity: string;
           adults: number;
           children: number;
-          price_per_night: number;
+          price_per_night: number | null;
+          source_key: string | null;
+          currency: string | null;
+          amenities: string[];
+          image_paths: string[];
+          metadata: Json;
           breakfast_included: boolean;
           description: string | null;
           active: boolean;
@@ -96,7 +120,7 @@ export type Database = {
           property_id: string;
           name: string;
           capacity: string;
-          price_per_night: number;
+          price_per_night?: number | null;
         };
         Update: Partial<Database["public"]["Tables"]["rooms"]["Row"]>;
         Relationships: [];
@@ -127,17 +151,22 @@ export type Database = {
           check_out: string;
           adults: number;
           children: number;
-          booking_total: number;
+          booking_total: number | null;
           taxes_fees: number;
           commission_percent: number;
-          company_revenue: number;
-          partner_revenue: number;
+          company_revenue: number | null;
+          partner_revenue: number | null;
           booking_status: string;
           payment_status: string;
           contact_preference: string;
           room_prepared: boolean;
           internal_notes: string | null;
           special_requests: string | null;
+          nights: number | null;
+          source: string;
+          selected_service_ids: string[];
+          quoted_amount: number | null;
+          quote_currency: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -163,6 +192,15 @@ export type Database = {
           caption: string | null;
           rights_status: string;
           archived: boolean;
+          application_id: string | null;
+          partner_id: string | null;
+          property_id: string | null;
+          room_id: string | null;
+          storage_bucket: string | null;
+          storage_path: string | null;
+          media_type: string | null;
+          sort_order: number;
+          visibility: string;
           created_at: string;
           updated_at: string;
         };
@@ -311,6 +349,9 @@ export type Database = {
           partner_id: string | null;
           reviewed_at: string | null;
           reviewed_by: string | null;
+          property_id: string | null;
+          approved_at: string | null;
+          approved_by_user_id: string | null;
           submitted_at: string;
           updated_at: string;
         };
@@ -432,6 +473,9 @@ export type Database = {
           active: boolean;
           sort_order: number;
           metadata: Json;
+          application_id: string | null;
+          source_key: string | null;
+          public_visible: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -509,6 +553,9 @@ export type Database = {
           partner_id: string;
           application_id: string | null;
           auth_user_id: string | null;
+          idempotency_key: string;
+          delivery_attempted_at: string | null;
+          delivery_error: string | null;
           email: string;
           status: string;
           invitation_url: string | null;
@@ -561,8 +608,68 @@ export type Database = {
       property_media: { Row: { property_id: string; media_asset_id: string; usage: string; sort_order: number; created_at: string }; Insert: { property_id: string; media_asset_id: string; usage?: string; sort_order?: number }; Update: Partial<{ usage: string; sort_order: number }>; Relationships: [] };
       partner_media: { Row: { partner_id: string; media_asset_id: string; usage: string; sort_order: number; created_at: string }; Insert: { partner_id: string; media_asset_id: string; usage?: string; sort_order?: number }; Update: Partial<{ usage: string; sort_order: number }>; Relationships: [] };
     };
-    Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Views: {
+      public_properties: {
+        Row: Omit<Database["public"]["Tables"]["properties"]["Row"], "application_id" | "phone" | "metadata" | "approved_at" | "approved_by_user_id" | "published_at" | "languages">;
+        Relationships: [];
+      };
+      public_rooms: {
+        Row: Omit<Database["public"]["Tables"]["rooms"]["Row"], "source_key" | "metadata">;
+        Relationships: [];
+      };
+      public_property_services: {
+        Row: Pick<Database["public"]["Tables"]["partner_service_items"]["Row"], "id" | "property_id" | "service_type" | "title" | "description" | "price" | "currency" | "unit" | "child_price" | "sort_order">;
+        Relationships: [];
+      };
+      public_property_media: {
+        Row: Pick<Database["public"]["Tables"]["media_assets"]["Row"], "id" | "property_id" | "room_id" | "media_type" | "path" | "alt_text" | "caption" | "sort_order" | "width" | "height">;
+        Relationships: [];
+      };
+    };
+    Functions: {
+      approve_partner_application: {
+        Args: {
+          application_uuid: string;
+          reviewer_user_id: string;
+          reviewer_name: string;
+          publish_listing?: boolean;
+          review_note?: string | null;
+        };
+        Returns: Json;
+      };
+      next_partner_application_reference: {
+        Args: Record<string, never>;
+        Returns: string;
+      };
+      admin_save_property: {
+        Args: {
+          admin_user_id: string;
+          property_uuid: string | null;
+          property_payload: Json;
+          room_payload: Json;
+          media_payload: Json;
+        };
+        Returns: Json;
+      };
+      partner_replace_rooms_services: {
+        Args: {
+          actor_user_id: string;
+          partner_uuid: string;
+          property_uuid: string;
+          items: Json;
+        };
+        Returns: Json;
+      };
+      partner_replace_gallery: {
+        Args: {
+          actor_user_id: string;
+          partner_uuid: string;
+          property_uuid: string;
+          items: Json;
+        };
+        Returns: Json;
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };
