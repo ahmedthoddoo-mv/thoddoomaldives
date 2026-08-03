@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { AdminMediaLibrary } from "@/components/admin/AdminMediaLibrary";
+import { AdminMediaDirectory } from "@/components/admin/AdminMediaDirectory";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { adminSidebarItems } from "@/data/adminContent";
-import { MediaRepository } from "@/lib/repositories";
+import { getLiveMedia } from "@/lib/repositories/liveReads";
 
 export const metadata: Metadata = {
   title: "Admin Media",
@@ -13,13 +13,13 @@ export const metadata: Metadata = {
   }
 };
 
-export default function AdminMediaPage() {
-  const mediaAssets = MediaRepository.findAll();
+export default async function AdminMediaPage() {
+  const mediaRead = await getLiveMedia();
 
   return (
     <AdminShell sidebar={<AdminSidebar items={adminSidebarItems} />}>
       <div className="adminContent">
-        <AdminMediaLibrary assets={mediaAssets} />
+        <AdminMediaDirectory assets={mediaRead.data} error={mediaRead.error} />
       </div>
     </AdminShell>
   );

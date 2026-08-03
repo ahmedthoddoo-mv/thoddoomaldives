@@ -225,6 +225,9 @@ export type Database = {
           opening_hours: string | null;
           image_path: string;
           publication_status: string;
+          verification_status: string;
+          application_id: string | null;
+          partner_id: string | null;
           featured: boolean;
           created_at: string;
           updated_at: string;
@@ -250,6 +253,9 @@ export type Database = {
           image_path: string;
           highlights: string[];
           publication_status: string;
+          verification_status: string;
+          application_id: string | null;
+          partner_id: string | null;
           featured: boolean;
           created_at: string;
           updated_at: string;
@@ -279,6 +285,9 @@ export type Database = {
           image_path: string;
           highlights: string[];
           publication_status: string;
+          verification_status: string;
+          application_id: string | null;
+          partner_id: string | null;
           featured: boolean;
           created_at: string;
           updated_at: string;
@@ -291,6 +300,29 @@ export type Database = {
           image_path: string;
         };
         Update: Partial<Database["public"]["Tables"]["transfers"]["Row"]>;
+        Relationships: [];
+      };
+      partner_application_review_versions: {
+        Row: {
+          id: string;
+          application_id: string;
+          version: number;
+          original_values: Json;
+          reviewed_values: Json;
+          reviewed_prices: Json;
+          edited_by_user_id: string;
+          edited_by_name: string;
+          edited_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["partner_application_review_versions"]["Row"]> & {
+          application_id: string;
+          version: number;
+          original_values: Json;
+          reviewed_values: Json;
+          edited_by_user_id: string;
+          edited_by_name: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["partner_application_review_versions"]["Row"]>;
         Relationships: [];
       };
       crm_tasks: {
@@ -347,6 +379,8 @@ export type Database = {
           missing_information: string[];
           review_notes: string[];
           partner_id: string | null;
+          listing_id: string | null;
+          listing_type: string | null;
           reviewed_at: string | null;
           reviewed_by: string | null;
           property_id: string | null;
@@ -625,6 +659,9 @@ export type Database = {
         Row: Pick<Database["public"]["Tables"]["media_assets"]["Row"], "id" | "property_id" | "room_id" | "media_type" | "path" | "alt_text" | "caption" | "sort_order" | "width" | "height">;
         Relationships: [];
       };
+      public_transfers: { Row: Database["public"]["Tables"]["transfers"]["Row"]; Relationships: [] };
+      public_experiences: { Row: Database["public"]["Tables"]["experiences"]["Row"]; Relationships: [] };
+      public_restaurants: { Row: Database["public"]["Tables"]["restaurants"]["Row"]; Relationships: [] };
     };
     Functions: {
       approve_partner_application: {
@@ -649,6 +686,30 @@ export type Database = {
           room_payload: Json;
           media_payload: Json;
         };
+        Returns: Json;
+      };
+      admin_save_application_review: {
+        Args: {
+          application_uuid: string;
+          reviewer_user_id: string;
+          reviewer_name: string;
+          review_payload: Json;
+          price_payload: Json;
+        };
+        Returns: Json;
+      };
+      approve_partner_application_all_types: {
+        Args: {
+          application_uuid: string;
+          reviewer_user_id: string;
+          reviewer_name: string;
+          publish_listing?: boolean;
+          review_note?: string | null;
+        };
+        Returns: Json;
+      };
+      admin_save_business_listing: {
+        Args: { admin_user_id: string; listing_type: string; listing_uuid: string | null; listing_payload: Json };
         Returns: Json;
       };
       partner_replace_rooms_services: {

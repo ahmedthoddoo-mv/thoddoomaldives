@@ -46,7 +46,7 @@ export function createBookingEmailPreviews(booking: BookingWorkflowRecord): Book
         `Property: ${booking.propertyName}`,
         `Guest: ${booking.guest.name}`,
         `Commission preview: ${booking.commission.companyRevenue === null ? "Not quoted" : `$${booking.commission.companyRevenue}`}`,
-        `CRM record: ${booking.crmRecordId ?? "demo-crm"}`,
+        `CRM record: ${booking.crmRecordId ?? "Not linked"}`,
         "",
         "This is a preview only. No email has been sent."
       ].join("\n")

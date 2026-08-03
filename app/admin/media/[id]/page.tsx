@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { AdminMediaDetail } from "@/components/admin/AdminMediaDetail";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { adminSidebarItems } from "@/data/adminContent";
-import { MediaRepository } from "@/lib/repositories";
+import { SupabaseMediaRepository } from "@/lib/repositories/supabase";
 
 type AdminMediaDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -18,15 +17,9 @@ export const metadata: Metadata = {
   }
 };
 
-export function generateStaticParams() {
-  const mediaAssets = MediaRepository.findAll();
-
-  return mediaAssets.map((asset) => ({ id: asset.id }));
-}
-
 export default async function AdminMediaDetailPage({ params }: AdminMediaDetailPageProps) {
   const { id } = await params;
-  const asset = MediaRepository.findById(id);
+  const asset = await SupabaseMediaRepository.findById(id);
 
   if (!asset) {
     notFound();
@@ -35,7 +28,8 @@ export default async function AdminMediaDetailPage({ params }: AdminMediaDetailP
   return (
     <AdminShell sidebar={<AdminSidebar items={adminSidebarItems} />}>
       <div className="adminContent">
-        <AdminMediaDetail asset={asset} />
+        <section className="adminContentHero"><div><p className="eyebrow">Live media record</p><h1>{asset.filename}</h1><p>{asset.caption || asset.altText}</p></div></section>
+        <section className="adminPanel"><dl className="applicationDetailGrid"><div><dt>Path</dt><dd>{asset.path}</dd></div><div><dt>Category</dt><dd>{asset.category}</dd></div><div><dt>Rights</dt><dd>{asset.rightsStatus}</dd></div><div><dt>Status</dt><dd>{asset.archived ? "Archived" : "Active"}</dd></div></dl></section>
       </div>
     </AdminShell>
   );

@@ -11,7 +11,7 @@ export default async function PartnerGalleryPage() {
   const portalData = await getCurrentPartnerPortalData();
 
   return (
-    <PartnerPortalShell portalData={portalData} title="Gallery" subtitle="Manage logo, cover, hero, gallery, video placeholders, captions, alt text, ordering, and deletes.">
+    <PartnerPortalShell portalData={portalData} title="Gallery" subtitle="Manage logo, cover, hero, gallery, captions, alt text, and ordering.">
       <PartnerGalleryManager initialGallery={portalData.gallery} />
     </PartnerPortalShell>
   );

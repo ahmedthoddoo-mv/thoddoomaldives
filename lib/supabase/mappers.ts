@@ -136,7 +136,7 @@ export function mapBookingRowToDomain(
       partnerRevenue: booking.quoted_amount === null ? null : booking.partner_revenue
     },
     status: booking.booking_status as Booking["status"],
-    paymentStatus: booking.payment_status === "demo_only" ? "demo-only" : booking.payment_status === "pending" ? "pending" : (booking.payment_status as Booking["paymentStatus"]),
+    paymentStatus: booking.payment_status === "demo_only" || booking.payment_status === "pending" ? "pending" : (booking.payment_status as Booking["paymentStatus"]),
     taxesFees: booking.taxes_fees,
     roomPrepared: booking.room_prepared,
     internalNotes: booking.internal_notes ?? undefined,
@@ -145,6 +145,8 @@ export function mapBookingRowToDomain(
 }
 
 export function mapPartnerRowToDomain(partner: Tables<"partners">): CrmPartner {
+  const category = partner.category.toLowerCase();
+  const membership = String(partner.membership_plan_id ?? "verified").toLowerCase();
   return {
     id: partner.id,
     business: partner.business_name,
@@ -154,7 +156,10 @@ export function mapPartnerRowToDomain(partner: Tables<"partners">): CrmPartner {
     website: partner.website ?? "",
     address: partner.address ?? "",
     gps: partner.latitude !== null && partner.longitude !== null ? `${partner.latitude}, ${partner.longitude}` : "",
-    category: partner.category === "restaurant" ? "Restaurant" : partner.category === "transfer" ? "Transfer" : partner.category === "excursion" ? "Excursion" : partner.category === "shop" ? "Shop" : "Guesthouse",
+    category: ["restaurant", "cafe"].includes(category) ? "Restaurant"
+      : ["transfer", "transfer-company", "speedboat-company", "ferry-operator"].includes(category) ? "Transfer"
+      : ["excursion", "excursion-operator", "dive-center", "watersports", "photographer", "farm-experience", "local-guide"].includes(category) ? "Excursion"
+      : category === "shop" ? "Shop" : "Guesthouse",
     status: partner.status === "verified" ? "Verified" : partner.status === "pending" ? "Pending" : "Contacted",
     leadSource: partner.lead_source ?? "Supabase",
     priority: partner.priority === "high" ? "High" : partner.priority === "urgent" ? "Urgent" : partner.priority === "low" ? "Low" : "Medium",
@@ -162,7 +167,7 @@ export function mapPartnerRowToDomain(partner: Tables<"partners">): CrmPartner {
     nextFollowUp: "",
     notes: [],
     verification: partner.verification_status === "verified" ? "Verified" : partner.verification_status === "pending" ? "Pending" : "Unverified",
-    membership: "Verified"
+    membership: membership === "premium" ? "Premium" : membership === "free" ? "Free" : membership === "enterprise" ? "Enterprise" : "Verified"
   };
 }
 
@@ -186,7 +191,7 @@ export function mapMediaRowToDomain(asset: Tables<"media_assets">): MediaAsset {
     isHero: asset.category === "Hero",
     archived: asset.archived,
     source: "Supabase",
-    rightsStatus: asset.rights_status === "needs_confirmation" ? "Needs confirmation" : asset.rights_status === "permission_confirmed" ? "Permission confirmed" : "Internal demo asset"
+    rightsStatus: asset.rights_status === "permission_confirmed" ? "Permission confirmed" : "Needs confirmation"
   };
 }
 
@@ -202,7 +207,9 @@ export function mapRestaurantRowToDomain(restaurant: Tables<"restaurants">): Res
     priceRange: restaurant.price_range ?? "$$",
     openingHours: restaurant.opening_hours ?? "Confirm locally",
     image: restaurant.image_path,
-    featured: restaurant.featured
+    featured: restaurant.featured,
+    publicationStatus: restaurant.publication_status,
+    verificationStatus: restaurant.verification_status
   };
 }
 
@@ -218,7 +225,9 @@ export function mapExperienceRowToDomain(experience: Tables<"experiences">): Exp
     price: experience.price ?? "Price on request",
     image: experience.image_path,
     highlights: experience.highlights,
-    featured: experience.featured
+    featured: experience.featured,
+    publicationStatus: experience.publication_status,
+    verificationStatus: experience.verification_status
   };
 }
 
@@ -236,6 +245,8 @@ export function mapTransferRowToDomain(transfer: Tables<"transfers">): Transfer 
     scheduleNote: transfer.schedule_note ?? "Schedules can change.",
     image: transfer.image_path,
     highlights: transfer.highlights,
-    featured: transfer.featured
+    featured: transfer.featured,
+    publicationStatus: transfer.publication_status,
+    verificationStatus: transfer.verification_status
   };
 }

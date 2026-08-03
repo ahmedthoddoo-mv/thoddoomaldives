@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { AdminCrmOverview } from "@/components/admin/AdminCrmOverview";
 import { AdminCrmShell } from "@/components/admin/AdminCrmShell";
+import { getLiveCrm } from "@/lib/repositories/liveReads";
 
 export const metadata: Metadata = {
   title: "Admin CRM",
@@ -10,10 +11,12 @@ export const metadata: Metadata = {
   }
 };
 
-export default function AdminCrmPage() {
+export default async function AdminCrmPage() {
+  const crmRead = await getLiveCrm();
   return (
     <AdminCrmShell>
-      <AdminCrmOverview />
+      {crmRead.error ? <section className="adminPanel"><p className="mutedText">{crmRead.error}</p></section> : null}
+      <AdminCrmOverview {...crmRead.data} />
     </AdminCrmShell>
   );
 }

@@ -1,14 +1,17 @@
 import Link from "next/link";
 import Badge from "@/components/ui/Badge";
-import { AdminCrmApplicationTimeline } from "@/components/admin/AdminCrmApplicationTimeline";
-import { AdminCrmBookingTimeline } from "@/components/admin/AdminCrmBookingTimeline";
 import { AdminCrmPartners } from "@/components/admin/AdminCrmPartners";
 import { AdminCrmStatusBadge } from "@/components/admin/AdminCrmStatusBadge";
-import { CRMRepository } from "@/lib/repositories";
+import type { CrmNote, CrmPartner, CrmTask } from "@/data/adminCrm";
 
-export function AdminCrmOverview() {
-  const crmSummaryStats = CRMRepository.findSummaryStats();
-  const crmTasks = CRMRepository.findTasks();
+export function AdminCrmOverview({ partners, tasks, notes }: { partners: CrmPartner[]; tasks: CrmTask[]; notes: CrmNote[] }) {
+  const openTasks = tasks.filter((task) => task.status !== "Completed");
+  const crmSummaryStats = [
+    { label: "CRM Partners", value: String(partners.length), detail: "Live partner records" },
+    { label: "Verified", value: String(partners.filter((partner) => partner.verification === "Verified").length), detail: "Verified partners" },
+    { label: "Open Tasks", value: String(openTasks.length), detail: "Tasks requiring action" },
+    { label: "Recent Notes", value: String(notes.length), detail: "Stored CRM notes" }
+  ];
 
   return (
     <div className="adminCrmStack">
@@ -39,7 +42,7 @@ export function AdminCrmOverview() {
           <h2>Active CRM Tasks</h2>
         </div>
         <div className="adminCrmTaskStrip">
-          {crmTasks.slice(0, 4).map((task) => (
+          {openTasks.slice(0, 4).map((task) => (
             <article key={task.id}>
               <strong>{task.type}</strong>
               <p>{task.partnerBusiness}</p>
@@ -48,12 +51,8 @@ export function AdminCrmOverview() {
           ))}
         </div>
       </section>
-
-      <AdminCrmBookingTimeline />
-
-      <AdminCrmApplicationTimeline />
-
-      <AdminCrmPartners />
+      {openTasks.length === 0 ? <section className="adminEmptyState"><strong>No CRM tasks due</strong></section> : null}
+      <AdminCrmPartners partners={partners} />
     </div>
   );
 }

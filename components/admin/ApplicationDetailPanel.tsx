@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { getPartnerApplicationBusinessTypeLabel } from "@/data/partnerApplications";
 import { ApplicationDecisionPanel } from "@/components/admin/ApplicationDecisionPanel";
@@ -9,10 +9,7 @@ import { ApplicationStatusBadge } from "@/components/admin/ApplicationStatusBadg
 import { ApplicationTimeline } from "@/components/admin/ApplicationTimeline";
 import { ApplicationVerificationChecklist } from "@/components/admin/ApplicationVerificationChecklist";
 import { RequestedChangesList } from "@/components/admin/RequestedChangesList";
-import {
-  PartnerApplicationRepository,
-  subscribeToPartnerApplications
-} from "@/lib/applications/partnerApplicationRepository";
+import { ApplicationReviewEditor } from "@/components/admin/ApplicationReviewEditor";
 import type { PartnerApplicationRecord } from "@/types/partner-application";
 
 function formatDate(value: string) {
@@ -24,35 +21,22 @@ function formatDate(value: string) {
 }
 
 export function ApplicationDetailPanel({
-  applicationId,
   initialApplication,
   dataSource,
   readError
 }: {
-  applicationId: string;
   initialApplication?: PartnerApplicationRecord;
   dataSource?: "mock" | "supabase" | "supabase_error";
   readError?: string;
 }) {
-  const useMockStore = !dataSource || dataSource === "mock";
-  const [storedApplication, setStoredApplication] = useState<PartnerApplicationRecord | undefined>(() =>
-    useMockStore ? PartnerApplicationRepository.findById(applicationId) : undefined
-  );
   const [applicationOverride, setApplicationOverride] = useState<PartnerApplicationRecord>();
-  const application = applicationOverride ?? initialApplication ?? (useMockStore ? storedApplication : undefined);
-
-  useEffect(() => {
-    if (!useMockStore || initialApplication) return;
-    return subscribeToPartnerApplications(() =>
-      setStoredApplication(PartnerApplicationRepository.findById(applicationId))
-    );
-  }, [applicationId, initialApplication, useMockStore]);
+  const application = applicationOverride ?? initialApplication;
 
   if (!application) {
     return (
       <section className="adminPanel">
         <h1>Application not found</h1>
-        <p className="mutedText">The application may be stored in another browser session or has been reset.</p>
+        <p className="mutedText">No application with this ID was returned by the live data source.</p>
         <Link className="adminContentAddButton" href="/admin/applications">
           Back to applications
         </Link>
@@ -184,6 +168,8 @@ export function ApplicationDetailPanel({
       </div>
 
       <ApplicationVerificationChecklist application={application} />
+
+      {dataSource === "supabase" ? <ApplicationReviewEditor application={application} /> : null}
 
       <section className="adminPanel">
         <div className="adminSectionHeader">

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import { getLiveTransfers } from "@/lib/repositories/liveReads";
+
+export const dynamic = "force-dynamic";
+import { getLivePublishedTransfers } from "@/lib/repositories/liveReads";
 import { createPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = createPageMetadata({
@@ -11,7 +13,7 @@ export const metadata: Metadata = createPageMetadata({
 });
 
 export default async function TransferPage() {
-  const transferRead = await getLiveTransfers();
+  const transferRead = await getLivePublishedTransfers();
   const options = transferRead.data;
 
   return (

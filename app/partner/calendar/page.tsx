@@ -12,7 +12,7 @@ export default async function PartnerCalendarPage() {
 
   return (
     <PartnerPortalShell portalData={portalData} title="Calendar" subtitle="Monthly availability with occupied, blocked, pending, and open dates.">
-      <PartnerCalendarView />
+      <PartnerCalendarView bookings={portalData.bookings} />
     </PartnerPortalShell>
   );
 }

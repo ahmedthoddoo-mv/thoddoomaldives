@@ -1,10 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { updatePartnerBooking } from "@/app/partner/actions";
-import { getBookingsForPartner } from "@/lib/platform/selectors";
-import { updateBookingStatus, useBookingWorkflow } from "@/lib/bookings/bookingWorkflowStore";
 import type { Booking, BookingStatus } from "@/types/booking";
 
 const bookingTabs = ["Upcoming", "Pending", "Completed", "Cancelled"] as const;
@@ -14,14 +12,10 @@ type PartnerBookingsViewProps = {
   initialBookings?: Booking[];
 };
 
-export function PartnerBookingsView({ selectedPartnerId = "partner-thoddoo-sun-sky", initialBookings: repositoryBookings }: PartnerBookingsViewProps) {
+export function PartnerBookingsView({ selectedPartnerId = "", initialBookings = [] }: PartnerBookingsViewProps) {
   const router = useRouter();
   const [actionMessage, setActionMessage] = useState("");
-  const initialBookings = useMemo(
-    () => (repositoryBookings && repositoryBookings.length > 0 ? repositoryBookings : getBookingsForPartner(selectedPartnerId)),
-    [repositoryBookings, selectedPartnerId]
-  );
-  const bookings = useBookingWorkflow(initialBookings).filter((booking) => booking.partnerId === selectedPartnerId);
+  const bookings = initialBookings.filter((booking) => booking.partnerId === selectedPartnerId);
 
   async function handlePartnerUpdate({
     bookingId,
@@ -30,10 +24,6 @@ export function PartnerBookingsView({ selectedPartnerId = "partner-thoddoo-sun-s
     bookingId: string;
     status?: Extract<BookingStatus, "confirmed" | "rejected" | "completed" | "cancelled">;
   }) {
-    if (status) {
-      updateBookingStatus(bookingId, status);
-    }
-
     const result = await updatePartnerBooking({
       bookingId,
       status
@@ -101,6 +91,7 @@ export function PartnerBookingsView({ selectedPartnerId = "partner-thoddoo-sun-s
           </div>
         </section>
       ))}
+      {bookings.length === 0 ? <section className="partnerPortalPanel"><h2>No bookings yet</h2><p>New enquiries will appear here.</p></section> : null}
     </div>
   );
 }

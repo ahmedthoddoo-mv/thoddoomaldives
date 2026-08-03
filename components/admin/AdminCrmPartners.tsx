@@ -5,8 +5,6 @@ import Link from "next/link";
 import Badge from "@/components/ui/Badge";
 import { AdminCrmStatusBadge } from "@/components/admin/AdminCrmStatusBadge";
 import { crmFilterOptions, type CrmPartner } from "@/data/adminCrm";
-import { platformCrmRelationships } from "@/data/platformIntegration";
-import { CRMRepository } from "@/lib/repositories";
 
 type CrmFilter = (typeof crmFilterOptions)[number];
 
@@ -27,6 +25,8 @@ function searchablePartnerText(partner: CrmPartner) {
     partner.nextFollowUp,
     partner.verification,
     partner.membership,
+    partner.linkedApplicationId,
+    partner.linkedListingId,
     ...partner.notes
   ]
     .join(" ")
@@ -53,8 +53,7 @@ function matchesFilter(partner: CrmPartner, filter: CrmFilter) {
   return partner.membership === filter;
 }
 
-export function AdminCrmPartners() {
-  const crmPartners = CRMRepository.findAll();
+export function AdminCrmPartners({ partners: crmPartners }: { partners: CrmPartner[] }) {
   const [query, setQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<CrmFilter>("All");
   const [selectedPartnerId, setSelectedPartnerId] = useState(crmPartners[0]?.id ?? "");
@@ -69,9 +68,6 @@ export function AdminCrmPartners() {
   }, [activeFilter, crmPartners, query]);
 
   const selectedPartner = crmPartners.find((partner) => partner.id === selectedPartnerId) ?? filteredPartners[0] ?? crmPartners[0];
-  const selectedRelationship = selectedPartner
-    ? platformCrmRelationships.find((relationship) => relationship.partner.id === selectedPartner.id)
-    : undefined;
 
   return (
     <div className="adminCrmStack">
@@ -125,10 +121,13 @@ export function AdminCrmPartners() {
             <span>Next follow-up: {selectedPartner.nextFollowUp}</span>
             <span>Lead source: {selectedPartner.leadSource}</span>
             <span>GPS: {selectedPartner.gps}</span>
-            <span>Property: {selectedRelationship?.property?.name ?? "Not linked yet"}</span>
-            <span>Bookings: {selectedRelationship?.bookings.length ?? 0}</span>
-            <span>Tasks: {selectedRelationship?.tasks.length ?? 0}</span>
-            <span>Media: {selectedRelationship?.media.length ?? 0}</span>
+            <span>Partner ID: {selectedPartner.id}</span>
+            <span>Application: {selectedPartner.linkedApplicationId ?? "Not linked"}</span>
+            <span>Listing: {selectedPartner.linkedListingId ?? "Not linked"}</span>
+            <span>Publication: {selectedPartner.publicationStatus ?? "Not linked"}</span>
+            <span>Bookings: {selectedPartner.bookingCount ?? 0}</span>
+            <span>Media: {selectedPartner.mediaCount ?? 0}</span>
+            <span>Open tasks: {selectedPartner.openTaskCount ?? 0}</span>
           </div>
         </section>
       ) : null}
@@ -171,7 +170,7 @@ export function AdminCrmPartners() {
       {filteredPartners.length === 0 ? (
         <section className="adminEmptyState">
           <strong>No CRM partners found</strong>
-          <p>Clear search or filters to return to the mock partner pipeline.</p>
+          <p>No live partner records match the current search and filters.</p>
         </section>
       ) : null}
     </div>

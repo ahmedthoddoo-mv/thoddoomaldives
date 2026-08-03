@@ -1,32 +1,21 @@
-import { partnerCalendarDays } from "@/data/partnerPortal";
+import type { Booking } from "@/types/booking";
 
-const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
-export function PartnerCalendarView() {
+export function PartnerCalendarView({ bookings }: { bookings: Booking[] }) {
+  const datedBookings = [...bookings].sort((a, b) => a.arrival.localeCompare(b.arrival));
   return (
     <section className="partnerPortalPanel">
       <div className="partnerPortalSectionHeader">
-        <p className="eyebrow">August 2026</p>
-        <h2>Availability Calendar</h2>
+        <p className="eyebrow">Live bookings</p>
+        <h2>Arrival and Departure Schedule</h2>
       </div>
-      <div className="partnerPortalCalendarLegend">
-        {["Available", "Occupied", "Pending", "Blocked"].map((status) => (
-          <span className={`calendar-${status.toLowerCase()}`} key={status}>
-            {status}
-          </span>
-        ))}
-      </div>
-      <div className="partnerPortalCalendar">
-        {weekdays.map((day) => (
-          <strong key={day}>{day}</strong>
-        ))}
-        {partnerCalendarDays.map((day) => (
-          <div className={`calendar-${day.status.toLowerCase()}`} key={day.day}>
-            <span>{day.day}</span>
-            <small>{day.label ?? day.status}</small>
+      {datedBookings.length ? <div className="partnerPortalList">
+        {datedBookings.map((booking) => (
+          <div key={booking.id}>
+            <strong>{booking.arrival} – {booking.departure}</strong>
+            <span>{booking.guest.name} · {booking.roomType} · {booking.status}</span>
           </div>
         ))}
-      </div>
+      </div> : <p>No bookings are scheduled.</p>}
     </section>
   );
 }

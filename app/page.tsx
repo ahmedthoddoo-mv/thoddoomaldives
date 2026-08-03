@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+
+export const dynamic = "force-dynamic";
 import Link from "next/link";
 import TestimonialCard from "@/components/TestimonialCard";
 import TripPlanner from "@/components/planner/TripPlanner";
@@ -7,7 +9,7 @@ import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Container from "@/components/ui/Container";
 import SectionTitle from "@/components/ui/SectionTitle";
-import { getLiveExperiences, getLivePublishedGuesthouses } from "@/lib/repositories/liveReads";
+import { getLivePublishedExperiences, getLivePublishedGuesthouses } from "@/lib/repositories/liveReads";
 import {
   SITE_NAME,
   SITE_URL,
@@ -132,10 +134,10 @@ function HeroBackground({ media }: { media: HeroMedia }) {
 export default async function Home() {
   const [guesthouseRead, experienceRead] = await Promise.all([
     getLivePublishedGuesthouses(),
-    getLiveExperiences()
+    getLivePublishedExperiences()
   ]);
   const guesthouses = guesthouseRead.data;
-  const experiencePlaceholders = experienceRead.data.slice(0, 4);
+  const featuredExperiences = experienceRead.data.slice(0, 4);
   const websiteJsonLd = {
     "@context": "https://schema.org",
     "@type": "WebSite",
@@ -295,7 +297,7 @@ export default async function Home() {
           </div>
 
           <div className="mt-10 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-            {experiencePlaceholders.map((experience) => (
+            {featuredExperiences.map((experience) => (
               <article
                 key={experience.title}
                 className="group overflow-hidden rounded-3xl bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"

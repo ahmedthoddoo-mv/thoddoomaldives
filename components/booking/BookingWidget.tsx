@@ -174,7 +174,7 @@ export function BookingWidget({ propertyName, propertySlug, propertyId, whatsapp
             </label>
             <label className="bookingField">
               <span>Email</span>
-              <input value={guestEmail} onChange={(event) => setGuestEmail(event.target.value)} placeholder="guest@example.com" type="email" />
+              <input value={guestEmail} onChange={(event) => setGuestEmail(event.target.value)} placeholder="Email address" type="email" />
             </label>
             <label className="bookingField">
               <span>WhatsApp</span>

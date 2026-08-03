@@ -11,7 +11,7 @@ export default async function PartnerMembershipPage() {
   const portalData = await getCurrentPartnerPortalData();
 
   return (
-    <PartnerPortalShell portalData={portalData} title="Membership" subtitle="View current plan, renewal status, invoice placeholders, and upgrade options.">
+    <PartnerPortalShell portalData={portalData} title="Membership" subtitle="View the current membership plan and account status.">
       <PartnerMembershipView portalData={portalData} />
     </PartnerPortalShell>
   );

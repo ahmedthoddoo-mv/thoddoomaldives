@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { AdminCmsForm } from "@/components/admin/AdminCmsForm";
+import { AdminBusinessEditor } from "@/components/admin/AdminBusinessEditor";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { adminSidebarItems } from "@/data/adminContent";
-import { getAdminCmsRecord, getAdminCmsSection } from "@/data/adminCms";
+import { SupabaseTransferRepository } from "@/lib/repositories/supabase";
 
 type EditTransferPageProps = {
   params: Promise<{ id: string }>;
@@ -15,14 +15,9 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false }
 };
 
-export function generateStaticParams() {
-  return getAdminCmsSection("transfers").records.map((record) => ({ id: record.id }));
-}
-
 export default async function EditTransferPage({ params }: EditTransferPageProps) {
   const { id } = await params;
-  const section = getAdminCmsSection("transfers");
-  const record = getAdminCmsRecord("transfers", id);
+  const record = await SupabaseTransferRepository.findById(id);
 
   if (!record) {
     notFound();
@@ -31,7 +26,7 @@ export default async function EditTransferPage({ params }: EditTransferPageProps
   return (
     <AdminShell sidebar={<AdminSidebar items={adminSidebarItems} />}>
       <div className="adminContent">
-        <AdminCmsForm mode="edit" record={record} section={section} />
+        <AdminBusinessEditor kind="transfer" id={id} initialValues={{ title: record.title, transferType: record.type, description: record.description, duration: record.duration, price: record.price, departurePoint: record.departurePoint, arrivalPoint: record.arrivalPoint, schedule: record.scheduleNote, image: record.image, featured: record.featured, publicationStatus: record.publicationStatus ?? "draft", verificationStatus: record.verificationStatus ?? "pending" }} />
       </div>
     </AdminShell>
   );

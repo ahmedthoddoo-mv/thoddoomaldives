@@ -28,7 +28,7 @@ function getTimelineType(action: AdminApplicationDecisionAction): PartnerApplica
 }
 
 export function ApplicationDecisionPanel({ application, onChange, dataSource }: ApplicationDecisionPanelProps) {
-  const [reviewer, setReviewer] = useState(application.assignedReviewer || "Ahmed");
+  const [reviewer, setReviewer] = useState(application.assignedReviewer || "Admin");
   const [note, setNote] = useState("");
   const [selectedChanges, setSelectedChanges] = useState<string[]>(application.requestedChanges);
   const [message, setMessage] = useState("");
@@ -105,13 +105,17 @@ export function ApplicationDecisionPanel({ application, onChange, dataSource }: 
       return;
     }
 
-    if (dataSource !== "supabase") {
+    if (dataSource === "mock") {
       if (action === "start_review") applyResult(PartnerApplicationRepository.startReview(application.id, reviewer || "Admin"));
       if (action === "approve_draft") applyResult(PartnerApplicationRepository.approve(application.id, false));
       if (action === "approve_publish") applyResult(PartnerApplicationRepository.approve(application.id, true));
       if (action === "request_changes") applyResult(PartnerApplicationRepository.requestChanges(application.id, selectedChanges, note));
       if (action === "reject") applyResult(PartnerApplicationRepository.reject(application.id, note));
       if (action === "reopen") applyResult(PartnerApplicationRepository.reopen(application.id));
+      return;
+    }
+    if (dataSource !== "supabase") {
+      setMessage("Application decisions are unavailable until the Supabase read succeeds.");
       return;
     }
 

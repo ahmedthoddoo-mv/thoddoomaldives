@@ -8,6 +8,7 @@ import { mapBookingRowToDomain } from "@/lib/supabase/mappers";
 import { getPartnerAuthState } from "@/lib/partner-portal/partnerAuth";
 import type { Booking } from "@/types/booking";
 import type { Tables } from "@/lib/supabase/types";
+import type { BusinessType } from "@/types/business-type";
 
 export type PartnerPortalProfileForm = {
   businessName: string;
@@ -77,10 +78,10 @@ export type PartnerPortalData = {
   source: "mock" | "supabase" | "fallback" | "setup_required";
   partnerId: string;
   propertyId: string;
-  businessType: "guesthouse";
+  businessType: BusinessType;
   profile: PartnerPortalProfileForm;
   membership: {
-    plan: "Free" | "Verified" | "Premium";
+    plan: string;
     renewalDate: string;
     status: string;
   };
@@ -119,14 +120,14 @@ function parseJsonRecord(value: unknown): Record<string, string> {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, string>) : {};
 }
 
-function getAccountSetupPortalData(email: string | null): PartnerPortalData {
+function getAccountSetupPortalData(email: string | null, source: PartnerPortalData["source"] = "setup_required"): PartnerPortalData {
   return {
-    source: "setup_required",
+    source,
     partnerId: "",
     propertyId: "",
     businessType: "guesthouse",
     profile: {
-      businessName: "Account setup required",
+      businessName: source === "fallback" ? "Data unavailable" : "Account setup required",
       shortDescription: "",
       description: "",
       address: "",
@@ -152,7 +153,7 @@ function getAccountSetupPortalData(email: string | null): PartnerPortalData {
       status: "Missing",
       completion: 0,
       missingDocuments: ["Linked partner record"],
-      adminNotes: ["This authenticated account is not linked to an approved business yet."]
+      adminNotes: [source === "fallback" ? "The live partner data query failed. No fallback records were loaded." : "This authenticated account is not linked to an approved business yet."]
     },
     services: [],
     gallery: [],
@@ -231,11 +232,21 @@ export async function getCurrentPartnerPortalData(): Promise<PartnerPortalData> 
 
   const supabase = createSupabaseServiceRoleClient();
   if (!supabase) {
-    return getAccountSetupPortalData(authState.email);
+    return getAccountSetupPortalData(authState.email, "fallback");
   }
 
   try {
     const db = supabase;
+    const [{ data: membershipPlan, error: membershipError }, { data: linkedApplication, error: applicationError }] = await Promise.all([
+      authState.partner.membership_plan_id
+        ? db.from("membership_plans").select("name").eq("id", authState.partner.membership_plan_id).maybeSingle()
+        : Promise.resolve({ data: null, error: null }),
+      db.from("partner_applications").select("id, business_type, listing_id, listing_type, submitted_at")
+        .eq("partner_id", authState.partner.id).order("submitted_at", { ascending: false }).limit(1).maybeSingle()
+    ]);
+    if (membershipError) throw membershipError;
+    if (applicationError) throw applicationError;
+
     const { data: propertyData, error: propertyError } = await db
       .from("properties")
       .select("*, partners(*), rooms(*), property_media(usage, sort_order, media_assets(*))")
@@ -246,15 +257,64 @@ export async function getCurrentPartnerPortalData(): Promise<PartnerPortalData> 
 
     if (propertyError) throw propertyError;
     const property = propertyData as unknown as PartnerPropertyWithRelations | null;
-    if (!property) return getAccountSetupPortalData(authState.email);
+    if (!property) {
+      const listingType = linkedApplication?.listing_type;
+      const listingId = linkedApplication?.listing_id;
+      if (!listingId || !["transfer", "experience", "restaurant"].includes(listingType ?? "")) return getAccountSetupPortalData(authState.email);
+      const listingResult = listingType === "transfer"
+        ? await db.from("transfers").select("*").eq("id", listingId).eq("partner_id", authState.partner.id).maybeSingle()
+        : listingType === "experience"
+          ? await db.from("experiences").select("*").eq("id", listingId).eq("partner_id", authState.partner.id).maybeSingle()
+          : await db.from("restaurants").select("*").eq("id", listingId).eq("partner_id", authState.partner.id).maybeSingle();
+      if (listingResult.error) throw listingResult.error;
+      if (!listingResult.data) return getAccountSetupPortalData(authState.email);
+      const listing = listingResult.data as unknown as Record<string, unknown>;
+      const [{ data: serviceItems, error: serviceError }, { data: mediaItems, error: mediaError }, { data: bookings, error: bookingError }] = await Promise.all([
+        db.from("partner_service_items").select("*").eq("partner_id", authState.partner.id).order("sort_order", { ascending: true }),
+        db.from("media_assets").select("*").eq("partner_id", authState.partner.id).eq("visibility", "public").order("sort_order", { ascending: true }),
+        db.from("bookings").select("*, guests(*), properties(*), rooms(*)").eq("partner_id", authState.partner.id).order("created_at", { ascending: false })
+      ]);
+      if (serviceError) throw serviceError;
+      if (mediaError) throw mediaError;
+      if (bookingError) throw bookingError;
+      const name = String(listing.name ?? listing.title ?? authState.partner.business_name);
+      const description = String(listing.description ?? "");
+      const image = String(listing.image_path ?? "");
+      const services = ((serviceItems ?? []) as Tables<"partner_service_items">[]).map((item) => ({
+        id: item.id, title: item.title, description: item.description ?? "", price: item.price === null ? "" : String(item.price),
+        currency: item.currency === "MVR" ? "MVR" as const : "USD" as const, unit: item.unit as PartnerPortalServiceItem["unit"],
+        childPrice: item.child_price === null ? "" : String(item.child_price), notes: item.notes ?? "", active: item.active,
+        sortOrder: item.sort_order, metadata: parseJsonRecord(item.metadata)
+      }));
+      const gallery = ((mediaItems ?? []) as Tables<"media_assets">[]).map((item) => ({
+        id: item.id, path: item.path, caption: item.caption ?? "", altText: item.alt_text ?? name,
+        usage: item.media_type === "hero" ? "hero" as const : "gallery" as const, sortOrder: item.sort_order
+      }));
+      return {
+        source: "supabase", partnerId: authState.partner.id, propertyId: listingId,
+        businessType: linkedApplication.business_type as BusinessType,
+        profile: { businessName: name, shortDescription: description, description, address: String(listing.location ?? authState.partner.address ?? ""), googleMaps: "",
+          whatsapp: authState.partner.whatsapp ?? "", email: authState.partner.email ?? authState.email ?? "", website: authState.partner.website ?? "",
+          instagram: "", facebook: "", operatingHours: String(listing.opening_hours ?? listing.schedule_note ?? ""), languages: [], amenities: [], policies: [],
+          seoTitle: `${name} | iThoddoo Maldives`, seoDescription: description },
+        membership: { plan: membershipPlan?.name ?? "Free", renewalDate: "Not configured", status: membershipPlan ? "Active" : "Not configured" },
+        verification: { status: listing.verification_status === "verified" ? "Verified" : "Pending", completion: 100, missingDocuments: [], adminNotes: [] },
+        services, gallery: gallery.length ? gallery : image ? [{ id: "hero", path: image, caption: "Hero image", altText: name, usage: "hero", sortOrder: 0 }] : [],
+        documents: [], bookings: ((bookings ?? []) as unknown as BookingWithRelations[]).map((booking) => mapBookingRowToDomain(booking, booking.guests ?? undefined, booking.properties ?? undefined, booking.rooms ?? undefined)), notifications: []
+      };
+    }
     if (property.partner_id !== authState.partner.id) throw new Error("Partner property scope mismatch.");
 
-    const [{ data: serviceItems }, { data: documents }, { data: notifications }, { data: bookings }] = await Promise.all([
+    const [{ data: serviceItems, error: serviceError }, { data: documents, error: documentError }, { data: notifications, error: notificationError }, { data: bookings, error: bookingError }] = await Promise.all([
       db.from("partner_service_items").select("*").eq("partner_id", property.partner_id).order("sort_order", { ascending: true }),
       db.from("partner_documents").select("*").eq("partner_id", property.partner_id).order("created_at", { ascending: true }),
       db.from("partner_notifications").select("*").eq("partner_id", property.partner_id).order("created_at", { ascending: false }),
       db.from("bookings").select("*, guests(*), properties(*), rooms(*)").eq("partner_id", property.partner_id).order("created_at", { ascending: false })
     ]);
+    if (serviceError) throw serviceError;
+    if (documentError) throw documentError;
+    if (notificationError) throw notificationError;
+    if (bookingError) throw bookingError;
 
     const socialLinks = parseJsonRecord(property.social_links);
     const propertyMedia = Array.isArray(property.property_media) ? property.property_media : [];
@@ -325,9 +385,9 @@ export async function getCurrentPartnerPortalData(): Promise<PartnerPortalData> 
         seoDescription: property.seo_description ?? property.short_description
       },
       membership: {
-        plan: property.verification_status === "verified" ? "Premium" : "Verified",
-        renewalDate: "2026-08-01",
-        status: "Active"
+        plan: membershipPlan?.name ?? "Free",
+        renewalDate: "Not configured",
+        status: membershipPlan ? "Active" : "Not configured"
       },
       verification: {
         status: property.verification_status === "verified" ? "Verified" : property.verification_status === "rejected" ? "Rejected" : "Pending",
@@ -343,8 +403,9 @@ export async function getCurrentPartnerPortalData(): Promise<PartnerPortalData> 
       bookings: bookingRows,
       notifications: ((notifications ?? []) as Tables<"partner_notifications">[]).map(mapNotification)
     };
-  } catch {
-    return getAccountSetupPortalData(authState.email);
+  } catch (error) {
+    console.error("[partner-portal-read]", error);
+    return getAccountSetupPortalData(authState.email, "fallback");
   }
 }
 

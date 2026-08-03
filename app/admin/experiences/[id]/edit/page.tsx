@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { AdminCmsForm } from "@/components/admin/AdminCmsForm";
+import { AdminBusinessEditor } from "@/components/admin/AdminBusinessEditor";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { adminSidebarItems } from "@/data/adminContent";
-import { getAdminCmsRecord, getAdminCmsSection } from "@/data/adminCms";
+import { SupabaseExperienceRepository } from "@/lib/repositories/supabase";
 
 type EditExperiencePageProps = {
   params: Promise<{ id: string }>;
@@ -15,14 +15,9 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false }
 };
 
-export function generateStaticParams() {
-  return getAdminCmsSection("experiences").records.map((record) => ({ id: record.id }));
-}
-
 export default async function EditExperiencePage({ params }: EditExperiencePageProps) {
   const { id } = await params;
-  const section = getAdminCmsSection("experiences");
-  const record = getAdminCmsRecord("experiences", id);
+  const record = await SupabaseExperienceRepository.findById(id);
 
   if (!record) {
     notFound();
@@ -31,7 +26,7 @@ export default async function EditExperiencePage({ params }: EditExperiencePageP
   return (
     <AdminShell sidebar={<AdminSidebar items={adminSidebarItems} />}>
       <div className="adminContent">
-        <AdminCmsForm mode="edit" record={record} section={section} />
+        <AdminBusinessEditor kind="experience" id={id} initialValues={{ title: record.title, category: record.category, description: record.description, duration: record.duration, price: record.price, image: record.image, highlights: record.highlights, featured: record.featured, publicationStatus: record.publicationStatus ?? "draft", verificationStatus: record.verificationStatus ?? "pending" }} />
       </div>
     </AdminShell>
   );

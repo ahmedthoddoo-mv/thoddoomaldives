@@ -2,41 +2,16 @@
 
 import { useState, useTransition } from "react";
 import { savePartnerBusinessProfile } from "@/app/partner/actions";
-import { AdminImagePicker } from "@/components/admin/AdminImagePicker";
-import { partnerProfile } from "@/data/partnerPortal";
-import { MediaRepository } from "@/lib/repositories";
 import type { PartnerPortalProfileForm } from "@/lib/partner-portal/partnerAccess";
 
 type PartnerProfileEditorProps = {
-  initialProfile?: PartnerPortalProfileForm;
+  initialProfile: PartnerPortalProfileForm;
 };
 
-function toEditableProfile(profile: typeof partnerProfile): PartnerPortalProfileForm {
-  return {
-    businessName: profile.businessName,
-    shortDescription: profile.description,
-    description: profile.description,
-    address: profile.address,
-    googleMaps: profile.map,
-    whatsapp: profile.whatsapp,
-    email: profile.email,
-    website: profile.website,
-    instagram: profile.socialMedia[0] ?? "",
-    facebook: profile.socialMedia[1] ?? "",
-    operatingHours: "Daily by WhatsApp",
-    languages: profile.languages,
-    amenities: ["Wi-Fi", "Breakfast", "Transfer support"],
-    policies: profile.policies,
-    seoTitle: `${profile.businessName} | iThoddoo Maldives`,
-    seoDescription: profile.description
-  };
-}
-
 export function PartnerProfileEditor({ initialProfile }: PartnerProfileEditorProps) {
-  const [profile, setProfile] = useState<PartnerPortalProfileForm>(initialProfile ?? toEditableProfile(partnerProfile));
+  const [profile, setProfile] = useState<PartnerPortalProfileForm>(initialProfile);
   const [message, setMessage] = useState("");
   const [isPending, startTransition] = useTransition();
-  const mediaAssets = MediaRepository.findAll();
 
   function updateField<Field extends keyof PartnerPortalProfileForm>(field: Field, value: PartnerPortalProfileForm[Field]) {
     setProfile((current) => ({ ...current, [field]: value }));
@@ -139,13 +114,6 @@ export function PartnerProfileEditor({ initialProfile }: PartnerProfileEditorPro
           </button>
         </div>
         {message ? <p className="propertySaveStatus propertySaveStatusSuccess">{message}</p> : null}
-        <div className="partnerPortalMediaPicker">
-          <AdminImagePicker
-            assets={mediaAssets}
-            onSelectPath={() => setMessage("Use Gallery to change cover or hero images.")}
-            selectedPaths={[]}
-          />
-        </div>
       </section>
 
       <aside className="partnerPortalPanel partnerPortalProfilePreview">

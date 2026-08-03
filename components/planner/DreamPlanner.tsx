@@ -5,15 +5,15 @@ import RecommendedExperience from "@/components/planner/RecommendedExperience";
 import RecommendedStay from "@/components/planner/RecommendedStay";
 import TripTimeline from "@/components/planner/TripTimeline";
 import SectionTitle from "@/components/ui/SectionTitle";
-import { generateDreamTripPlan } from "@/lib/planner/generateDreamTripPlan";
+import { generateDreamTripPlan, loadPlannerCatalog } from "@/lib/planner/generateDreamTripPlan";
 import type { TripRequest } from "@/types/trip-request";
 
-export default function DreamPlanner({
+export default async function DreamPlanner({
   tripRequest,
 }: {
   tripRequest: TripRequest;
 }) {
-  const tripPlan = generateDreamTripPlan(tripRequest);
+  const tripPlan = generateDreamTripPlan(tripRequest, await loadPlannerCatalog());
 
   return (
     <section className="bg-slate-50 py-20">

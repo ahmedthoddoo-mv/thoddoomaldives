@@ -71,7 +71,17 @@ export type PartnerApplicationRecord = {
   verificationCompletion?: number;
   submittedFields?: Array<{ label: string; value: string }>;
   pricingRows?: Array<{ name: string; price: string; unit: string }>;
-  publicMedia?: Array<{ label: string; status: string }>;
+  publicMedia?: Array<{ id: string; label: string; status: string; selected: boolean; rightsConfirmed: boolean }>;
+  reviewValues?: {
+    common: Record<string, string>;
+    category: Record<string, string>;
+    prices: Array<{ name: string; price: string; currency: string; unit: string }>;
+    verificationNotes: string;
+    publicMediaIds: string[];
+    mediaRightsConfirmed: boolean;
+    editedAt?: string;
+    editedBy?: string;
+  };
   timeline: PartnerApplicationTimelineEvent[];
 };
 

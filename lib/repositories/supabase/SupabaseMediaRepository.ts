@@ -4,8 +4,9 @@ import { mapMediaRowToDomain } from "@/lib/supabase/mappers";
 export const SupabaseMediaRepository = {
   async findAll() {
     const supabase = createSupabaseServerClient();
-    if (!supabase) return [];
-    const { data } = await supabase.from("media_assets").select("*").order("created_at", { ascending: false });
+    if (!supabase) throw new Error("Supabase is not configured.");
+    const { data, error } = await supabase.from("media_assets").select("*").order("created_at", { ascending: false });
+    if (error) throw error;
     return (data ?? []).map(mapMediaRowToDomain);
   },
   async findById(id: string) {

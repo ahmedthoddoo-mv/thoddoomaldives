@@ -310,7 +310,7 @@ export function AdminPropertyForm({ mode, property }: AdminPropertyFormProps) {
             <div className="adminFormGrid">
               <label>
                 <span>Property name</span>
-                <input value={form.name} onChange={(event) => updateName(event.target.value)} placeholder="Thoddoo Sun Sky Inn" />
+                <input value={form.name} onChange={(event) => updateName(event.target.value)} placeholder="Business name" />
               </label>
               <label>
                 <span>Slug</span>
@@ -336,11 +336,11 @@ export function AdminPropertyForm({ mode, property }: AdminPropertyFormProps) {
               </label>
               <label>
                 <span>Email</span>
-                <input value={form.email} onChange={(event) => updateField("email", event.target.value)} placeholder="hello@property.example" />
+                <input value={form.email} onChange={(event) => updateField("email", event.target.value)} placeholder="Business email" />
               </label>
               <label>
                 <span>Website</span>
-                <input value={form.website} onChange={(event) => updateField("website", event.target.value)} placeholder="https://property.example" />
+                <input value={form.website} onChange={(event) => updateField("website", event.target.value)} placeholder="Business website" />
               </label>
               <label>
                 <span>GPS Location</span>

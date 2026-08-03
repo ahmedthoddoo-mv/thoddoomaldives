@@ -6,6 +6,8 @@ import { requireAdminSession } from "@/lib/admin/adminAuth";
 import { getDataMode } from "@/lib/supabase/status";
 import { logPartnerAuditEvent } from "@/lib/partner-portal/partnerAuth";
 import type { PartnerApplicationStatus } from "@/types/partner-application";
+import type { Json } from "@/lib/supabase/types";
+import { revalidatePublicListingPaths } from "@/lib/cache/publicRoutes";
 
 export type AdminApplicationDecisionAction =
   | "start_review"
@@ -29,6 +31,54 @@ export type AdminApplicationDecisionResult = {
   status?: PartnerApplicationStatus;
   requestedChanges?: string[];
 };
+
+export type AdminApplicationReviewInput = {
+  applicationId: string;
+  reviewer: string;
+  common: Record<string, string>;
+  category: Record<string, string>;
+  prices: Array<{ name: string; price: string; currency: string; unit: string }>;
+  verificationNotes: string;
+  publicMediaIds: string[];
+  mediaRightsConfirmed: boolean;
+};
+
+export async function saveAdminApplicationReview(input: AdminApplicationReviewInput) {
+  const admin = await requireAdminSession();
+  if (getDataMode() !== "supabase") return { ok: false, message: "Application reviews require Supabase mode." };
+  const supabase = createSupabaseServiceRoleClient();
+  if (!supabase) return { ok: false, message: "Supabase service role is not configured." };
+
+  const reviewer = sanitizeText(input.reviewer || "Admin", 120);
+  const cleanRecord = (record: Record<string, string>) => Object.fromEntries(
+    Object.entries(record).map(([key, value]) => [sanitizeText(key, 80), sanitizeText(value, 5000)])
+  );
+  const prices = input.prices.map((price) => ({
+    name: sanitizeText(price.name, 180),
+    price: price.price.trim() === "" ? null : Number(price.price),
+    currency: price.currency === "MVR" ? "MVR" : "USD",
+    unit: sanitizeText(price.unit, 80)
+  }));
+  if (prices.some((price) => price.price !== null && (!Number.isFinite(price.price) || price.price <= 0))) {
+    return { ok: false, message: "Prices must be positive or blank for Price on request." };
+  }
+
+  const { data, error } = await supabase.rpc("admin_save_application_review", {
+    application_uuid: input.applicationId,
+    reviewer_user_id: admin.userId,
+    reviewer_name: reviewer,
+    review_payload: {
+      common: cleanRecord(input.common),
+      category: cleanRecord(input.category),
+      verificationNotes: sanitizeText(input.verificationNotes, 5000),
+      publicMediaIds: input.publicMediaIds,
+      mediaRightsConfirmed: input.mediaRightsConfirmed
+    } as Json,
+    price_payload: prices as Json
+  });
+  if (error) return { ok: false, message: error.message };
+  return { ok: true, message: "Reviewed values saved and added to the application timeline.", data };
+}
 
 function sanitizeText(value: string, maxLength = 1200) {
   return value.replace(/[<>]/g, "").trim().slice(0, maxLength);
@@ -207,7 +257,7 @@ export async function updateSupabasePartnerApplicationDecision(
   const requestedChanges = input.action === "request_changes" ? input.requestedChanges.map((change) => sanitizeText(change, 160)) : [];
 
   if (input.action === "approve_draft" || input.action === "approve_publish") {
-    const { data, error: approvalError } = await supabase.rpc("approve_partner_application", {
+    const { data, error: approvalError } = await supabase.rpc("approve_partner_application_all_types", {
       application_uuid: input.applicationId,
       reviewer_user_id: admin.userId,
       reviewer_name: reviewer,
@@ -228,6 +278,7 @@ export async function updateSupabasePartnerApplicationDecision(
     if (!approval.partnerId) {
       return { ok: false, message: "Approval transaction did not return a partner link." };
     }
+    if (input.action === "approve_publish") revalidatePublicListingPaths();
     try {
       await deliverPartnerInvitation(supabase, input.applicationId, reviewer, approval.partnerId);
     } catch (error) {
@@ -270,7 +321,9 @@ export async function updateSupabasePartnerApplicationDecision(
       .eq("status", "missing");
   }
 
+  const { data: linkedApplication } = await supabase.from("partner_applications").select("partner_id").eq("id", input.applicationId).maybeSingle();
   await supabase.from("crm_notes").insert({
+    partner_id: linkedApplication?.partner_id ?? null,
     author: "Admin",
     body: `${decisionMessage} for application ${input.applicationId}.${note ? ` ${note}` : ""}`
   });

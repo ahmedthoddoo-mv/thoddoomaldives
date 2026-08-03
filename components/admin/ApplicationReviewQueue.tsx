@@ -1,12 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { ApplicationFilterBar } from "@/components/admin/ApplicationFilterBar";
 import { ApplicationSummaryCard } from "@/components/admin/ApplicationSummaryCard";
-import {
-  PartnerApplicationRepository,
-  subscribeToPartnerApplications
-} from "@/lib/applications/partnerApplicationRepository";
 import type { PartnerApplicationFilters, PartnerApplicationRecord } from "@/types/partner-application";
 
 const defaultFilters: PartnerApplicationFilters = {
@@ -50,21 +46,12 @@ export function ApplicationReviewQueue({
   dataSource,
   readError
 }: {
-  initialApplications?: PartnerApplicationRecord[];
-  dataSource?: "mock" | "supabase" | "supabase_error";
+  initialApplications: PartnerApplicationRecord[];
+  dataSource: "mock" | "supabase" | "supabase_error";
   readError?: string;
 }) {
-  const hasServerApplications = Boolean(initialApplications);
-  const [storedApplications, setStoredApplications] = useState<PartnerApplicationRecord[]>(() =>
-    PartnerApplicationRepository.findAll()
-  );
-  const applications = initialApplications ?? storedApplications;
+  const applications = initialApplications;
   const [filters, setFilters] = useState<PartnerApplicationFilters>(defaultFilters);
-
-  useEffect(() => {
-    if (hasServerApplications) return;
-    return subscribeToPartnerApplications(() => setStoredApplications(PartnerApplicationRepository.findAll()));
-  }, [hasServerApplications]);
 
   const filteredApplications = useMemo(() => filterApplications(applications, filters), [applications, filters]);
   const reviewCount = applications.filter((application) =>
@@ -107,7 +94,7 @@ export function ApplicationReviewQueue({
       {filteredApplications.length === 0 ? (
         <section className="adminPanel">
           <h2>No applications found</h2>
-          <p className="mutedText">Try clearing filters or submit a new partner onboarding demo application.</p>
+          <p className="mutedText">Try clearing filters or wait for a new partner application.</p>
         </section>
       ) : null}
     </div>

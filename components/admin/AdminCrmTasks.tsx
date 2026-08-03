@@ -4,13 +4,11 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import Badge from "@/components/ui/Badge";
 import { AdminCrmStatusBadge } from "@/components/admin/AdminCrmStatusBadge";
-import type { CrmTaskStatus } from "@/data/adminCrm";
-import { CRMRepository } from "@/lib/repositories";
+import type { CrmTask, CrmTaskStatus } from "@/data/adminCrm";
 
 const taskColumns: CrmTaskStatus[] = ["Open", "In Progress", "Waiting Response", "Completed"];
 
-export function AdminCrmTasks() {
-  const crmTasks = CRMRepository.findTasks();
+export function AdminCrmTasks({ tasks: crmTasks }: { tasks: CrmTask[] }) {
   const [query, setQuery] = useState("");
 
   const filteredTasks = useMemo(() => {
@@ -68,6 +66,9 @@ export function AdminCrmTasks() {
           </div>
         ))}
       </section>
+      {crmTasks.length === 0 ? (
+        <section className="adminEmptyState"><strong>No CRM tasks due</strong><p>No live task records are currently assigned.</p></section>
+      ) : null}
     </div>
   );
 }

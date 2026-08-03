@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
+
+export const dynamic = "force-dynamic";
+import ExcursionsPage from "@/app/excursions/page";
 import { createPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = createPageMetadata({
@@ -11,5 +13,5 @@ export const metadata: Metadata = createPageMetadata({
 });
 
 export default function ExperiencesPage() {
-  redirect("/excursions");
+  return <ExcursionsPage />;
 }

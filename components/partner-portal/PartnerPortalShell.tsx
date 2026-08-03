@@ -13,6 +13,7 @@ type PartnerPortalShellProps = {
 export function PartnerPortalShell({ children, title, subtitle, portalData }: PartnerPortalShellProps) {
   const businessName = portalData?.profile.businessName ?? "Partner account";
   const setupRequired = portalData?.source === "setup_required";
+  const unavailable = portalData?.source === "fallback";
   const logo =
     businessName
       .split(/\s+/)
@@ -47,13 +48,15 @@ export function PartnerPortalShell({ children, title, subtitle, portalData }: Pa
             <div className="partnerPortalHeaderBadges">
               <span>{portalData?.membership.plan ?? "Free"}</span>
               <span>{portalData?.verification.status ?? "Missing"}</span>
-              <span>{portalData?.source === "supabase" ? "Live" : "Setup required"}</span>
+              <span>{portalData?.source === "supabase" ? "Live" : unavailable ? "Unavailable" : "Setup required"}</span>
               <form action={signOutPartner}>
                 <button type="submit">Sign out</button>
               </form>
             </div>
           </header>
-          {setupRequired ? (
+          {unavailable ? (
+            <section className="partnerPortalPanel"><p className="eyebrow">Data unavailable</p><h2>Partner data could not be loaded.</h2><p>No local or sample records were substituted. Please retry later or contact support.</p></section>
+          ) : setupRequired ? (
             <section className="partnerPortalPanel">
               <p className="eyebrow">Account setup required</p>
               <h2>Your login is not linked to a partner record yet.</h2>

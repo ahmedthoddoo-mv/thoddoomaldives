@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import { getLiveRestaurants } from "@/lib/repositories/liveReads";
+
+export const dynamic = "force-dynamic";
+import { getLivePublishedRestaurants } from "@/lib/repositories/liveReads";
 import { createPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = createPageMetadata({
@@ -11,7 +13,7 @@ export const metadata: Metadata = createPageMetadata({
 });
 
 export default async function RestaurantsPage() {
-  const restaurantRead = await getLiveRestaurants();
+  const restaurantRead = await getLivePublishedRestaurants();
   const restaurants = restaurantRead.data;
 
   return (

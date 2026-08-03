@@ -1,11 +1,18 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient, createSupabaseServiceRoleClient } from "@/lib/supabase/server";
 import { mapTransferRowToDomain } from "@/lib/supabase/mappers";
 
 export const SupabaseTransferRepository = {
   async findAll() {
-    const supabase = createSupabaseServerClient();
-    if (!supabase) return [];
+    const supabase = createSupabaseServiceRoleClient() ?? createSupabaseServerClient();
+    if (!supabase) throw new Error("Supabase is not configured.");
     const { data, error } = await supabase.from("transfers").select("*").order("created_at", { ascending: false });
+    if (error) throw error;
+    return (data ?? []).map(mapTransferRowToDomain);
+  },
+  async findPublished() {
+    const supabase = createSupabaseServerClient();
+    if (!supabase) throw new Error("Supabase is not configured.");
+    const { data, error } = await supabase.from("public_transfers").select("*").order("created_at", { ascending: false });
     if (error) throw error;
     return (data ?? []).map(mapTransferRowToDomain);
   },

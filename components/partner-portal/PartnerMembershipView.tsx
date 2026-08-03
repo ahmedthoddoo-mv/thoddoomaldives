@@ -1,4 +1,3 @@
-import { partnerMembershipPlans } from "@/data/partnerPortal";
 import type { PartnerPortalData } from "@/lib/partner-portal/partnerAccess";
 
 export function PartnerMembershipView({ portalData }: { portalData: PartnerPortalData }) {
@@ -18,33 +17,9 @@ export function PartnerMembershipView({ portalData }: { portalData: PartnerPorta
           <div>
             <span>Renewal Date</span>
             <strong>{portalData.membership.renewalDate}</strong>
-            <small>Demo billing schedule</small>
-          </div>
-          <div>
-            <span>Invoices</span>
-            <strong>Placeholder</strong>
-            <small>Payment integration later</small>
+            <small>Database membership record</small>
           </div>
         </div>
-        <div className="partnerPortalActions">
-          <button type="button">Upgrade Plan</button>
-        </div>
-      </section>
-
-      <section className="partnerPortalPlanGrid">
-        {partnerMembershipPlans.map((plan) => (
-          <article className={`partnerPortalPanel partnerPortalPlan ${plan.name === portalData.membership.plan ? "partnerPortalPlanCurrent" : ""}`} key={plan.name}>
-            {plan.name === portalData.membership.plan ? <span>Current plan</span> : null}
-            <h2>{plan.name}</h2>
-            <strong>{plan.price}</strong>
-            <p>{plan.description}</p>
-            <ul>
-              {plan.features.map((feature) => (
-                <li key={feature}>{feature}</li>
-              ))}
-            </ul>
-          </article>
-        ))}
       </section>
     </div>
   );

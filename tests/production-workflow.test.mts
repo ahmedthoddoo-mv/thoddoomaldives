@@ -29,6 +29,14 @@ const migrationSql = readFileSync(
 const partnerActionsSource = readFileSync(new URL("../app/partner/actions.ts", import.meta.url), "utf8");
 const bookingActionsSource = readFileSync(new URL("../app/booking/actions.ts", import.meta.url), "utf8");
 const onboardingActionsSource = readFileSync(new URL("../app/partners/onboarding/actions.ts", import.meta.url), "utf8");
+const reviewMigrationSql = readFileSync(new URL("../supabase/migrations/202607310001_application_review_versions.sql", import.meta.url), "utf8");
+const roomPriceMigrationSql = readFileSync(new URL("../supabase/migrations/202607310002_correct_approved_room_prices.sql", import.meta.url), "utf8");
+const liveReadsSource = readFileSync(new URL("../lib/repositories/liveReads.ts", import.meta.url), "utf8");
+const dataModeSource = readFileSync(new URL("../lib/supabase/status.ts", import.meta.url), "utf8");
+const crmMapperSource = readFileSync(new URL("../lib/supabase/mappers.ts", import.meta.url), "utf8");
+const crmRepositorySource = readFileSync(new URL("../lib/repositories/supabase/SupabaseCRMRepository.ts", import.meta.url), "utf8");
+const bookingAnalyticsSource = readFileSync(new URL("../lib/bookings/bookingAnalytics.ts", import.meta.url), "utf8");
+const repairSource = readFileSync(new URL("../scripts/repair-approved-applications.mjs", import.meta.url), "utf8");
 
 test("1 new guesthouse approval has no existing identity match", () => {
   assert.equal(matchIdentity(application, []), null);
@@ -201,4 +209,69 @@ test("authenticated partners have no direct mutation grants on protected base ta
 test("booking enquiries require canonical server-side Turnstile verification", () => {
   assert.match(bookingActionsSource, /challenges\.cloudflare\.com\/turnstile\/v0\/siteverify/);
   assert.match(bookingActionsSource, /result\.success === true && result\.action === "turnstile-spin-v2"/);
+});
+test("production data mode cannot default to mock", () => {
+  assert.match(dataModeSource, /NEXT_PUBLIC_DATA_MODE === "mock"/);
+  assert.doesNotMatch(dataModeSource, /return isSupabaseConfigured\(\) \? "supabase" : "mock"/);
+});
+test("Supabase read failures return empty data rather than fixture fallbacks", () => {
+  assert.match(liveReadsSource, /source: "supabase_error"/);
+  assert.match(liveReadsSource, /data: fallback\(\)/);
+  assert.doesNotMatch(liveReadsSource, /source: "mock", data: fallback\(\)/);
+});
+test("Nasru Speed-style categories normalize to the transfer CRM category", () => {
+  assert.match(crmMapperSource, /"speedboat-company"/);
+  assert.match(crmMapperSource, /"transfer-company"/);
+  assert.match(crmMapperSource, /\? "Transfer"/);
+});
+test("CRM aggregates real application listing booking media and task relationships", () => {
+  for (const table of ["partner_applications", "bookings", "media_assets", "crm_tasks", "crm_notes"]) {
+    assert.match(crmRepositorySource, new RegExp(`from\\(\\"${table}\\"\\)`));
+  }
+  assert.match(crmRepositorySource, /linkedApplicationId/);
+  assert.match(crmRepositorySource, /linkedListingId/);
+});
+test("application corrections preserve original values in versioned audit rows", () => {
+  assert.match(reviewMigrationSql, /partner_application_review_versions/);
+  assert.match(reviewMigrationSql, /original_snapshot := coalesce\(original_snapshot, to_jsonb\(app\)\)/);
+  assert.match(reviewMigrationSql, /edited_by_user_id/);
+  assert.match(reviewMigrationSql, /edited_at/);
+});
+test("corrected structured prices replace approval inputs without requiring a destructive uniqueness migration", () => {
+  assert.match(reviewMigrationSql, /update public\.partner_application_prices set active = false/);
+  assert.match(reviewMigrationSql, /price = nullif\(price_item->>'price', ''\)::numeric/);
+  assert.doesNotMatch(reviewMigrationSql, /partner_application_prices_application_item_unit_key/);
+  assert.match(migrationSql, /price_per_night = coalesce\(public\.rooms\.price_per_night, excluded\.price_per_night\)/);
+  assert.match(roomPriceMigrationSql, /price_per_night = case when price\.price > 0 then price\.price else null end/);
+  assert.match(roomPriceMigrationSql, /currency = price\.currency/);
+  assert.match(roomPriceMigrationSql, /lower\(trim\(room\.name\)\) = lower\(trim\(price\.item_name\)\)/);
+  assert.doesNotMatch(roomPriceMigrationSql, /insert into public\.rooms/);
+});
+test("all supported listing categories are created idempotently by application ID", () => {
+  for (const table of ["restaurants", "experiences", "transfers"]) {
+    assert.match(reviewMigrationSql, new RegExp(`insert into public\\.${table}`));
+    assert.match(reviewMigrationSql, new RegExp(`${table}_application_id_key`));
+  }
+  assert.match(reviewMigrationSql, /approve_partner_application_all_types/);
+  assert.match(reviewMigrationSql, /on conflict \(application_id\)/);
+});
+test("public business views hide draft and unverified records", () => {
+  for (const view of ["public_transfers", "public_experiences", "public_restaurants"]) {
+    assert.match(reviewMigrationSql, new RegExp(`view public\\.${view}`));
+  }
+  assert.match(reviewMigrationSql, /publication_status = 'published' and verification_status = 'verified'/);
+});
+test("booking revenue excludes cancelled rejected draft and unknown amounts", () => {
+  assert.match(bookingAnalyticsSource, /booking\.estimatedValue !== null/);
+  assert.match(bookingAnalyticsSource, /\["cancelled", "rejected", "draft"\]/);
+  assert.doesNotMatch(bookingAnalyticsSource, /estimatedValue \?\? 0\)[\s\S]*bookings\.reduce/);
+});
+test("repair tooling is dry-run by default and requires explicit safe apply inputs", () => {
+  assert.match(repairSource, /const apply = has\("--apply"\)/);
+  assert.match(repairSource, /--confirm-project-ref/);
+  assert.match(repairSource, /--approved-by-user-id/);
+  assert.match(repairSource, /--application/);
+  assert.match(repairSource, /--business/);
+  assert.match(repairSource, /--email/);
+  assert.match(repairSource, /--category/);
 });

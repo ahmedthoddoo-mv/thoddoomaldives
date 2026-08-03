@@ -13,6 +13,9 @@ const valueAfter = (flag) => {
 if (has("--help")) {
   console.log(`Usage:
   node --env-file=.env.local scripts/repair-approved-applications.mjs --application <uuid>
+  node --env-file=.env.local scripts/repair-approved-applications.mjs --business <name>
+  node --env-file=.env.local scripts/repair-approved-applications.mjs --email <email>
+  node --env-file=.env.local scripts/repair-approved-applications.mjs --category <category>
   node --env-file=.env.local scripts/repair-approved-applications.mjs --all
 
 Dry-run is the default. Writes require:
@@ -21,13 +24,17 @@ Dry-run is the default. Writes require:
 }
 
 const applicationId = valueAfter("--application");
+const businessName = valueAfter("--business");
+const email = valueAfter("--email");
+const category = valueAfter("--category");
 const scanAll = has("--all");
 const apply = has("--apply");
 const confirmedRef = valueAfter("--confirm-project-ref");
 const approvedByUserId = valueAfter("--approved-by-user-id");
 
-if ((!applicationId && !scanAll) || (applicationId && scanAll)) {
-  throw new Error("Choose exactly one of --application <uuid> or --all.");
+const selectors = [applicationId, businessName, email, category, scanAll ? "all" : undefined].filter(Boolean);
+if (selectors.length !== 1) {
+  throw new Error("Choose exactly one filter: --application, --business, --email, --category, or --all.");
 }
 if (apply && confirmedRef !== productionProjectRef) {
   throw new Error(`Production writes require --confirm-project-ref ${productionProjectRef}.`);
@@ -51,7 +58,10 @@ const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABA
 let query = db.from("partner_applications")
   .select("id, application_reference, business_name, business_type, status, partner_id, email, metadata")
   .eq("status", "approved");
-query = applicationId ? query.eq("id", applicationId) : query.or("partner_id.is.null,property_id.is.null");
+if (applicationId) query = query.eq("id", applicationId);
+else if (businessName) query = query.ilike("business_name", businessName);
+else if (email) query = query.ilike("email", email);
+else if (category) query = query.eq("business_type", category);
 const { data: applications, error } = await query.order("submitted_at");
 if (error) throw error;
 if (!applications?.length) {
@@ -61,26 +71,47 @@ if (!applications?.length) {
 
 const reports = [];
 for (const application of applications) {
-  const [partnerResult, propertyResult, priceResult, serviceResult, mediaResult, invitationResult] = await Promise.all([
+  const [partnerResult, propertyResult, priceResult, serviceResult, mediaResult, invitationResult, duplicatePartnerResult] = await Promise.all([
     application.partner_id
       ? db.from("partners").select("id, business_name, slug").eq("id", application.partner_id).maybeSingle()
       : db.from("partners").select("id, business_name, slug").eq("email", application.email).ilike("business_name", application.business_name).limit(1).maybeSingle(),
     application.partner_id
-      ? db.from("properties").select("id, name, slug, publication_status").eq("partner_id", application.partner_id).ilike("name", application.business_name).limit(1).maybeSingle()
+      ? db.from("properties").select("id, name, slug, publication_status, verification_status, application_id, partner_id").eq("partner_id", application.partner_id).ilike("name", application.business_name).limit(1).maybeSingle()
       : Promise.resolve({ data: null, error: null }),
     db.from("partner_application_prices").select("id, item_name, price, currency, unit, active").eq("application_id", application.id),
     db.from("partner_application_services").select("id, title").eq("application_id", application.id),
     db.from("partner_application_media").select("id, media_type, status").eq("application_id", application.id),
-    db.from("partner_account_invitations").select("id, status").eq("application_id", application.id).maybeSingle()
+    db.from("partner_account_invitations").select("id, status").eq("application_id", application.id).maybeSingle(),
+    db.from("partners").select("id, application_id, business_name, email").eq("email", application.email.toLowerCase())
   ]);
 
   const accommodation = ["guesthouse", "hotel"].includes(application.business_type);
+  const listingTable = accommodation ? "properties"
+    : ["restaurant", "cafe"].includes(application.business_type) ? "restaurants"
+      : ["speedboat-company", "ferry-operator", "transfer-company"].includes(application.business_type) ? "transfers"
+        : "experiences";
+  const listingResult = accommodation
+    ? propertyResult
+    : await db.from(listingTable).select("id, publication_status, verification_status, application_id, partner_id").eq("application_id", application.id).maybeSingle();
+  const publicView = listingTable === "properties" ? "public_properties" : `public_${listingTable}`;
+  const publicVisibilityResult = listingResult.data?.id
+    ? await db.from(publicView).select("id").eq("id", listingResult.data.id).maybeSingle()
+    : { data: null, error: null };
   const report = {
     application: { id: application.id, reference: application.application_reference, business: application.business_name },
     matchedPartner: partnerResult.data ?? null,
     proposedPartner: partnerResult.data ? null : { businessName: application.business_name, category: application.business_type },
-    matchedProperty: propertyResult.data ?? null,
-    proposedProperty: accommodation && !propertyResult.data ? { name: application.business_name, publicationStatus: "draft" } : null,
+    crmIdentity: partnerResult.data ? "linked to stable partner identity" : "missing stable partner identity",
+    duplicatePartnerIds: (duplicatePartnerResult.data ?? [])
+      .filter((row) => row.business_name.trim().toLowerCase() === application.business_name.trim().toLowerCase())
+      .map((row) => row.id).filter((id) => id !== partnerResult.data?.id),
+    listingType: listingTable,
+    matchedListing: listingResult.data ?? null,
+    missingListing: !listingResult.data,
+    categoryMismatch: listingTable === "properties" ? !accommodation : false,
+    missingApplicationLink: Boolean(listingResult.data && listingResult.data.application_id !== application.id),
+    publicationMismatch: Boolean(listingResult.data?.publication_status === "published" && !publicVisibilityResult.data),
+    publicViewVisible: Boolean(publicVisibilityResult.data),
     roomChanges: accommodation
       ? (priceResult.data ?? []).filter((row) => row.active && row.unit === "per night").map((row) => ({
           source: row.id, name: row.item_name, price: row.price && row.price > 0 ? `${row.currency} ${row.price}` : "unknown"
@@ -97,6 +128,7 @@ for (const application of applications) {
       ? ["No positive approved room price; price remains unknown."]
       : []
   };
+  if (report.duplicatePartnerIds.length) report.warnings.push("Potential duplicate partner identities require manual review; dry-run will not merge them.");
 
   if (apply) {
     const { data: adminUser, error: adminUserError } = await db
@@ -108,11 +140,11 @@ for (const application of applications) {
     if (adminUserError || !adminUser) {
       throw new Error("The supplied approval actor is not an active administrator.");
     }
-    const { data: approval, error: approvalError } = await db.rpc("approve_partner_application", {
+    const { data: approval, error: approvalError } = await db.rpc("approve_partner_application_all_types", {
       application_uuid: application.id,
       reviewer_user_id: approvedByUserId,
       reviewer_name: "Approved application repair",
-      publish_listing: propertyResult.data?.publication_status === "published",
+      publish_listing: listingResult.data?.publication_status === "published",
       review_note: "Idempotent approved-application repair"
     });
     if (approvalError) throw new Error(`Repair failed for ${application.id}: ${approvalError.message}`);

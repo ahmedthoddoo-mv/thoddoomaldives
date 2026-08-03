@@ -1,24 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
-import {
-  PartnerApplicationRepository,
-  subscribeToPartnerApplications
-} from "@/lib/applications/partnerApplicationRepository";
 import type { PartnerApplicationRecord } from "@/types/partner-application";
 
-export function AdminApplicationStats({ initialApplications }: { initialApplications?: PartnerApplicationRecord[] }) {
-  const hasServerApplications = Boolean(initialApplications);
-  const [storedApplications, setStoredApplications] = useState<PartnerApplicationRecord[]>(() =>
-    PartnerApplicationRepository.findAll()
-  );
-  const applications = initialApplications ?? storedApplications;
-
-  useEffect(() => {
-    if (hasServerApplications) return;
-    return subscribeToPartnerApplications(() => setStoredApplications(PartnerApplicationRepository.findAll()));
-  }, [hasServerApplications]);
+export function AdminApplicationStats({ initialApplications: applications }: { initialApplications: PartnerApplicationRecord[] }) {
 
   const stats = useMemo(() => {
     const applicationsWithDocuments = applications.filter(

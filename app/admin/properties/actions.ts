@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import type { AdminManagedProperty } from "@/data/adminContent";
+import { revalidatePublicListingPaths } from "@/lib/cache/publicRoutes";
 import { requireAdminSession } from "@/lib/admin/adminAuth";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
 
@@ -135,6 +136,7 @@ export async function saveAdminPropertyToSupabase({
   revalidatePath("/admin/properties");
   revalidatePath(`/admin/guesthouses/${result.propertyId}/edit`);
   revalidatePath(`/stay/${result.slug}`);
+  revalidatePublicListingPaths();
   return {
     ok: true,
     message: publish ? `${property.name} saved and published.` : `${property.name} saved.`,

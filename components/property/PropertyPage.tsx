@@ -1,8 +1,6 @@
 "use client";
 
 import { BookingWidget } from "@/components/booking/BookingWidget";
-import ExperienceCard from "@/components/cards/ExperienceCard";
-import TestimonialCard from "@/components/cards/TestimonialCard";
 import PropertyAmenities from "@/components/property/PropertyAmenities";
 import PropertyGallery from "@/components/property/PropertyGallery";
 import PropertyMapPlaceholder from "@/components/property/PropertyMapPlaceholder";
@@ -12,8 +10,6 @@ import { VerifiedBadge } from "@/components/partner/VerifiedBadge";
 import Badge from "@/components/ui/Badge";
 import Container from "@/components/ui/Container";
 import SectionTitle from "@/components/ui/SectionTitle";
-import { testimonials } from "@/data/testimonials";
-import { ExperienceRepository } from "@/lib/repositories";
 import { generateGuesthouseLink } from "@/lib/whatsapp";
 import type { Guesthouse } from "@/types/guesthouse";
 
@@ -28,13 +24,6 @@ export default function PropertyPage({
     phone: guesthouse.whatsapp,
     guesthouse: guesthouse.name,
   });
-  const experiences = ExperienceRepository.findAll();
-  const relatedExperiences = experiences.filter((experience) =>
-    guesthouse.relatedExperienceSlugs.includes(experience.slug)
-  );
-  const guestReviews = testimonials.filter((testimonial) =>
-    guesthouse.testimonialIds.includes(testimonial.id)
-  );
   const bookingRooms = guesthouse.rooms.map((room) => ({
     id: room.id ?? room.name.toLowerCase().replaceAll(" ", "-"),
     name: room.name,
@@ -226,36 +215,6 @@ export default function PropertyPage({
                 </div>
               </section>
 
-              {relatedExperiences.length > 0 && (
-                <section className="mt-16">
-                  <SectionTitle
-                    eyebrow="Experiences"
-                    title="Pair Your Stay With Local Experiences"
-                  />
-                  <div className="mt-8 grid gap-8 md:grid-cols-2">
-                    {relatedExperiences.map((experience) => (
-                      <ExperienceCard
-                        key={experience.id}
-                        experience={experience}
-                      />
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {guestReviews.length > 0 && (
-                <section className="mt-16">
-                  <SectionTitle eyebrow="Reviews" title="Guest Reviews" />
-                  <div className="mt-8 grid gap-6 md:grid-cols-3">
-                    {guestReviews.map((testimonial) => (
-                      <TestimonialCard
-                        key={testimonial.id}
-                        testimonial={testimonial}
-                      />
-                    ))}
-                  </div>
-                </section>
-              )}
             </div>
 
             <StickyBookingCard guesthouse={guesthouse} />

@@ -3,11 +3,9 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import Badge from "@/components/ui/Badge";
-import { CRMRepository } from "@/lib/repositories";
+import type { CrmNote, CrmPartner } from "@/data/adminCrm";
 
-export function AdminCrmNotes() {
-  const crmNotes = CRMRepository.findNotes();
-  const crmPartners = CRMRepository.findAll();
+export function AdminCrmNotes({ notes: crmNotes, partners: crmPartners }: { notes: CrmNote[]; partners: CrmPartner[] }) {
   const [query, setQuery] = useState("");
   const [partnerId, setPartnerId] = useState("All");
 

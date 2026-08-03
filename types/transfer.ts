@@ -18,4 +18,6 @@ export type Transfer = {
   image: string;
   highlights: string[];
   featured: boolean;
+  publicationStatus?: string;
+  verificationStatus?: string;
 };

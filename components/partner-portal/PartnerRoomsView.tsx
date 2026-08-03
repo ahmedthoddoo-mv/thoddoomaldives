@@ -6,7 +6,7 @@ import type { PartnerPortalServiceItem } from "@/lib/partner-portal/partnerAcces
 
 type PartnerRoomsViewProps = {
   initialServices: PartnerPortalServiceItem[];
-  businessType?: "guesthouse";
+  businessType?: import("@/types/business-type").BusinessType;
 };
 
 function createService(index: number): PartnerPortalServiceItem {
