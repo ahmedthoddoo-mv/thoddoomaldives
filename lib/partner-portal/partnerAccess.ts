@@ -253,7 +253,7 @@ export async function getCurrentPartnerPortalData(): Promise<PartnerPortalData> 
       db.from("partner_service_items").select("*").eq("partner_id", property.partner_id).order("sort_order", { ascending: true }),
       db.from("partner_documents").select("*").eq("partner_id", property.partner_id).order("created_at", { ascending: true }),
       db.from("partner_notifications").select("*").eq("partner_id", property.partner_id).order("created_at", { ascending: false }),
-      db.from("bookings").select("*, guests(*), properties(*), rooms(*)").eq("partner_id", property.partner_id).order("created_at", { ascending: false })
+      db.from("bookings").select("*, guests(*), properties(*), rooms(*)").eq("partner_id", property.partner_id).neq("payment_status", "demo_only").order("created_at", { ascending: false })
     ]);
 
     const socialLinks = parseJsonRecord(property.social_links);

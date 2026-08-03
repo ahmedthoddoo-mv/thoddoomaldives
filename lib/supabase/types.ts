@@ -560,9 +560,53 @@ export type Database = {
       property_transfers: { Row: { property_id: string; transfer_id: string; created_at: string }; Insert: { property_id: string; transfer_id: string }; Update: never; Relationships: [] };
       property_media: { Row: { property_id: string; media_asset_id: string; usage: string; sort_order: number; created_at: string }; Insert: { property_id: string; media_asset_id: string; usage?: string; sort_order?: number }; Update: Partial<{ usage: string; sort_order: number }>; Relationships: [] };
       partner_media: { Row: { partner_id: string; media_asset_id: string; usage: string; sort_order: number; created_at: string }; Insert: { partner_id: string; media_asset_id: string; usage?: string; sort_order?: number }; Update: Partial<{ usage: string; sort_order: number }>; Relationships: [] };
+      partner_application_review_versions: {
+        Row: {
+          id: string;
+          application_id: string;
+          previous_status: string | null;
+          new_status: string;
+          action: string;
+          reviewer: string | null;
+          note: string | null;
+          requested_changes: string[];
+          snapshot: Record<string, unknown>;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["partner_application_review_versions"]["Row"]> & {
+          application_id: string;
+          new_status: string;
+          action: string;
+        };
+        Update: never;
+        Relationships: [];
+      };
     };
-    Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Views: {
+      public_transfers: {
+        Row: Database["public"]["Tables"]["transfers"]["Row"];
+        Relationships: [];
+      };
+      public_experiences: {
+        Row: Database["public"]["Tables"]["experiences"]["Row"];
+        Relationships: [];
+      };
+      public_restaurants: {
+        Row: Database["public"]["Tables"]["restaurants"]["Row"];
+        Relationships: [];
+      };
+    };
+    Functions: {
+      approve_partner_application_all_types: {
+        Args: {
+          p_application_id: string;
+          p_reviewer?: string;
+          p_note?: string;
+          p_publish?: boolean;
+        };
+        Returns: Record<string, unknown>;
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };

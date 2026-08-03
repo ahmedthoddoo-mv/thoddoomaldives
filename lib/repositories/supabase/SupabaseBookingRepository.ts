@@ -12,7 +12,7 @@ export const SupabaseBookingRepository = {
   async findAll() {
     const supabase = createSupabaseServiceRoleClient() ?? createSupabaseServerClient();
     if (!supabase) return [];
-    const { data, error } = await supabase.from("bookings").select("*, guests(*), properties(*), rooms(*)").order("created_at", { ascending: false });
+    const { data, error } = await supabase.from("bookings").select("*, guests(*), properties(*), rooms(*)").neq("payment_status", "demo_only").order("created_at", { ascending: false });
     if (error) throw error;
     return ((data ?? []) as BookingWithRelations[]).map((booking) =>
       mapBookingRowToDomain(booking, booking.guests ?? undefined, booking.properties ?? undefined, booking.rooms ?? undefined)
