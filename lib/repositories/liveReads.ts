@@ -100,8 +100,22 @@ export async function getLiveTransfers(): Promise<LiveReadResult<Transfer[]>> {
 
   return safeRead({
     source,
-    read: () => provider.transfers.findAll(),
+    read: () => provider.transfers.findPublished(),
     fallback: () => []
+  });
+}
+
+export async function getLiveTransferBySlug(slug: string): Promise<LiveReadResult<Transfer | null>> {
+  const provider = getRepositoryProvider();
+  const source = normalizeProviderMode(provider.mode);
+
+  return safeRead({
+    source,
+    read: async () => {
+      const transfers = await provider.transfers.findPublished();
+      return transfers.find((transfer) => transfer.slug === slug) ?? null;
+    },
+    fallback: () => null
   });
 }
 
