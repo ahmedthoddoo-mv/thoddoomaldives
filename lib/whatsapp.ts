@@ -62,18 +62,59 @@ iThoddoo Maldives`;
  */
 export function generateTransferLink({
   phone = DEFAULT_PHONE,
+  direction,
+  passengers,
 }: {
   phone?: string;
+  direction?: string;
+  passengers?: number;
 }) {
+  const directionLine = direction ? `🧭 Direction: ${direction}\n` : "🧭 Direction: (Airport → Thoddoo / Thoddoo → Airport)\n";
+  const paxLine = passengers ? `👥 Passengers: ${passengers}\n` : "👥 Passengers: \n";
+
   const message = `Hi,
 
-I need airport transfer to Thoddoo.
+I would like to enquire about the Nasru Speed Boat transfer.
 
-✈️ Flight Number:
-🕒 Arrival Time:
-👥 Number of Guests:
+${directionLine}${paxLine}✈️ Flight Number:
+📅 Travel Date:
+🕒 Arrival / Departure Time:
 
-Please recommend the best transfer option.
+Please confirm availability and send me the booking details.
+
+Thank you!
+iThoddoo Maldives`;
+
+  return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+}
+
+/**
+ * Transfer enquiry with full details
+ */
+export function generateTransferEnquiryLink({
+  phone = DEFAULT_PHONE,
+  direction = "",
+  passengers = 0,
+  date = "",
+  flightNumber = "",
+}: {
+  phone?: string;
+  direction?: string;
+  passengers?: number;
+  date?: string;
+  flightNumber?: string;
+}) {
+  const paxText = passengers > 0 ? String(passengers) : "";
+  const message = `Hi,
+
+I would like to book the Nasru Speed Boat transfer to / from Thoddoo.
+
+🧭 Direction: ${direction || "(Airport → Thoddoo / Thoddoo → Airport)"}
+👥 Passengers: ${paxText}
+📅 Travel Date: ${date}
+✈️ Flight Number: ${flightNumber}
+
+Please confirm availability (USD 35 per person) and send payment details.
 
 Thank you!
 iThoddoo Maldives`;

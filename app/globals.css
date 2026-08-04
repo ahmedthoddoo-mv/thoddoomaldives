@@ -5193,3 +5193,373 @@ body {
     width: auto;
   }
 }
+
+/* ── Transfer page (Nasru Speed Boat redesign) ── */
+.transferHero {
+  min-height: 72vh;
+}
+
+/* Enquiry stats band */
+.transferEnquiryBand {
+  background: #fff;
+  border-bottom: 1px solid rgba(23, 32, 28, 0.1);
+  padding: 24px 20px;
+}
+
+.transferEnquiryRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.transferEnquiryStat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.transferEnquiryStatValue {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #12201b;
+  line-height: 1.1;
+}
+
+.transferEnquiryStatLabel {
+  font-size: 0.78rem;
+  color: #5d6a64;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.transferEnquiryCta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.transferEnquiryNote {
+  font-size: 0.78rem;
+  color: #5d6a64;
+  margin: 0;
+}
+
+/* Price highlight */
+.transferPrice {
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: #087f7a;
+  margin-top: 8px;
+}
+
+/* Highlights list inside cards */
+.transferHighlightList {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+  display: grid;
+  gap: 8px;
+  color: #43514b;
+  font-size: 0.93rem;
+}
+
+/* WhatsApp secondary button inside card */
+.transferCardWa {
+  background: transparent;
+  border: 1px solid rgba(8, 127, 122, 0.4);
+  color: #087f7a;
+}
+
+/* Fleet cards */
+.transferFleetCard {
+  display: flex;
+  flex-direction: column;
+}
+
+.transferFleetIcon {
+  font-size: 3rem;
+  padding: 28px 22px 0;
+}
+
+.transferFleetCount {
+  color: #5d6a64;
+  font-size: 0.9rem;
+  margin-top: 4px;
+}
+
+.transferFleetCapacity {
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: #087f7a;
+  margin-top: 4px;
+}
+
+/* Timetable */
+.transferTimetableCard .platformCardBody {
+  overflow-x: auto;
+}
+
+.transferRouteTitle {
+  margin-bottom: 16px;
+}
+
+.transferTimetable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.transferTimetable th {
+  text-align: left;
+  padding: 8px 12px;
+  background: #eef5f1;
+  color: #12201b;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 2px solid rgba(23, 32, 28, 0.08);
+}
+
+.transferTimetable td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(23, 32, 28, 0.06);
+  color: #43514b;
+}
+
+.transferTimeCell {
+  font-weight: 900;
+  color: #12201b;
+  font-size: 1.05rem;
+  white-space: nowrap;
+}
+
+.transferFridayRow td {
+  background: #fff8e6;
+  color: #6c4a10;
+}
+
+.transferTimetableNote {
+  margin-top: 20px;
+}
+
+/* Journey timeline */
+.transferTimeline {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0;
+}
+
+.transferTimelineStep {
+  display: flex;
+  gap: 20px;
+  padding: 24px 0;
+  border-bottom: 1px solid rgba(23, 32, 28, 0.08);
+}
+
+.transferTimelineStep:last-child {
+  border-bottom: none;
+}
+
+.transferTimelineNumber {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #087f7a;
+  color: #fff;
+  font-weight: 900;
+  font-size: 1rem;
+}
+
+.transferTimelineContent h3 {
+  margin: 0 0 6px;
+  font-size: 1.05rem;
+  color: #12201b;
+}
+
+.transferTimelineContent p {
+  margin: 0;
+  color: #5d6a64;
+  font-size: 0.93rem;
+  line-height: 1.65;
+}
+
+/* Service cards */
+.transferServiceGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.transferServiceCard {
+  display: flex;
+  flex-direction: column;
+}
+
+.transferServiceIcon {
+  font-size: 2rem;
+  padding: 22px 22px 0;
+}
+
+.transferServiceList {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  display: grid;
+  gap: 8px;
+  color: #43514b;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.transferServiceList li::before {
+  content: "· ";
+  color: #087f7a;
+  font-weight: 900;
+}
+
+/* FAQ */
+.transferFaqList {
+  display: grid;
+  gap: 16px;
+}
+
+.transferFaqItem {
+  border: 1px solid rgba(23, 32, 28, 0.1);
+  border-radius: 8px;
+  background: #fff;
+  padding: 20px 24px;
+}
+
+.transferFaqQ {
+  font-weight: 900;
+  color: #12201b;
+  font-size: 1rem;
+  margin-bottom: 8px;
+}
+
+.transferFaqA {
+  color: #5d6a64;
+  font-size: 0.93rem;
+  line-height: 1.65;
+  margin: 0;
+}
+
+/* Why book */
+.transferWhyCard {
+  display: flex;
+  flex-direction: column;
+}
+
+.transferWhyIcon {
+  font-size: 2rem;
+  padding: 22px 22px 0;
+}
+
+/* Mobile sticky bar */
+.transferStickyBar {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: #fff;
+  border-top: 1px solid rgba(23, 32, 28, 0.12);
+  box-shadow: 0 -4px 24px rgba(23, 32, 28, 0.1);
+  padding: 12px 20px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+
+.transferStickyContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.transferStickyPrice {
+  font-weight: 900;
+  font-size: 1.1rem;
+  color: #12201b;
+}
+
+.transferStickyBtn {
+  flex-shrink: 0;
+}
+
+/* Breadcrumb link */
+.transferBreadcrumb {
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.transferBreadcrumb:hover {
+  color: #fff;
+}
+
+/* Highlight grid on slug detail page */
+.transferHighlightGrid {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.transferHighlightGridItem {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 0.97rem;
+  color: #43514b;
+  line-height: 1.6;
+}
+
+.transferHighlightCheck {
+  color: #087f7a;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.transferError {
+  color: #c0392b;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 759px) {
+  .transferStickyBar {
+    display: block;
+  }
+
+  .transferServiceGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 760px) {
+  .transferEnquiryBand {
+    padding: 28px 36px;
+  }
+
+  .transferTimeline {
+    max-width: 760px;
+  }
+
+  .transferHighlightGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .transferFaqList {
+    max-width: 860px;
+  }
+}
