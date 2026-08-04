@@ -5193,3 +5193,327 @@ body {
     width: auto;
   }
 }
+
+
+.transferPage {
+  padding-bottom: 32px;
+}
+
+.transferHeroLayout,
+.transferDetailHeroGrid,
+.transferOverviewGrid,
+.transferBookingLayout,
+.transferScheduleGrid,
+.transferInfoGrid,
+.transferListingGrid {
+  display: grid;
+  gap: 18px;
+}
+
+.transferHeroPanel,
+.transferHeroAside,
+.transferOverviewCard,
+.transferInfoCard,
+.transferFeatureCard,
+.transferEnquiryCard {
+  border: 1px solid rgba(23, 32, 28, 0.1);
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 20px 60px rgba(23, 32, 28, 0.08);
+  padding: 22px;
+}
+
+.transferHeroPanel,
+.transferHeroAside {
+  background: rgba(7, 16, 14, 0.55);
+  color: #fff;
+  backdrop-filter: blur(18px);
+}
+
+.transferHeroPanel p,
+.transferHeroAside p,
+.transferHeroAside span,
+.transferDetailHeroContent p:not(.eyebrow) {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.transferHeroPanel strong,
+.transferHeroAside strong {
+  font-size: 1.5rem;
+}
+
+.transferListingGrid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.transferListingCard {
+  display: grid;
+  overflow: hidden;
+  border: 1px solid rgba(23, 32, 28, 0.1);
+  border-radius: 28px;
+  background: #fff;
+  box-shadow: 0 24px 80px rgba(23, 32, 28, 0.08);
+}
+
+.transferListingImage {
+  min-height: 260px;
+  background-position: center;
+  background-size: cover;
+}
+
+.transferListingBody {
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+}
+
+.transferListingBadges,
+.transferCardActions,
+.transferTimeRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.transferListingRoute {
+  margin: 0;
+  color: #087f7a;
+  font-weight: 800;
+}
+
+.transferMiniGrid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.transferMiniGrid div,
+.transferOverviewCard,
+.transferFeatureCard {
+  display: grid;
+  gap: 6px;
+}
+
+.transferMiniGrid dt,
+.transferEnquiryCard label span,
+.transferInfoNote,
+.transferBackLink {
+  color: #5d6a64;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.transferMiniGrid dd {
+  margin: 0;
+  color: #12201b;
+  font-weight: 700;
+}
+
+.transferListingSummary,
+.transferListingAvailability {
+  margin: 0;
+}
+
+.transferSecondaryAction {
+  border: 1px solid rgba(8, 127, 122, 0.28);
+  background: #fff;
+  color: #087f7a;
+}
+
+.transferDetailHero {
+  min-height: 78vh;
+}
+
+.transferBackLink {
+  display: inline-flex;
+  margin-bottom: 16px;
+  color: #d8f6f1;
+}
+
+.transferInfoCard h3,
+.transferFeatureCard h3,
+.transferListingCard h2,
+.transferOverviewCard h2,
+.transferEnquiryHeader h2 {
+  margin: 0;
+  color: #12201b;
+}
+
+.transferHeroAside .platformButton,
+.transferHeroAside .transferSecondaryAction {
+  width: 100%;
+}
+
+.transferTimeRow span {
+  display: inline-flex;
+  border-radius: 999px;
+  background: #e6f5f2;
+  color: #045b58;
+  padding: 8px 12px;
+  font-weight: 900;
+}
+
+.transferTimeline {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.transferTimeline li {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.transferTimeline li span {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #087f7a;
+  color: #fff;
+  font-weight: 900;
+}
+
+.transferFaqList {
+  display: grid;
+  gap: 12px;
+}
+
+.transferFaqItem {
+  border: 1px solid rgba(23, 32, 28, 0.1);
+  border-radius: 20px;
+  background: #fff;
+  padding: 18px 20px;
+}
+
+.transferFaqItem summary {
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.transferFaqItem p {
+  margin: 12px 0 0;
+}
+
+.transferEnquiryHeader,
+.transferEnquiryFooter {
+  display: grid;
+  gap: 10px;
+}
+
+.transferFormAlert {
+  border-radius: 18px;
+  background: #fff1f2;
+  color: #9f1239;
+  padding: 14px 16px;
+}
+
+.transferFormAlert ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.transferFormGrid {
+  display: grid;
+  gap: 14px;
+}
+
+.transferFormGrid label {
+  display: grid;
+  gap: 8px;
+}
+
+.transferFormGrid input,
+.transferFormGrid select,
+.transferFormGrid textarea {
+  width: 100%;
+  border: 1px solid rgba(23, 32, 28, 0.12);
+  border-radius: 16px;
+  background: #fff;
+  color: #12201b;
+  padding: 12px 14px;
+  font: inherit;
+}
+
+.transferFormGrid textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.transferFormWide {
+  grid-column: 1 / -1;
+}
+
+.transferStickyBar {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 35;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 10px;
+  align-items: center;
+  border-top: 1px solid rgba(23, 32, 28, 0.12);
+  background: rgba(255, 255, 255, 0.98);
+  padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
+  box-shadow: 0 -10px 30px rgba(23, 32, 28, 0.08);
+}
+
+.transferStickyBar strong,
+.transferStickyBar span {
+  display: block;
+}
+
+.transferStickyBar span {
+  color: #5d6a64;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.transferPage :is(a, button, input, select, textarea, summary):focus-visible {
+  outline: 3px solid rgba(8, 127, 122, 0.35);
+  outline-offset: 3px;
+}
+
+@media (min-width: 760px) {
+  .transferListingCard {
+    grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.1fr);
+  }
+
+  .transferHeroLayout,
+  .transferDetailHeroGrid,
+  .transferOverviewGrid,
+  .transferScheduleGrid,
+  .transferInfoGrid,
+  .transferBookingLayout {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .transferFormGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .transferDetailHeroGrid {
+    grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.6fr);
+    align-items: end;
+  }
+
+  .transferBookingLayout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .transferPage * {
+    scroll-behavior: auto;
+  }
+}

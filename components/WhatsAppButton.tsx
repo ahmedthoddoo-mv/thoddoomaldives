@@ -6,7 +6,7 @@ import { generateGeneralLink } from "@/lib/whatsapp";
 export default function WhatsAppButton() {
   const pathname = usePathname();
 
-  if (pathname.startsWith("/admin")) {
+  if (pathname.startsWith("/admin") || pathname.startsWith("/transfer/")) {
     return null;
   }
 
