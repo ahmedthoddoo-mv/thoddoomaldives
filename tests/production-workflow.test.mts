@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { normalizePartnerApplicationPricingUnit, partnerApplicationPricingUnits } from "../lib/applications/pricingUnits.ts";
 import {
   collisionSafeSlug,
   formatPublicPrice,
@@ -285,6 +286,13 @@ test("partner authentication does not hide live partner lookup failures", () => 
   assert.match(partnerAuthSource, /if \(partnerError\)/);
   assert.match(reviewMigrationSql, /grant select, insert, update, delete on all tables in schema public to service_role/);
   assert.doesNotMatch(reviewMigrationSql, /grant select, insert, update, delete on all tables in schema public to (?:anon|authenticated)/);
+});
+test("reviewed price display text maps to the database unit constraint", () => {
+  assert.deepEqual(partnerApplicationPricingUnits, ["per night", "per person", "per trip", "per hour", "per transfer", "per package"]);
+  assert.equal(normalizePartnerApplicationPricingUnit("per person one way transfer"), "per transfer");
+  assert.equal(normalizePartnerApplicationPricingUnit("Per Person"), "per person");
+  assert.equal(normalizePartnerApplicationPricingUnit("hourly"), "per hour");
+  assert.equal(normalizePartnerApplicationPricingUnit("per vehicle"), null);
 });
 test("repair tooling is dry-run by default and requires explicit safe apply inputs", () => {
   assert.match(repairSource, /const apply = has\("--apply"\)/);

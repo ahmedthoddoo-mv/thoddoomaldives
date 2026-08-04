@@ -8,6 +8,7 @@ import { logPartnerAuditEvent } from "@/lib/partner-portal/partnerAuth";
 import type { PartnerApplicationStatus } from "@/types/partner-application";
 import type { Json } from "@/lib/supabase/types";
 import { revalidatePublicListingPaths } from "@/lib/cache/publicRoutes";
+import { normalizePartnerApplicationPricingUnit } from "@/lib/applications/pricingUnits";
 
 export type AdminApplicationDecisionAction =
   | "start_review"
@@ -57,8 +58,11 @@ export async function saveAdminApplicationReview(input: AdminApplicationReviewIn
     name: sanitizeText(price.name, 180),
     price: price.price.trim() === "" ? null : Number(price.price),
     currency: price.currency === "MVR" ? "MVR" : "USD",
-    unit: sanitizeText(price.unit, 80)
+    unit: normalizePartnerApplicationPricingUnit(price.unit)
   }));
+  if (prices.some((price) => !price.unit)) {
+    return { ok: false, message: "Choose a valid price unit before saving." };
+  }
   if (prices.some((price) => price.price !== null && (!Number.isFinite(price.price) || price.price <= 0))) {
     return { ok: false, message: "Prices must be positive or blank for Price on request." };
   }

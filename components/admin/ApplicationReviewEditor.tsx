@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { saveAdminApplicationReview } from "@/app/admin/applications/actions";
 import type { PartnerApplicationRecord } from "@/types/partner-application";
+import { normalizePartnerApplicationPricingUnit, partnerApplicationPricingUnits } from "@/lib/applications/pricingUnits";
 
 const commonLabels: Record<string, string> = {
   businessName: "Business name", contactPerson: "Owner / contact", whatsapp: "WhatsApp", email: "Email",
@@ -71,7 +72,7 @@ export function ApplicationReviewEditor({ application }: { application: PartnerA
             <label><span>Item</span><input value={price.name} onChange={(event) => setPrices((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, name: event.target.value } : item))} /></label>
             <label><span>Price</span><input inputMode="decimal" placeholder="Price on request" value={price.price} onChange={(event) => setPrices((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, price: event.target.value } : item))} /></label>
             <label><span>Currency</span><select value={price.currency} onChange={(event) => setPrices((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, currency: event.target.value } : item))}><option>USD</option><option>MVR</option></select></label>
-            <label><span>Unit</span><input value={price.unit} onChange={(event) => setPrices((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, unit: event.target.value } : item))} /></label>
+            <label><span>Unit</span><select value={normalizePartnerApplicationPricingUnit(price.unit) ?? ""} onChange={(event) => setPrices((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, unit: event.target.value } : item))}><option value="" disabled>Select unit</option>{partnerApplicationPricingUnits.map((unit) => <option key={unit} value={unit}>{unit}</option>)}</select></label>
             <button type="button" onClick={() => setPrices((current) => current.filter((_, itemIndex) => itemIndex !== index))}>Remove price</button>
           </div>
         ))}
