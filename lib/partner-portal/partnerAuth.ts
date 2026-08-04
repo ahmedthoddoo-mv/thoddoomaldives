@@ -65,11 +65,14 @@ export async function getPartnerAuthState(): Promise<PartnerAuthState> {
     return { status: "unauthenticated", reason: "Partner session is invalid or expired." };
   }
 
-  const { data: partner } = await serviceRole
+  const { data: partner, error: partnerError } = await serviceRole
     .from("partners")
     .select("*")
     .eq("auth_user_id", userResult.user.id)
     .maybeSingle();
+  if (partnerError) {
+    throw new Error(`Partner account lookup failed: ${partnerError.message}`);
+  }
 
   return {
     status: "authenticated",

@@ -272,7 +272,7 @@ export async function getCurrentPartnerPortalData(): Promise<PartnerPortalData> 
       const [{ data: serviceItems, error: serviceError }, { data: mediaItems, error: mediaError }, { data: bookings, error: bookingError }] = await Promise.all([
         db.from("partner_service_items").select("*").eq("partner_id", authState.partner.id).order("sort_order", { ascending: true }),
         db.from("media_assets").select("*").eq("partner_id", authState.partner.id).eq("visibility", "public").order("sort_order", { ascending: true }),
-        db.from("bookings").select("*, guests(*), properties(*), rooms(*)").eq("partner_id", authState.partner.id).order("created_at", { ascending: false })
+        db.from("bookings").select("*, guests(*), properties(*), rooms(*)").eq("partner_id", authState.partner.id).neq("payment_status", "demo_only").order("created_at", { ascending: false })
       ]);
       if (serviceError) throw serviceError;
       if (mediaError) throw mediaError;
@@ -309,7 +309,7 @@ export async function getCurrentPartnerPortalData(): Promise<PartnerPortalData> 
       db.from("partner_service_items").select("*").eq("partner_id", property.partner_id).order("sort_order", { ascending: true }),
       db.from("partner_documents").select("*").eq("partner_id", property.partner_id).order("created_at", { ascending: true }),
       db.from("partner_notifications").select("*").eq("partner_id", property.partner_id).order("created_at", { ascending: false }),
-      db.from("bookings").select("*, guests(*), properties(*), rooms(*)").eq("partner_id", property.partner_id).order("created_at", { ascending: false })
+      db.from("bookings").select("*, guests(*), properties(*), rooms(*)").eq("partner_id", property.partner_id).neq("payment_status", "demo_only").order("created_at", { ascending: false })
     ]);
     if (serviceError) throw serviceError;
     if (documentError) throw documentError;

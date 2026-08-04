@@ -49,10 +49,7 @@ begin
     and price.application_id = application_uuid
     and price.active
     and price.unit = 'per night'
-    and (
-      room.source_key = 'price:' || price.id::text
-      or lower(trim(room.name)) = lower(trim(price.item_name))
-    );
+    and room.source_key = 'price:' || price.id::text;
 
   -- Retain historical room rows but deactivate stale application-managed
   -- definitions. Unrelated/admin-created rooms are not touched.
@@ -71,10 +68,7 @@ begin
       where price.application_id = application_uuid
         and price.active
         and price.unit = 'per night'
-        and (
-          room.source_key = 'price:' || price.id::text
-          or lower(trim(room.name)) = lower(trim(price.item_name))
-        )
+        and room.source_key = 'price:' || price.id::text
     );
 
   return approval_result;

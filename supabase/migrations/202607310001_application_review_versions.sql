@@ -1,6 +1,12 @@
 -- Versioned admin corrections for partner applications.
 -- Additive and data-preserving. Do not apply automatically from application code.
 
+-- Migrations are applied by the database owner, whose local default privileges
+-- do not automatically grant PostgREST access to the service_role. Keep all
+-- server-side repository access privileged without granting anon/authenticated.
+grant select, insert, update, delete on all tables in schema public to service_role;
+grant usage, select, update on all sequences in schema public to service_role;
+
 create table if not exists public.partner_application_review_versions (
   id uuid primary key default gen_random_uuid(),
   application_id uuid not null references public.partner_applications(id) on delete cascade,
@@ -179,8 +185,8 @@ declare
   price_text text;
   hero_path text;
 begin
-  base_result := public.approve_partner_application(application_uuid, reviewer_user_id, reviewer_name, publish_listing, review_note);
   select * into app from public.partner_applications where id = application_uuid;
+  if not found then raise exception 'Application not found'; end if;
   answers := coalesce(app.metadata->'categoryAnswers', '{}'::jsonb);
   if publish_listing and exists (
     select 1 from public.partner_application_media
@@ -190,6 +196,28 @@ begin
     select 1 from public.partner_application_media
     where application_id = app.id and admin_rights_confirmed and public_selected
   ) then raise exception 'Select public media and confirm publication rights before publishing'; end if;
+  -- The already-applied core function captures only the hour from HH:MM before
+  -- casting to time. Keep reviewed values authoritative but omit those keys
+  -- during the legacy call, then persist validated values below.
+  if app.business_type in ('guesthouse', 'hotel') then
+    update public.partner_applications
+    set metadata = jsonb_set(
+      metadata,
+      '{categoryAnswers}',
+      answers - 'checkInTime' - 'checkOutTime' - 'checkInOut'
+    )
+    where id = app.id;
+  end if;
+  base_result := public.approve_partner_application(application_uuid, reviewer_user_id, reviewer_name, publish_listing, review_note);
+  if app.business_type in ('guesthouse', 'hotel') then
+    update public.partner_applications
+    set metadata = jsonb_set(metadata, '{categoryAnswers}', answers)
+    where id = app.id;
+    update public.properties
+    set check_in_time = case when coalesce(answers->>'checkInTime', '') ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$' then (answers->>'checkInTime')::time else check_in_time end,
+        check_out_time = case when coalesce(answers->>'checkOutTime', '') ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$' then (answers->>'checkOutTime')::time else check_out_time end
+    where id = nullif(base_result->>'propertyId', '')::uuid;
+  end if;
   if app.business_type in ('guesthouse', 'hotel') and not exists (
     select 1 from public.partner_application_prices where application_id = app.id and active and unit = 'per night'
   ) then raise exception 'At least one structured room is required'; end if;
@@ -290,9 +318,29 @@ begin
   on conflict (path) do update set
     application_id=excluded.application_id, partner_id=excluded.partner_id,
     media_type=excluded.media_type, sort_order=excluded.sort_order,
-    visibility='public', archived=false
+    rights_status='permission_confirmed', visibility='public', archived=false
   where public.media_assets.application_id = app.id
     or (public.media_assets.application_id is null and public.media_assets.partner_id is null and public.media_assets.property_id is null);
+
+  -- The core accommodation approval predates explicit media review. Reconcile
+  -- its result so unselected or unconfirmed application media cannot remain public.
+  update public.media_assets asset
+  set visibility = 'private', rights_status = 'needs_confirmation'
+  where asset.application_id = app.id
+    and not exists (
+      select 1 from public.partner_application_media media
+      where media.application_id = app.id
+        and media.path_or_note = asset.path
+        and media.admin_rights_confirmed
+        and media.public_selected
+        and media.status <> 'rejected'
+    );
+
+  delete from public.property_media link
+  using public.media_assets asset
+  where link.media_asset_id = asset.id
+    and asset.application_id = app.id
+    and asset.visibility <> 'public';
 
   if saved_listing_id is not null then
     update public.partner_applications set listing_id = saved_listing_id,
