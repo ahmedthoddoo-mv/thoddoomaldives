@@ -229,7 +229,6 @@ export async function getCurrentPartnerPortalData(): Promise<PartnerPortalData> 
   if (!authState.partner) {
     return getAccountSetupPortalData(authState.email);
   }
-
   const supabase = createSupabaseServiceRoleClient();
   if (!supabase) {
     return getAccountSetupPortalData(authState.email, "fallback");
@@ -411,20 +410,23 @@ export async function getCurrentPartnerPortalData(): Promise<PartnerPortalData> 
 
 export async function getAuthorizedPartnerScope() {
   if (getDataMode() !== "supabase") {
-    return { mode: "setup_required" as const, partnerId: "", partnerSlug: "", propertyId: "", propertySlug: "" };
+    return { mode: "setup_required" as const, partnerId: "", partnerSlug: "", propertyId: "", propertySlug: "", listingId: "", listingType: "" };
   }
 
   const authState = await getPartnerAuthState();
   if (authState.status !== "authenticated") {
-    return { mode: "unauthenticated" as const, partnerId: "", partnerSlug: "", propertyId: "", propertySlug: "" };
+    return { mode: "unauthenticated" as const, partnerId: "", partnerSlug: "", propertyId: "", propertySlug: "", listingId: "", listingType: "" };
   }
   if (!authState.partner) {
-    return { mode: "setup_required" as const, partnerId: "", partnerSlug: "", propertyId: "", propertySlug: "", authUserId: authState.userId };
+    return { mode: "setup_required" as const, partnerId: "", partnerSlug: "", propertyId: "", propertySlug: "", listingId: "", listingType: "", authUserId: authState.userId };
+  }
+  if (authState.partner.editing_suspended) {
+    return { mode: "suspended" as const, partnerId: authState.partner.id, partnerSlug: authState.partner.slug, propertyId: "", propertySlug: "", listingId: "", listingType: "", authUserId: authState.userId };
   }
 
   const supabase = createSupabaseServiceRoleClient();
   if (!supabase) {
-    return { mode: "unavailable" as const, partnerId: "", partnerSlug: "", propertyId: "", propertySlug: "" };
+    return { mode: "unavailable" as const, partnerId: "", partnerSlug: "", propertyId: "", propertySlug: "", listingId: "", listingType: "" };
   }
 
   const { data: property } = await supabase
@@ -436,12 +438,22 @@ export async function getAuthorizedPartnerScope() {
     .maybeSingle();
 
   if (!property || property.partner_id !== authState.partner.id) {
+    const { data: application } = await supabase.from("partner_applications")
+      .select("listing_id, listing_type").eq("partner_id", authState.partner.id)
+      .not("listing_id", "is", null).order("submitted_at", { ascending: false }).limit(1).maybeSingle();
+    if (application?.listing_id && ["transfer", "experience", "restaurant"].includes(application.listing_type ?? "")) {
+      const table = application.listing_type === "transfer" ? "transfers" : application.listing_type === "experience" ? "experiences" : "restaurants";
+      const { data: listing } = await supabase.from(table).select("id, partner_id").eq("id", application.listing_id).eq("partner_id", authState.partner.id).maybeSingle();
+      if (listing) return { mode: "supabase" as const, partnerId: authState.partner.id, partnerSlug: authState.partner.slug, propertyId: "", propertySlug: "", listingId: listing.id, listingType: application.listing_type ?? "", authUserId: authState.userId };
+    }
     return {
       mode: "setup_required" as const,
       partnerId: authState.partner.id,
       partnerSlug: authState.partner.slug,
       propertyId: "",
       propertySlug: "",
+      listingId: "",
+      listingType: "",
       authUserId: authState.userId
     };
   }
@@ -452,6 +464,8 @@ export async function getAuthorizedPartnerScope() {
     propertyId: property.id as string,
     partnerSlug: authState.partner.slug,
     propertySlug: property.slug as string,
+    listingId: property.id as string,
+    listingType: "property",
     authUserId: authState.userId
   };
 }

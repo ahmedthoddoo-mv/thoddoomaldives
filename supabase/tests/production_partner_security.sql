@@ -1,4 +1,6 @@
 begin;
+create extension if not exists pgtap with schema extensions;
+select plan(1);
 
 do $$
 declare
@@ -33,5 +35,8 @@ begin
   end if;
 end
 $$;
+
+select pass('production partner security privilege checks passed');
+select * from finish();
 
 rollback;

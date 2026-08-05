@@ -31,6 +31,7 @@ export type Database = {
           published_at: string | null;
           lead_source: string | null;
           priority: string | null;
+          editing_suspended: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -300,6 +301,36 @@ export type Database = {
           image_path: string;
         };
         Update: Partial<Database["public"]["Tables"]["transfers"]["Row"]>;
+        Relationships: [];
+      };
+      transfer_schedules: {
+        Row: { id: string; transfer_id: string; partner_id: string; direction: string; departure_point: string; arrival_point: string; days_of_week: number[]; departure_time: string; effective_start: string | null; effective_end: string | null; friday_specific: boolean; price: number | null; currency: string; unit: string; vessel_capacity: number | null; vessel_details: string | null; luggage_policy: string | null; pickup_dropoff: string | null; cancellation_notice: string | null; weather_notice: string | null; active: boolean; updated_by: string | null; created_at: string; updated_at: string };
+        Insert: Partial<Database["public"]["Tables"]["transfer_schedules"]["Row"]> & { transfer_id: string; partner_id: string; direction: string; departure_point: string; arrival_point: string; departure_time: string };
+        Update: Partial<Database["public"]["Tables"]["transfer_schedules"]["Row"]>;
+        Relationships: [];
+      };
+      transfer_schedule_exceptions: {
+        Row: { id: string; schedule_id: string; exception_date: string; departure_time: string | null; cancelled: boolean; notice: string | null; updated_by: string | null; created_at: string; updated_at: string };
+        Insert: Partial<Database["public"]["Tables"]["transfer_schedule_exceptions"]["Row"]> & { schedule_id: string; exception_date: string };
+        Update: Partial<Database["public"]["Tables"]["transfer_schedule_exceptions"]["Row"]>;
+        Relationships: [];
+      };
+      availability_integrations: {
+        Row: { id: string; property_id: string; partner_id: string; provider: string; external_property_id: string | null; last_synchronized_at: string | null; sync_status: string; error_state: string | null; updated_by: string | null; created_at: string; updated_at: string };
+        Insert: Partial<Database["public"]["Tables"]["availability_integrations"]["Row"]> & { property_id: string; partner_id: string };
+        Update: Partial<Database["public"]["Tables"]["availability_integrations"]["Row"]>;
+        Relationships: [];
+      };
+      room_availability: {
+        Row: { id: string; property_id: string; room_id: string | null; partner_id: string; availability_date: string; rooms_available: number | null; rate: number | null; currency: string; restrictions: Json; provider: string; external_property_id: string | null; external_room_id: string | null; last_synchronized_at: string | null; sync_status: string; error_state: string | null; updated_by: string | null; created_at: string; updated_at: string };
+        Insert: Partial<Database["public"]["Tables"]["room_availability"]["Row"]> & { property_id: string; partner_id: string; availability_date: string };
+        Update: Partial<Database["public"]["Tables"]["room_availability"]["Row"]>;
+        Relationships: [];
+      };
+      partner_change_requests: {
+        Row: { id: string; partner_id: string; listing_type: string; listing_id: string; change_type: string; requested_values: Json; status: string; requested_by: string; reviewed_by: string | null; review_note: string | null; created_at: string; reviewed_at: string | null };
+        Insert: Partial<Database["public"]["Tables"]["partner_change_requests"]["Row"]> & { partner_id: string; listing_type: string; listing_id: string; change_type: string; requested_values: Json; requested_by: string };
+        Update: Partial<Database["public"]["Tables"]["partner_change_requests"]["Row"]>;
         Relationships: [];
       };
       partner_application_review_versions: {
@@ -660,6 +691,9 @@ export type Database = {
         Relationships: [];
       };
       public_transfers: { Row: Database["public"]["Tables"]["transfers"]["Row"]; Relationships: [] };
+      public_transfer_schedules: { Row: Omit<Database["public"]["Tables"]["transfer_schedules"]["Row"], "partner_id" | "updated_by" | "created_at" | "updated_at">; Relationships: [] };
+      public_transfer_schedule_exceptions: { Row: Omit<Database["public"]["Tables"]["transfer_schedule_exceptions"]["Row"], "updated_by" | "created_at" | "updated_at">; Relationships: [] };
+      public_room_availability: { Row: Omit<Database["public"]["Tables"]["room_availability"]["Row"], "partner_id" | "external_property_id" | "external_room_id" | "error_state" | "updated_by" | "created_at" | "updated_at">; Relationships: [] };
       public_experiences: { Row: Database["public"]["Tables"]["experiences"]["Row"]; Relationships: [] };
       public_restaurants: { Row: Database["public"]["Tables"]["restaurants"]["Row"]; Relationships: [] };
     };
@@ -729,6 +763,18 @@ export type Database = {
           items: Json;
         };
         Returns: Json;
+      };
+      partner_save_transfer_schedule: {
+        Args: { actor_user_id: string; partner_uuid: string; transfer_uuid: string; schedule_uuid: string | null; payload: Json; exceptions: Json };
+        Returns: string;
+      };
+      partner_save_manual_availability: {
+        Args: { actor_user_id: string; partner_uuid: string; property_uuid: string; entries: Json };
+        Returns: number;
+      };
+      partner_set_availability_provider: {
+        Args: { actor_user_id: string; partner_uuid: string; property_uuid: string; provider_name: string };
+        Returns: string;
       };
     };
     Enums: Record<string, never>;

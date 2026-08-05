@@ -23,7 +23,14 @@ export function mapRoomRowToDomain(room: Tables<"rooms">): AdminManagedProperty[
     id: room.id,
     name: room.name,
     price: formatRoomPrice(room.price_per_night, room.currency),
-    capacity: room.capacity
+    capacity: room.capacity,
+    bedType: room.bed_type ?? "",
+    description: room.description ?? "",
+    image: room.image_paths[0],
+    amenities: room.amenities,
+    breakfastIncluded: room.breakfast_included,
+    adults: room.adults,
+    children: room.children
   };
 }
 

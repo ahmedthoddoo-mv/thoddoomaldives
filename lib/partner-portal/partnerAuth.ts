@@ -94,6 +94,9 @@ export async function logPartnerAuditEvent(
     | "gallery_update"
     | "booking_update"
     | "notification_update"
+    | "transfer_schedule_update"
+    | "availability_update"
+    | "availability_provider_update"
     | "invitation_preview_created",
   metadata: Record<string, string | number | boolean | null> = {},
   partnerId?: string | null,

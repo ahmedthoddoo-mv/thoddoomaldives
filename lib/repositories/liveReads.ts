@@ -5,6 +5,7 @@ import type { Experience } from "@/types/experience";
 import type { Guesthouse } from "@/types/guesthouse";
 import type { Restaurant } from "@/types/restaurant";
 import type { Transfer } from "@/types/transfer";
+import type { TransferSchedule } from "@/types/transfer-schedule";
 import { adminPropertyToGuesthouse } from "@/lib/properties/propertyDomain";
 import { isSupabaseServerConfigured } from "@/lib/supabase/server";
 import { SupabaseExperienceRepository, SupabaseRestaurantRepository, SupabaseTransferRepository } from "@/lib/repositories/supabase";
@@ -128,6 +129,28 @@ export async function getLivePublishedTransfers(): Promise<LiveReadResult<Transf
   const provider = getRepositoryProvider();
   const source = normalizeProviderMode(provider.mode);
   return safeRead({ source, read: () => source === "mock" ? provider.transfers.findAll() : SupabaseTransferRepository.findPublished(), fallback: () => [] });
+}
+
+export async function getLivePublishedTransferBySlug(slug: string): Promise<LiveReadResult<Transfer | undefined>> {
+  const provider = getRepositoryProvider();
+  const source = normalizeProviderMode(provider.mode);
+  return safeRead({
+    source,
+    read: () => source === "mock" ? provider.transfers.findBySlug(slug) : SupabaseTransferRepository.findBySlug(slug),
+    fallback: () => undefined
+  });
+}
+
+export async function getLivePublishedTransferDetail(slug: string): Promise<LiveReadResult<{ transfer: Transfer; schedules: TransferSchedule[] } | undefined>> {
+  const transferRead = await getLivePublishedTransferBySlug(slug);
+  if (!transferRead.data) return { ...transferRead, data: undefined };
+  if (transferRead.source === "mock") return { ...transferRead, data: { transfer: transferRead.data, schedules: [] } };
+  try {
+    const schedules = await SupabaseTransferRepository.findPublishedSchedules(transferRead.data.id);
+    return { source: "supabase", data: { transfer: transferRead.data, schedules } };
+  } catch (error) {
+    return { source: "supabase_error", data: { transfer: transferRead.data, schedules: [] }, error: error instanceof Error ? error.message : "Transfer schedules are unavailable." };
+  }
 }
 
 export async function getLiveBookings(): Promise<LiveReadResult<Booking[]>> {

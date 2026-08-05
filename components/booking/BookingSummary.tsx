@@ -14,6 +14,14 @@ export function BookingSummary({ draft }: { draft: BookingDraft }) {
           <dd>{estimate.nights}</dd>
         </div>
         <div>
+          <dt>Guests</dt>
+          <dd>{draft.adults} adult{draft.adults === 1 ? "" : "s"}{draft.children ? `, ${draft.children} child${draft.children === 1 ? "" : "ren"}` : ""}</dd>
+        </div>
+        <div>
+          <dt>Selected room</dt>
+          <dd>{draft.roomType}</dd>
+        </div>
+        <div>
           <dt>Price per night</dt>
           <dd>{draft.roomRate ? `$${draft.roomRate}` : "Price on request"}</dd>
         </div>
@@ -38,7 +46,7 @@ export function BookingSummary({ draft }: { draft: BookingDraft }) {
           <dd>${estimate.total}</dd>
         </div> : null}
       </dl>
-      <p>Your request is not a confirmed booking until the property or iThoddoo Maldives confirms it.</p>
+      <p>This is an estimate. The final price and availability are confirmed by the property.</p>
     </aside>
   );
 }

@@ -277,6 +277,7 @@ export const partnerNavigation = [
   { label: "Pricing", href: "/partner/pricing" },
   { label: "Bookings", href: "/partner/bookings" },
   { label: "Calendar", href: "/partner/calendar" },
+  { label: "Integrations", href: "/partner/integrations" },
   { label: "Gallery", href: "/partner/gallery" },
   { label: "Documents", href: "/partner/documents" },
   { label: "Verification", href: "/partner/verification" },

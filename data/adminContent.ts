@@ -13,6 +13,13 @@ export type AdminPropertyRoomType = {
   name: string;
   price: string;
   capacity: string;
+  bedType?: string;
+  description?: string;
+  image?: string;
+  amenities?: string[];
+  breakfastIncluded?: boolean;
+  adults?: number;
+  children?: number;
 };
 
 export type AdminPropertySeoFields = {

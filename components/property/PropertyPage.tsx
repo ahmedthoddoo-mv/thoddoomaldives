@@ -134,6 +134,7 @@ export default function PropertyPage({
                     type: service.name.toLowerCase().includes("transfer") ? "transfer" : "custom"
                   }))}
                   whatsapp={guesthouse.whatsapp}
+                  availability={guesthouse.availability}
                 />
               </section>
 
@@ -169,6 +170,7 @@ export default function PropertyPage({
                       <p className="mt-3 leading-7 text-slate-600">{text}</p>
                     </article>
                   ))}
+                  {guesthouse.about.find((section) => section.title === "Policies")?.body ? <article className="rounded-3xl border bg-white p-6 shadow-sm"><h3 className="text-2xl font-bold">Property policies</h3><p className="mt-3 leading-7 text-slate-600">{guesthouse.about.find((section) => section.title === "Policies")?.body}</p></article> : null}
                 </div>
               </section>
 

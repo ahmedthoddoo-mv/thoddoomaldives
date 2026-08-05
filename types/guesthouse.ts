@@ -50,4 +50,5 @@ export type Guesthouse = {
   checkIn?: string;
   checkOut?: string;
   services?: Array<{ id: string; name: string; description: string; price: number | null; currency: string; unit: string }>;
+  availability?: import("@/types/availability").RoomAvailability[];
 };

@@ -10,12 +10,12 @@ function toPublicRoom(room: AdminManagedProperty["roomTypes"][number], fallbackI
     name: room.name,
     price: room.price,
     capacity: room.capacity,
-    occupancy: room.capacity,
-    bedType: "",
-    description: room.price === "Price on request" ? room.name : `${room.name} — ${room.price}.`,
-    image: fallbackImage,
-    amenities: [],
-    breakfast: "",
+    occupancy: room.adults ? `${room.adults} adult${room.adults === 1 ? "" : "s"}${room.children ? ` + ${room.children} child${room.children === 1 ? "" : "ren"}` : ""}` : room.capacity,
+    bedType: room.bedType ?? "",
+    description: room.description || (room.price === "Price on request" ? room.name : `${room.name} — ${room.price}.`),
+    image: room.image || fallbackImage,
+    amenities: room.amenities ?? [],
+    breakfast: room.breakfastIncluded ? "Included" : "Not included",
     nightlyRate,
     currency
   };
@@ -23,7 +23,8 @@ function toPublicRoom(room: AdminManagedProperty["roomTypes"][number], fallbackI
 
 export function adminPropertyToGuesthouse(property: AdminManagedProperty): Guesthouse {
   const heroImage = property.coverImage || property.gallery[0] || "";
-  const firstPrice = property.roomTypes.find((room) => room.price)?.price ?? "Price on request";
+  const pricedRooms = property.roomTypes.filter((room) => room.price !== "Price on request").sort((a, b) => Number(a.price.match(/[\d.]+/)?.[0] ?? Infinity) - Number(b.price.match(/[\d.]+/)?.[0] ?? Infinity));
+  const firstPrice = pricedRooms[0]?.price ?? "Price on request";
 
   return {
     id: property.id,

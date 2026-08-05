@@ -39,6 +39,9 @@ const crmRepositorySource = readFileSync(new URL("../lib/repositories/supabase/S
 const bookingAnalyticsSource = readFileSync(new URL("../lib/bookings/bookingAnalytics.ts", import.meta.url), "utf8");
 const supabaseBookingRepositorySource = readFileSync(new URL("../lib/repositories/supabase/SupabaseBookingRepository.ts", import.meta.url), "utf8");
 const partnerAuthSource = readFileSync(new URL("../lib/partner-portal/partnerAuth.ts", import.meta.url), "utf8");
+const transferListingSource = readFileSync(new URL("../app/transfer/page.tsx", import.meta.url), "utf8");
+const transferDetailSource = readFileSync(new URL("../app/transfer/[slug]/page.tsx", import.meta.url), "utf8");
+const supabaseTransferRepositorySource = readFileSync(new URL("../lib/repositories/supabase/SupabaseTransferRepository.ts", import.meta.url), "utf8");
 const repairSource = readFileSync(new URL("../scripts/repair-approved-applications.mjs", import.meta.url), "utf8");
 
 test("1 new guesthouse approval has no existing identity match", () => {
@@ -293,6 +296,28 @@ test("reviewed price display text maps to the database unit constraint", () => {
   assert.equal(normalizePartnerApplicationPricingUnit("Per Person"), "per person");
   assert.equal(normalizePartnerApplicationPricingUnit("hourly"), "per hour");
   assert.equal(normalizePartnerApplicationPricingUnit("per vehicle"), null);
+});
+test("public transfer cards link to dynamic slug details with stored pricing", () => {
+  assert.match(transferListingSource, /href={`\/transfer\/\$\{option\.slug\}`}/);
+  assert.match(transferListingSource, /aria-label={`View details for \$\{option\.title\}`}/);
+  assert.match(transferListingSource, /firstSchedule\?\.price[\s\S]*option\.price/);
+  assert.doesNotMatch(transferListingSource, /per person/);
+  assert.match(transferDetailSource, /export const dynamic = "force-dynamic"/);
+  assert.match(transferDetailSource, /if \(!detail\) notFound\(\)/);
+  assert.match(transferDetailSource, /schedules\[0\]\?\.price[\s\S]*transfer\.price/);
+  assert.doesNotMatch(transferDetailSource, /per person/);
+  for (const label of ["Duration:", "Route:", "Departure point:", "Arrival point:", "Schedule:", "Luggage:", "Pickup/drop-off:", "Cancellation policy:"]) {
+    assert.ok(transferDetailSource.includes(label), `missing transfer detail label: ${label}`);
+  }
+  assert.match(transferDetailSource, /robots: \{ index: true, follow: true \}/);
+  assert.match(transferDetailSource, /path: `\/transfer\/\$\{detail\.transfer\.slug\}`/);
+});
+test("transfer slug lookup can resolve only published verified public-view rows", () => {
+  assert.match(supabaseTransferRepositorySource, /from\("public_transfers"\)[\s\S]*eq\("slug", slug\)[\s\S]*maybeSingle\(\)/);
+  assert.doesNotMatch(supabaseTransferRepositorySource.match(/async findBySlug[\s\S]*?\n  },/)?.[0] ?? "", /from\("transfers"\)/);
+  assert.match(reviewMigrationSql, /public_transfers[\s\S]*publication_status = 'published' and verification_status = 'verified'/);
+  assert.match(transferDetailSource, /getLivePublishedTransferDetail/);
+  assert.match(transferDetailSource, /if \(!detail\) notFound\(\)/);
 });
 test("repair tooling is dry-run by default and requires explicit safe apply inputs", () => {
   assert.match(repairSource, /const apply = has\("--apply"\)/);

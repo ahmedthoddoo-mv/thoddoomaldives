@@ -1248,6 +1248,18 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+.srOnlyText {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* EPIC-016.5 platform consistency */
 .platformPage {
   background: #f7faf8;
@@ -1348,6 +1360,35 @@ body {
 .platformCard {
   overflow: hidden;
 }
+
+.transferCardLink {
+  color: inherit;
+  text-decoration: none;
+  transition: box-shadow 180ms ease, transform 180ms ease;
+}
+
+.transferCardLink:hover {
+  box-shadow: 0 24px 70px rgba(23, 32, 28, 0.14);
+  transform: translateY(-2px);
+}
+
+.transferCardLink:focus-visible {
+  outline: 3px solid #087f7a;
+  outline-offset: 4px;
+}
+
+.transferCardAction {
+  display: inline-block;
+  margin-top: 18px;
+  color: #045b58;
+  font-weight: 900;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.transferScheduleSection + .transferScheduleSection { margin-top: 18px; }
+.transferTimetable { display: grid; gap: 10px; margin-top: 20px; }
+.transferTimetable > div { display: flex; justify-content: space-between; gap: 20px; border-bottom: 1px solid rgba(23, 32, 28, 0.1); padding: 10px 0; }
 
 .platformCardBody {
   padding: 22px;
@@ -1480,6 +1521,543 @@ body {
 .platformCard.bg-green-600 h3,
 .platformCard.bg-green-600 p {
   color: #fff;
+}
+
+.transferExperiencePage {
+  background:
+    linear-gradient(180deg, #f8fbfa 0%, #f3f7f5 34%, #eef3f2 100%);
+}
+
+.transferHero {
+  min-height: 78vh;
+  padding-top: 132px;
+  padding-bottom: 44px;
+}
+
+.transferHero::before {
+  background:
+    linear-gradient(180deg, rgba(4, 16, 18, 0.18), rgba(4, 16, 18, 0.88)),
+    linear-gradient(120deg, rgba(4, 93, 88, 0.34), transparent 45%),
+    radial-gradient(circle at 82% 18%, rgba(212, 183, 120, 0.18), transparent 28rem);
+}
+
+.transferHeroLayout {
+  display: grid;
+  gap: 24px;
+}
+
+.transferHeroCopy {
+  display: grid;
+  gap: 18px;
+}
+
+.transferHeroActions,
+.transferDepartureFooter,
+.transferDirectionHeader,
+.transferStickyBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.transferGhostButton {
+  border-color: rgba(255, 255, 255, 0.38);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+}
+
+.transferHeroStats {
+  display: grid;
+  gap: 12px;
+  margin: 4px 0 0;
+}
+
+.transferHeroStats div,
+.transferLiveCard,
+.transferFleetCard,
+.transferFactCard,
+.transferFaqCard,
+.transferOverviewCard,
+.transferBookingPanel,
+.transferTimelineCard,
+.transferFleetPanel {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 22px;
+  box-shadow: 0 30px 80px rgba(7, 16, 14, 0.12);
+}
+
+.transferHeroStats div {
+  min-width: 0;
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  padding: 18px;
+}
+
+.transferHeroStats dt,
+.transferTypeBadge,
+.transferFeaturedBadge,
+.transferFridayTag,
+.transferLiveLabel,
+.transferDirectionHeader p,
+.transferFleetCard small {
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.transferHeroStats dt {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.transferHeroStats dd {
+  margin: 10px 0 0;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.transferLiveCard {
+  align-self: end;
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(9, 19, 21, 0.62);
+  color: #fff;
+  padding: 24px;
+  backdrop-filter: blur(16px);
+}
+
+.transferLiveCard h2 {
+  margin: 8px 0 0;
+  color: #fff;
+  font-size: clamp(1.8rem, 3.5vw, 3rem);
+  line-height: 1.02;
+}
+
+.transferLiveMeta,
+.transferMetaList p,
+.transferReasonList li,
+.transferFactCard {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.transferLiveMeta {
+  margin: 14px 0 0;
+  color: rgba(255, 255, 255, 0.84);
+}
+
+.transferLiveDescription,
+.transferScheduleAlert {
+  margin: 16px 0 0;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.7;
+}
+
+.transferScheduleAlert {
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 12px 14px;
+}
+
+.transferLivePrice,
+.transferDeparturePrice {
+  margin: 18px 0 0;
+  color: #b9fff8;
+  font-size: 1.2rem;
+  font-weight: 900;
+}
+
+.transferInlineLink {
+  display: inline-flex;
+  margin-top: 16px;
+  color: #fff;
+  font-weight: 900;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.transferLiveDivider {
+  height: 1px;
+  margin: 18px 0 0;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.transferDepartureGrid,
+.transferFleetGrid,
+.transferFaqGrid,
+.transferInfoGrid,
+.transferDetailGrid,
+.transferFactGrid {
+  display: grid;
+  gap: 18px;
+}
+
+.transferDepartureCard,
+.transferOverviewCard,
+.transferBookingPanel,
+.transferTimelineCard,
+.transferFleetPanel,
+.transferWhyBookCard,
+.transferInfoPanel,
+.transferFaqCard,
+.transferTimetableCard {
+  border-radius: 24px;
+}
+
+.transferDepartureImage {
+  position: relative;
+  min-height: 320px;
+}
+
+.transferDepartureImageOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px;
+  background: linear-gradient(180deg, rgba(7, 16, 14, 0.28), transparent 42%);
+}
+
+.transferTypeBadge,
+.transferFeaturedBadge,
+.transferFridayTag {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 8px 12px;
+}
+
+.transferTypeBadge {
+  background: rgba(255, 255, 255, 0.88);
+  color: #0e2b28;
+}
+
+.transferFeaturedBadge {
+  background: rgba(208, 177, 111, 0.92);
+  color: #382100;
+}
+
+.transferFridayTag {
+  background: rgba(8, 127, 122, 0.12);
+  color: #045b58;
+}
+
+.transferDepartureHeader {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: start;
+  justify-content: space-between;
+}
+
+.transferDepartureHeader p,
+.transferScheduleNote,
+.transferFleetCard p,
+.transferFactCard p,
+.transferFallbackText {
+  margin: 0;
+}
+
+.transferMetaList {
+  display: grid;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.transferMetaList p {
+  margin: 0;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  border-radius: 18px;
+  background: #f4f8f7;
+  padding: 14px 16px;
+  color: #18312d;
+}
+
+.transferMetaList strong,
+.transferFactCard strong {
+  color: #12201b;
+  font-size: 0.9rem;
+}
+
+.transferMetaList em {
+  color: #52625b;
+  font-style: normal;
+  text-align: right;
+}
+
+.transferHighlightsList,
+.transferReasonList,
+.transferJourneyTimeline {
+  display: grid;
+  gap: 12px;
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.transferHighlightsList li,
+.transferJourneyTimeline li {
+  border-top: 1px solid rgba(18, 32, 27, 0.08);
+  padding-top: 12px;
+  color: #52625b;
+  line-height: 1.7;
+}
+
+.transferShowcasePanel {
+  display: grid;
+  gap: 24px;
+}
+
+.transferFleetCard,
+.transferFactCard,
+.transferFaqCard {
+  background: #fff;
+  padding: 20px;
+}
+
+.transferFleetCard h3,
+.transferFaqCard h3 {
+  margin: 14px 0 8px;
+  font-size: 1.18rem;
+}
+
+.transferReasonList li {
+  grid-template-columns: auto minmax(0, 1fr);
+  border-radius: 18px;
+  background: #f4f8f7;
+  padding: 14px 16px;
+}
+
+.transferReasonList p,
+.transferFactCard p {
+  color: #52625b;
+  line-height: 1.7;
+}
+
+.transferInfoPanel {
+  padding: 24px;
+}
+
+.transferInfoPanel .platformSectionHeader {
+  margin-bottom: 18px;
+}
+
+.transferInfoPanel ul {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: #43514b;
+}
+
+.transferInfoPanel li {
+  border-top: 1px solid rgba(18, 32, 27, 0.08);
+  padding-top: 12px;
+  line-height: 1.7;
+}
+
+.transferDetailLiveCard {
+  max-width: 420px;
+}
+
+.transferFactGrid {
+  margin-top: 22px;
+}
+
+.transferFactCard {
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px 12px;
+  border: 1px solid rgba(18, 32, 27, 0.08);
+  border-radius: 20px;
+  box-shadow: none;
+}
+
+.transferFactCard strong,
+.transferFactCard p {
+  grid-column: 2;
+}
+
+.transferTimetableCard .platformCardBody {
+  padding: 24px;
+}
+
+.transferDirectionHeader {
+  margin-bottom: 18px;
+}
+
+.transferDirectionHeader p {
+  margin: 0;
+  color: #5d6a64;
+}
+
+.transferTimetable {
+  gap: 12px;
+}
+
+.transferTimetableRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: start;
+  border-bottom: 1px solid rgba(23, 32, 28, 0.1);
+  padding: 12px 0;
+}
+
+.transferTimetableRow strong {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.transferTimetableFriday {
+  border-radius: 18px;
+  background: linear-gradient(90deg, rgba(8, 127, 122, 0.08), rgba(8, 127, 122, 0));
+  padding-inline: 14px;
+}
+
+.transferTimelineCard ol {
+  counter-reset: transfer-step;
+}
+
+.transferJourneyTimeline li {
+  position: relative;
+  padding-left: 56px;
+}
+
+.transferJourneyTimeline li::before {
+  counter-increment: transfer-step;
+  content: counter(transfer-step);
+  position: absolute;
+  left: 0;
+  top: 8px;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: #087f7a;
+  color: #fff;
+  font-weight: 900;
+}
+
+.transferStickyOffset {
+  padding-bottom: 40px;
+}
+
+.transferStickyBar {
+  position: sticky;
+  bottom: 12px;
+  z-index: 20;
+  width: min(calc(100% - 24px), 1120px);
+  margin: 0 auto 12px;
+  border: 1px solid rgba(18, 32, 27, 0.08);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 24px 50px rgba(18, 32, 27, 0.16);
+  padding: 12px 14px;
+  backdrop-filter: blur(16px);
+}
+
+.transferStickyBar div {
+  display: grid;
+}
+
+.transferStickyBar strong {
+  color: #12201b;
+}
+
+.transferStickyBar span {
+  color: #5d6a64;
+}
+
+.transferIcon {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  color: #087f7a;
+}
+
+.transferClosingCta {
+  position: relative;
+  overflow: hidden;
+}
+
+.transferClosingCta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 80% 20%, rgba(212, 183, 120, 0.16), transparent 20rem);
+  pointer-events: none;
+}
+
+@media (min-width: 760px) {
+  .transferHeroLayout,
+  .transferInfoGrid,
+  .transferDetailGrid {
+    grid-template-columns: minmax(0, 1.3fr) minmax(320px, 0.7fr);
+    align-items: end;
+  }
+
+  .transferHeroStats,
+  .transferFactGrid,
+  .transferFleetGrid,
+  .transferFaqGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .transferDepartureGrid {
+    gap: 24px;
+  }
+}
+
+@media (min-width: 1040px) {
+  .transferHeroStats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .transferFleetGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 759px) {
+  .transferHero {
+    min-height: 72vh;
+    padding-top: 116px;
+  }
+
+  .transferHeroActions,
+  .platformButtonRow,
+  .transferStickyBar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .transferMetaList p,
+  .transferTimetableRow {
+    grid-template-columns: auto 1fr;
+  }
+
+  .transferMetaList em,
+  .transferTimetableRow span {
+    text-align: left;
+  }
+
+  .transferTimetableRow {
+    flex-direction: column;
+  }
+
+  .transferStickyBar {
+    bottom: 8px;
+  }
 }
 
 .sectionHeader {

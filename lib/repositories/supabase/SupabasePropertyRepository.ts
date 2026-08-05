@@ -138,6 +138,13 @@ export const SupabasePropertyRepository = {
   async findPublished() {
     return readPublicProperties();
   },
+  async findPublicAvailability(propertyId: string) {
+    const supabase = createSupabaseServerClient();
+    if (!supabase) return [];
+    const { data, error } = await supabase.from("public_room_availability").select("*").eq("property_id", propertyId).gte("availability_date", new Date().toISOString().slice(0, 10)).order("availability_date");
+    if (error) throw error;
+    return (data ?? []).map((row) => ({ id: row.id, propertyId: row.property_id, roomId: row.room_id ?? undefined, date: row.availability_date, roomsAvailable: row.rooms_available, rate: row.rate, currency: row.currency, restrictions: row.restrictions && typeof row.restrictions === "object" && !Array.isArray(row.restrictions) ? row.restrictions : {}, provider: row.provider as import("@/types/availability").AvailabilityProvider, lastSynchronizedAt: row.last_synchronized_at ?? undefined, syncStatus: row.sync_status }));
+  },
   async search(query: string) {
     const supabase = createSupabaseServerClient();
     if (!supabase) return [];

@@ -245,10 +245,14 @@ export default function PartnersPage() {
       <section className="partnerFinalCta">
         <div className="partnerLandingContainer">
           <p className="eyebrow">Apply today</p>
-          <h2>Ready to become an iThoddoo Growth Partner?</h2>
-          <p>Submit your business details through the WhatsApp-only onboarding flow. No login, database, or payments.</p>
+          <h2>Join the iThoddoo Maldives Partner Network</h2>
+          <p>
+            Apply to join iThoddoo Maldives and manage your business through a secure partner portal. Submit your details,
+            complete verification, update your listing, manage rates, schedules, photos, and availability, and receive
+            booking enquiries from travelers.
+          </p>
           <Link className="partnerPrimaryButton" href="/partners/onboarding">
-            Apply Now
+            Start Partner Application
           </Link>
         </div>
       </section>

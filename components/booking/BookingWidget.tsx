@@ -16,6 +16,7 @@ import { PropertyAvailabilityCard } from "@/components/booking/PropertyAvailabil
 import { RoomSelector } from "@/components/booking/RoomSelector";
 import { TransferSelector } from "@/components/booking/TransferSelector";
 import { TurnstileWidget } from "@/components/booking/TurnstileWidget";
+import type { RoomAvailability } from "@/types/availability";
 
 type BookingWidgetProps = {
   propertyName: string;
@@ -24,12 +25,13 @@ type BookingWidgetProps = {
   whatsapp: string;
   rooms: Room[];
   optionalServices?: BookingService[];
+  availability?: RoomAvailability[];
 };
 
 const transferAndMealTypes = new Set<BookingService["type"]>(["transfer", "meal"]);
 const experienceTypes = new Set<BookingService["type"]>(["experience", "rental", "custom"]);
 
-export function BookingWidget({ propertyName, propertySlug, propertyId, whatsapp, rooms, optionalServices = [] }: BookingWidgetProps) {
+export function BookingWidget({ propertyName, propertySlug, propertyId, whatsapp, rooms, optionalServices = [], availability = [] }: BookingWidgetProps) {
   const bookingOptionalServices = optionalServices;
   const [isSubmitting, startSubmitting] = useTransition();
   const [checkIn, setCheckIn] = useState("");
@@ -249,7 +251,7 @@ export function BookingWidget({ propertyName, propertySlug, propertyId, whatsapp
 
         <div className="bookingWidgetSide">
           <BookingSummary draft={draft} />
-          <PropertyAvailabilityCard />
+          <PropertyAvailabilityCard availability={availability} />
         </div>
       </div>
     </section>
