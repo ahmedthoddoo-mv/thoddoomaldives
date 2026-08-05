@@ -1,23 +1,28 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import type { Metadata, Viewport } from "next";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import WhatsAppButton from "@/components/WhatsAppButton";
-import { DEFAULT_OG_IMAGE, SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/seo";
+import { SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/seo";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+const canonicalSiteUrl = (() => {
+  const candidate = process.env.NEXT_PUBLIC_SITE_URL?.trim() || SITE_URL;
+  try {
+    return new URL(candidate);
+  } catch {
+    return new URL(SITE_URL);
+  }
+})();
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const socialImagePath = "/og-image.png";
+const socialImageUrl = absoluteUrl(socialImagePath);
+
+export const viewport: Viewport = {
+  themeColor: "#087f7a"
+};
 
 export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
+  metadataBase: canonicalSiteUrl,
   title: {
     default: "iThoddoo Maldives | Thoddoo Stays, Experiences & Transfers",
     template: `%s | ${SITE_NAME}`,
@@ -28,6 +33,12 @@ export const metadata: Metadata = {
   alternates: {
     canonical: SITE_URL,
   },
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: SITE_NAME,
+    statusBarStyle: "default"
+  },
   openGraph: {
     title: "iThoddoo Maldives | Thoddoo Stays, Experiences & Transfers",
     description:
@@ -36,10 +47,10 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     images: [
       {
-        url: absoluteUrl(DEFAULT_OG_IMAGE),
+        url: socialImageUrl,
         width: 1200,
         height: 630,
-        alt: "Thoddoo Maldives beach aerial",
+        alt: "Discover Thoddoo with iThoddoo Maldives",
       },
     ],
     locale: "en_US",
@@ -50,12 +61,22 @@ export const metadata: Metadata = {
     title: "iThoddoo Maldives | Thoddoo Stays, Experiences & Transfers",
     description:
       "Plan stays, transfers, excursions, and island days in Thoddoo with trusted local support.",
-    images: [absoluteUrl(DEFAULT_OG_IMAGE)],
+    images: [absoluteUrl("/twitter-image.png")],
   },
   icons: {
-    icon: "/icon.png?v=4",
-    shortcut: "/icon.png?v=4",
-    apple: "/apple-icon.png?v=4",
+    icon: [
+      { url: "/icon.png" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" }
+    ],
+    shortcut: ["/icon.png"],
+    apple: [
+      { url: "/apple-icon.png" },
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+      { url: "/apple-touch-icon-precomposed.png", sizes: "180x180", type: "image/png" },
+      { url: "/apple-touch-icon-120x120.png", sizes: "120x120", type: "image/png" },
+      { url: "/apple-touch-icon-120x120-precomposed.png", sizes: "120x120", type: "image/png" }
+    ]
   },
 };
 
@@ -65,10 +86,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
+    <html lang="en" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
         <Navbar />
         {children}
