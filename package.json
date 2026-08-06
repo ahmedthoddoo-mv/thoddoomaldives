@@ -19,7 +19,7 @@
     "supabase:status": "supabase status",
     "repair:partners": "node --env-file=.env.local scripts/repair-approved-applications.mjs",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
-    "deploy": "opennextjs-cloudflare build && wrangler deploy"
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.2",
