@@ -227,6 +227,13 @@ test("booking enquiries require canonical server-side Turnstile verification", (
   assert.doesNotMatch(turnstileWidgetSource, /TURNSTILE_SECRET/);
   assert.match(turnstileWidgetSource, /process\.env\.NEXT_PUBLIC_TURNSTILE_SITE_KEY/);
 });
+test("partner applications require canonical server-side Turnstile verification", () => {
+  assert.match(onboardingActionsSource, /import\s+\{\s*verifyTurnstileToken\s*\}\s+from\s+"@\/lib\/security\/turnstile"/);
+  assert.match(onboardingActionsSource, /verifyTurnstileToken\(\{\s*token:\s*input\.turnstileToken,\s*remoteIp,\s*expectedAction:\s*"turnstile-spin-v2"\s*\}\)/);
+  assert.match(onboardingActionsSource, /input\.websiteField\?\.trim\(\)/);
+  assert.match(onboardingActionsSource, /checkRateLimit\(/);
+  assert.match(onboardingActionsSource, /getClientIp\(/);
+});
 test("production data mode cannot default to mock", () => {
   assert.match(dataModeSource, /NEXT_PUBLIC_DATA_MODE === "mock"/);
   assert.doesNotMatch(dataModeSource, /return isSupabaseConfigured\(\) \? "supabase" : "mock"/);

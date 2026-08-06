@@ -1,7 +1,11 @@
 "use server";
 
+import { headers } from "next/headers";
 import { platformConfig } from "@/lib/config/platform";
 import { sendEmail } from "@/lib/email/client";
+import { checkRateLimit } from "@/lib/security/rateLimit";
+import { getClientIp } from "@/lib/security/request";
+import { verifyTurnstileToken } from "@/lib/security/turnstile";
 import { buildAdminNotificationEmail } from "@/lib/email/templates/admin-notification";
 import { buildPartnerApplicationEmail } from "@/lib/email/templates/partner-application";
 import { validateCategoryAnswers, validatePricingRows } from "@/lib/partner-onboarding/onboardingSchemas";
@@ -170,6 +174,27 @@ export async function submitSmartPartnerApplication(input: SmartPartnerApplicati
       mode: "mock",
       message: "Mock mode is active. Application can be saved in browser demo storage."
     };
+  }
+
+  if (input.websiteField?.trim()) {
+    return { ok: false, mode: "supabase", message: "Application could not be submitted.", errors: ["Please complete the security check and try again."] };
+  }
+
+  const requestHeaders = await headers();
+  const remoteIp = getClientIp(requestHeaders);
+  const ipRateLimit = checkRateLimit({ bucket: "partner-application", key: remoteIp, limit: 5, windowMs: 30 * 60 * 1000 });
+  if (!ipRateLimit.allowed) {
+    return {
+      ok: false,
+      mode: "supabase",
+      message: "Too many submission attempts.",
+      errors: [`Please wait about ${ipRateLimit.retryAfterSeconds} seconds and try again.`]
+    };
+  }
+
+  const turnstileOk = await verifyTurnstileToken({ token: input.turnstileToken, remoteIp, expectedAction: "turnstile-spin-v2" });
+  if (!turnstileOk) {
+    return { ok: false, mode: "supabase", message: "Application could not be submitted.", errors: ["Please complete the security check and try again."] };
   }
 
   const canonicalInput = { ...input, businessType: normalizeBusinessType(input.businessType) };
