@@ -14,7 +14,8 @@ export type Partner = {
 export type Room = {
   id: string;
   name: string;
-  nightlyRate: number;
+  nightlyRate: number | null;
+  currency?: string;
   capacity: string;
 };
 
@@ -38,7 +39,7 @@ export type Guest = {
 export type Transfer = {
   id: string;
   name: string;
-  price: number;
+  price: number | null;
 };
 
 export type Experience = {
@@ -49,15 +50,15 @@ export type Experience = {
 
 export type Commission = {
   rate: number;
-  bookingTotal: number;
-  companyRevenue: number;
-  partnerRevenue: number;
+  bookingTotal: number | null;
+  companyRevenue: number | null;
+  partnerRevenue: number | null;
 };
 
 export type BookingService = {
   id: string;
   name: string;
-  price: number;
+  price: number | null;
   type: "transfer" | "meal" | "experience" | "rental" | "custom";
 };
 
@@ -76,7 +77,7 @@ export type Booking = {
   roomType: string;
   nights: number;
   services: BookingService[];
-  estimatedValue: number;
+  estimatedValue: number | null;
   commission: Commission;
   status: BookingStatus;
   paymentStatus: PaymentStatus;
@@ -94,7 +95,7 @@ export type BookingDraft = {
   adults: number;
   children: number;
   roomType: string;
-  roomRate: number;
+  roomRate: number | null;
   services: BookingService[];
   specialRequests: string;
 };

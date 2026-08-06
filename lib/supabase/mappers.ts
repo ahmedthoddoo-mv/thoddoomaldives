@@ -7,8 +7,8 @@ import type { Restaurant, RestaurantCuisine } from "@/types/restaurant";
 import type { Transfer, TransferType } from "@/types/transfer";
 import type { Tables } from "@/lib/supabase/types";
 
-function formatUsd(value: number | null) {
-  return value ? `From $${Number(value).toFixed(0)}/night` : "Price on request";
+function formatRoomPrice(value: number | null, currency: string | null) {
+  return value && value > 0 ? `${currency ?? "USD"} ${Number(value).toFixed(0)}/night` : "Price on request";
 }
 
 function normalizeVerificationStatus(status: string): AdminManagedProperty["verificationStatus"] {
@@ -22,8 +22,15 @@ export function mapRoomRowToDomain(room: Tables<"rooms">): AdminManagedProperty[
   return {
     id: room.id,
     name: room.name,
-    price: formatUsd(room.price_per_night),
-    capacity: room.capacity
+    price: formatRoomPrice(room.price_per_night, room.currency),
+    capacity: room.capacity,
+    bedType: room.bed_type ?? "",
+    description: room.description ?? "",
+    image: room.image_paths[0],
+    amenities: room.amenities,
+    breakfastIncluded: room.breakfast_included,
+    adults: room.adults,
+    children: room.children
   };
 }
 
@@ -57,8 +64,10 @@ export function mapPropertyRowToDomain(
   const gpsLocation =
     property.latitude !== null && property.longitude !== null ? `${property.latitude}, ${property.longitude}` : "";
   const gallery = getGalleryFromMedia(property, propertyMedia);
-  const partnerName = partner?.business_name ? `Partner: ${partner.business_name}` : "Partner details available on request";
-
+  const metadata = property.metadata && typeof property.metadata === "object" && !Array.isArray(property.metadata)
+    ? property.metadata as { membership?: unknown }
+    : {};
+  const membership = String(metadata.membership ?? "").toLowerCase();
   return {
     id: property.id,
     name: property.name,
@@ -70,10 +79,10 @@ export function mapPropertyRowToDomain(
     gallery,
     description: property.short_description,
     shortDescription: property.short_description,
-    fullDescription: property.full_description ? `${property.full_description}\n\n${partnerName}` : `${property.short_description}\n\n${partnerName}`,
+    fullDescription: property.full_description || property.short_description,
     roomTypes: rooms.map(mapRoomRowToDomain),
-    amenities: property.amenities.length > 0 ? property.amenities : ["Wi-Fi", "Local support", "Direct WhatsApp booking"],
-    policies: property.policies.length > 0 ? property.policies : ["Policies will be confirmed directly with the property."],
+    amenities: property.amenities,
+    policies: property.policies,
     checkIn: property.check_in_time?.slice(0, 5) ?? "",
     checkOut: property.check_out_time?.slice(0, 5) ?? "",
     whatsapp: property.whatsapp ?? partner?.whatsapp ?? "",
@@ -82,7 +91,7 @@ export function mapPropertyRowToDomain(
     googleMaps: property.address ?? "",
     googleMapsLink: gpsLocation ? `https://maps.google.com/?q=${encodeURIComponent(gpsLocation)}` : "",
     gpsLocation,
-    membershipPlan: "Verified",
+    membershipPlan: membership === "premium" ? "Premium" : membership === "free" ? "Free" : "Verified",
     verificationStatus: normalizeVerificationStatus(property.verification_status),
     isPublished: property.publication_status === "published",
     isFeatured: property.featured,
@@ -126,15 +135,15 @@ export function mapBookingRowToDomain(
     roomType: room?.name ?? "Room to be confirmed",
     nights,
     services: [],
-    estimatedValue: booking.booking_total,
+    estimatedValue: booking.quoted_amount,
     commission: {
-      bookingTotal: booking.booking_total,
+      bookingTotal: booking.quoted_amount,
       rate: booking.commission_percent / 100,
-      companyRevenue: booking.company_revenue,
-      partnerRevenue: booking.partner_revenue
+      companyRevenue: booking.quoted_amount === null ? null : booking.company_revenue,
+      partnerRevenue: booking.quoted_amount === null ? null : booking.partner_revenue
     },
     status: booking.booking_status as Booking["status"],
-    paymentStatus: booking.payment_status === "demo_only" ? "demo-only" : booking.payment_status === "pending" ? "pending" : (booking.payment_status as Booking["paymentStatus"]),
+    paymentStatus: booking.payment_status === "demo_only" || booking.payment_status === "pending" ? "pending" : (booking.payment_status as Booking["paymentStatus"]),
     taxesFees: booking.taxes_fees,
     roomPrepared: booking.room_prepared,
     internalNotes: booking.internal_notes ?? undefined,
@@ -143,6 +152,8 @@ export function mapBookingRowToDomain(
 }
 
 export function mapPartnerRowToDomain(partner: Tables<"partners">): CrmPartner {
+  const category = partner.category.toLowerCase();
+  const membership = String(partner.membership_plan_id ?? "verified").toLowerCase();
   return {
     id: partner.id,
     business: partner.business_name,
@@ -152,7 +163,10 @@ export function mapPartnerRowToDomain(partner: Tables<"partners">): CrmPartner {
     website: partner.website ?? "",
     address: partner.address ?? "",
     gps: partner.latitude !== null && partner.longitude !== null ? `${partner.latitude}, ${partner.longitude}` : "",
-    category: partner.category === "restaurant" ? "Restaurant" : partner.category === "transfer" ? "Transfer" : partner.category === "excursion" ? "Excursion" : partner.category === "shop" ? "Shop" : "Guesthouse",
+    category: ["restaurant", "cafe"].includes(category) ? "Restaurant"
+      : ["transfer", "transfer-company", "speedboat-company", "ferry-operator"].includes(category) ? "Transfer"
+      : ["excursion", "excursion-operator", "dive-center", "watersports", "photographer", "farm-experience", "local-guide"].includes(category) ? "Excursion"
+      : category === "shop" ? "Shop" : "Guesthouse",
     status: partner.status === "verified" ? "Verified" : partner.status === "pending" ? "Pending" : "Contacted",
     leadSource: partner.lead_source ?? "Supabase",
     priority: partner.priority === "high" ? "High" : partner.priority === "urgent" ? "Urgent" : partner.priority === "low" ? "Low" : "Medium",
@@ -160,7 +174,7 @@ export function mapPartnerRowToDomain(partner: Tables<"partners">): CrmPartner {
     nextFollowUp: "",
     notes: [],
     verification: partner.verification_status === "verified" ? "Verified" : partner.verification_status === "pending" ? "Pending" : "Unverified",
-    membership: "Verified"
+    membership: membership === "premium" ? "Premium" : membership === "free" ? "Free" : membership === "enterprise" ? "Enterprise" : "Verified"
   };
 }
 
@@ -184,7 +198,7 @@ export function mapMediaRowToDomain(asset: Tables<"media_assets">): MediaAsset {
     isHero: asset.category === "Hero",
     archived: asset.archived,
     source: "Supabase",
-    rightsStatus: asset.rights_status === "needs_confirmation" ? "Needs confirmation" : asset.rights_status === "permission_confirmed" ? "Permission confirmed" : "Internal demo asset"
+    rightsStatus: asset.rights_status === "permission_confirmed" ? "Permission confirmed" : "Needs confirmation"
   };
 }
 
@@ -200,7 +214,9 @@ export function mapRestaurantRowToDomain(restaurant: Tables<"restaurants">): Res
     priceRange: restaurant.price_range ?? "$$",
     openingHours: restaurant.opening_hours ?? "Confirm locally",
     image: restaurant.image_path,
-    featured: restaurant.featured
+    featured: restaurant.featured,
+    publicationStatus: restaurant.publication_status,
+    verificationStatus: restaurant.verification_status
   };
 }
 
@@ -216,7 +232,9 @@ export function mapExperienceRowToDomain(experience: Tables<"experiences">): Exp
     price: experience.price ?? "Price on request",
     image: experience.image_path,
     highlights: experience.highlights,
-    featured: experience.featured
+    featured: experience.featured,
+    publicationStatus: experience.publication_status,
+    verificationStatus: experience.verification_status
   };
 }
 
@@ -234,6 +252,8 @@ export function mapTransferRowToDomain(transfer: Tables<"transfers">): Transfer 
     scheduleNote: transfer.schedule_note ?? "Schedules can change.",
     image: transfer.image_path,
     highlights: transfer.highlights,
-    featured: transfer.featured
+    featured: transfer.featured,
+    publicationStatus: transfer.publication_status,
+    verificationStatus: transfer.verification_status
   };
 }

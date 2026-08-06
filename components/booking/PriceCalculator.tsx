@@ -6,11 +6,11 @@ export function PriceCalculator({ draft }: { draft: BookingDraft }) {
 
   return (
     <div className="bookingPriceCalculator">
-      <span>${draft.roomRate}/night</span>
+      <span>{draft.roomRate ? `$${draft.roomRate}/night` : "Price on request"}</span>
       <span>{estimate.nights} nights</span>
-      <span>${estimate.accommodation} accommodation</span>
-      <span>Taxes/fees pending</span>
-      <span>${estimate.total} total</span>
+      {estimate.accommodation !== null ? <span>${estimate.accommodation} accommodation</span> : null}
+      <span>The property will confirm availability and the final price.</span>
+      {estimate.total !== null ? <span>${estimate.total} estimated total</span> : null}
     </div>
   );
 }

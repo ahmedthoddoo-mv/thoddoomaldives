@@ -3,19 +3,17 @@
 import Link from "next/link";
 import { VerifiedBadge } from "@/components/partner/VerifiedBadge";
 import { usePublicStayProperties } from "@/lib/properties/propertyStore";
-import type { PropertyReadSource } from "@/lib/properties/propertyReads";
 import type { Guesthouse } from "@/types/guesthouse";
 
 type StayDirectoryClientProps = {
   initialGuesthouses: Guesthouse[];
-  readSource: PropertyReadSource;
   error?: string;
 };
 
-export function StayDirectoryClient({ initialGuesthouses, readSource, error }: StayDirectoryClientProps) {
+export function StayDirectoryClient({ initialGuesthouses, error }: StayDirectoryClientProps) {
   const storedGuesthouses = usePublicStayProperties();
   const guesthousesBySlug = new Map<string, Guesthouse>();
-  const allowBrowserDemoMerge = readSource !== "supabase";
+  const allowBrowserDemoMerge = process.env.NEXT_PUBLIC_DATA_MODE === "mock";
 
   initialGuesthouses.forEach((guesthouse) => guesthousesBySlug.set(guesthouse.slug, guesthouse));
   if (allowBrowserDemoMerge) {

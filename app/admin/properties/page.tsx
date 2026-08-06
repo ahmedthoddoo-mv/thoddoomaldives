@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { AdminPropertyImportPreview } from "@/components/admin/AdminPropertyImportPreview";
 import { AdminPropertyManager } from "@/components/admin/AdminPropertyManager";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
@@ -27,7 +26,6 @@ export default async function AdminPropertiesPage() {
           </section>
         ) : null}
         <AdminPropertyManager actions={adminPropertyActions} properties={properties} />
-        <AdminPropertyImportPreview />
       </div>
     </AdminShell>
   );

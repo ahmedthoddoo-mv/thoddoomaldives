@@ -1,11 +1,18 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient, createSupabaseServiceRoleClient } from "@/lib/supabase/server";
 import { mapRestaurantRowToDomain } from "@/lib/supabase/mappers";
 
 export const SupabaseRestaurantRepository = {
   async findAll() {
-    const supabase = createSupabaseServerClient();
-    if (!supabase) return [];
+    const supabase = createSupabaseServiceRoleClient() ?? createSupabaseServerClient();
+    if (!supabase) throw new Error("Supabase is not configured.");
     const { data, error } = await supabase.from("restaurants").select("*").order("created_at", { ascending: false });
+    if (error) throw error;
+    return (data ?? []).map(mapRestaurantRowToDomain);
+  },
+  async findPublished() {
+    const supabase = createSupabaseServerClient();
+    if (!supabase) throw new Error("Supabase is not configured.");
+    const { data, error } = await supabase.from("public_restaurants").select("*").order("created_at", { ascending: false });
     if (error) throw error;
     return (data ?? []).map(mapRestaurantRowToDomain);
   },

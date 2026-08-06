@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getDataMode } from "@/lib/supabase/status";
+import { getPartnerAccessState } from "@/lib/partner-portal/partnerAccess";
 import {
   clearPartnerSessionCookies,
   getPartnerAuthState,
@@ -48,6 +49,20 @@ export async function signInPartner(_prevState: PartnerAuthFormState, formData: 
 
   await setPartnerSessionCookies(data.session.access_token, data.session.refresh_token, data.session.expires_in);
   await logPartnerAuditEvent("login", { email }, null, data.user.id);
+  const authState = await getPartnerAuthState();
+  const accessState = getPartnerAccessState(authState.status === "authenticated" ? authState.partner : null);
+  if (accessState === "pending") {
+    redirect("/partner/pending");
+  }
+  if (accessState === "rejected") {
+    redirect("/partner/rejected");
+  }
+  if (accessState === "suspended") {
+    redirect("/partner/suspended");
+  }
+  if (accessState === "access_denied") {
+    redirect("/partner/access-denied");
+  }
   redirect(getPartnerRedirectPath(formData));
 }
 

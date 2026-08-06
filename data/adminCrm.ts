@@ -24,6 +24,14 @@ export type CrmPartner = {
   notes: string[];
   verification: CrmVerification;
   membership: CrmMembership;
+  applicationStatus?: string;
+  publicationStatus?: string;
+  linkedApplicationId?: string;
+  linkedListingId?: string;
+  bookingCount?: number;
+  mediaCount?: number;
+  latestNote?: string;
+  openTaskCount?: number;
 };
 
 export type CrmTask = {

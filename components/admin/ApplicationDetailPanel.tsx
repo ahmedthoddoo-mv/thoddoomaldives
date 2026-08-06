@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { getPartnerApplicationBusinessTypeLabel } from "@/data/partnerApplications";
 import { ApplicationDecisionPanel } from "@/components/admin/ApplicationDecisionPanel";
@@ -9,10 +9,7 @@ import { ApplicationStatusBadge } from "@/components/admin/ApplicationStatusBadg
 import { ApplicationTimeline } from "@/components/admin/ApplicationTimeline";
 import { ApplicationVerificationChecklist } from "@/components/admin/ApplicationVerificationChecklist";
 import { RequestedChangesList } from "@/components/admin/RequestedChangesList";
-import {
-  PartnerApplicationRepository,
-  subscribeToPartnerApplications
-} from "@/lib/applications/partnerApplicationRepository";
+import { ApplicationReviewEditor } from "@/components/admin/ApplicationReviewEditor";
 import type { PartnerApplicationRecord } from "@/types/partner-application";
 
 function formatDate(value: string) {
@@ -24,35 +21,22 @@ function formatDate(value: string) {
 }
 
 export function ApplicationDetailPanel({
-  applicationId,
   initialApplication,
   dataSource,
   readError
 }: {
-  applicationId: string;
   initialApplication?: PartnerApplicationRecord;
   dataSource?: "mock" | "supabase" | "supabase_error";
   readError?: string;
 }) {
-  const useMockStore = !dataSource || dataSource === "mock";
-  const [storedApplication, setStoredApplication] = useState<PartnerApplicationRecord | undefined>(() =>
-    useMockStore ? PartnerApplicationRepository.findById(applicationId) : undefined
-  );
   const [applicationOverride, setApplicationOverride] = useState<PartnerApplicationRecord>();
-  const application = applicationOverride ?? initialApplication ?? (useMockStore ? storedApplication : undefined);
-
-  useEffect(() => {
-    if (!useMockStore || initialApplication) return;
-    return subscribeToPartnerApplications(() =>
-      setStoredApplication(PartnerApplicationRepository.findById(applicationId))
-    );
-  }, [applicationId, initialApplication, useMockStore]);
+  const application = applicationOverride ?? initialApplication;
 
   if (!application) {
     return (
       <section className="adminPanel">
         <h1>Application not found</h1>
-        <p className="mutedText">The application may be stored in another browser session or has been reset.</p>
+        <p className="mutedText">No application with this ID was returned by the live data source.</p>
         <Link className="adminContentAddButton" href="/admin/applications">
           Back to applications
         </Link>
@@ -136,6 +120,40 @@ export function ApplicationDetailPanel({
           </dl>
           <h3>Services</h3>
           <p>{application.services}</p>
+          {application.submittedFields?.length ? (
+            <>
+              <h3>Category details</h3>
+              <dl className="applicationDetailGrid">
+                {application.submittedFields.map((field) => (
+                  <div key={field.label}>
+                    <dt>{field.label}</dt>
+                    <dd>{field.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </>
+          ) : null}
+          {application.pricingRows?.length ? (
+            <>
+              <h3>Submitted pricing</h3>
+              <dl className="applicationDetailGrid">
+                {application.pricingRows.map((price) => (
+                  <div key={`${price.name}-${price.unit}`}>
+                    <dt>{price.name}</dt>
+                    <dd>{price.price} · {price.unit}</dd>
+                  </div>
+                ))}
+              </dl>
+            </>
+          ) : null}
+          {application.publicMedia?.length ? (
+            <>
+              <h3>Submitted public media</h3>
+              <ul>
+                {application.publicMedia.map((media) => <li key={media.label}>{media.label}: {media.status}</li>)}
+              </ul>
+            </>
+          ) : null}
           <h3>Media notes</h3>
           <p>{application.mediaNotes || "No media notes submitted."}</p>
           <h3>Requested changes</h3>
@@ -150,6 +168,8 @@ export function ApplicationDetailPanel({
       </div>
 
       <ApplicationVerificationChecklist application={application} />
+
+      {dataSource === "supabase" ? <ApplicationReviewEditor application={application} /> : null}
 
       <section className="adminPanel">
         <div className="adminSectionHeader">

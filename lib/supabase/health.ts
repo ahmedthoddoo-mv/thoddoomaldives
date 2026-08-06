@@ -46,7 +46,7 @@ export async function getSupabaseHealthCheck(): Promise<SupabaseHealthCheck> {
       dataMode,
       migrationVersion: SUPABASE_MIGRATION_VERSION,
       checkedTables: expectedTables.map((table) => ({ table, accessible: false })),
-      message: "Supabase environment variables are not configured. Mock mode remains active."
+      message: dataMode === "mock" ? "Supabase is not configured; explicit mock mode is active." : "Supabase environment variables are not configured. Live reads will fail closed."
     };
   }
 

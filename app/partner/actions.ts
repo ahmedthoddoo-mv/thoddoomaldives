@@ -10,6 +10,9 @@ import type {
 } from "@/lib/partner-portal/partnerAccess";
 import type { BookingStatus } from "@/types/booking";
 import type { Database } from "@/lib/supabase/types";
+import type { Json } from "@/lib/supabase/types";
+import type { AvailabilityProvider } from "@/types/availability";
+import type { TransferSchedule } from "@/types/transfer-schedule";
 
 export type PartnerPortalActionResult = {
   ok: boolean;
@@ -56,8 +59,15 @@ export async function savePartnerBusinessProfile(profile: PartnerPortalProfileFo
   const { scope, supabase, mode } = await getScopedSupabase();
   if (!supabase || scope.mode !== "supabase") return { ok: false, mode, message: "Partner access is not available." };
 
+  const { data: currentProperty, error: currentPropertyError } = await supabase.from("properties").select("name").eq("id", scope.propertyId).eq("partner_id", scope.partnerId).maybeSingle();
+  if (currentPropertyError || !currentProperty) return { ok: false, mode, message: currentPropertyError?.message ?? "Owned property was not found." };
+  const requestedBusinessName = sanitizeText(profile.businessName, 180);
+  const identityChangeRequested = requestedBusinessName !== currentProperty.name;
+  if (identityChangeRequested) {
+    const { error: requestError } = await supabase.from("partner_change_requests").insert({ partner_id: scope.partnerId, listing_type: "property", listing_id: scope.propertyId, change_type: "business_identity", requested_values: { name: requestedBusinessName }, requested_by: scope.authUserId });
+    if (requestError) return { ok: false, mode, message: requestError.message };
+  }
   const payload = {
-    name: sanitizeText(profile.businessName, 180),
     address: sanitizeText(profile.address, 300),
     google_maps_link: sanitizeText(profile.googleMaps, 700),
     whatsapp: sanitizeText(profile.whatsapp, 80),
@@ -88,7 +98,6 @@ export async function savePartnerBusinessProfile(profile: PartnerPortalProfileFo
   await supabase
     .from("partners")
     .update({
-      business_name: payload.name,
       whatsapp: payload.whatsapp,
       email: payload.email,
       website: payload.website,
@@ -98,18 +107,14 @@ export async function savePartnerBusinessProfile(profile: PartnerPortalProfileFo
 
   await logPartnerAuditEvent("profile_update", { propertyId: scope.propertyId }, scope.partnerId);
   await logPartnerAuditEvent("property_update", { propertyId: scope.propertyId }, scope.partnerId);
-  return { ok: true, mode, message: "Business profile saved to Supabase." };
+  return { ok: true, mode, message: identityChangeRequested ? "Operational profile saved. The business name change was sent for admin review." : "Business profile saved to Supabase." };
 }
 
 export async function savePartnerServices(services: PartnerPortalServiceItem[]): Promise<PartnerPortalActionResult> {
   const { scope, supabase, mode } = await getScopedSupabase();
   if (!supabase || scope.mode !== "supabase") return { ok: false, mode, message: "Partner access is not available." };
 
-  const db = supabase;
-  const serviceRows = services.map((service, index) => ({
-    partner_id: scope.partnerId,
-    property_id: scope.propertyId,
-    service_type: "room",
+  const items = services.map((service, index) => ({
     title: sanitizeText(service.title, 180),
     description: sanitizeText(service.description, 800),
     price: parsePrice(service.price),
@@ -119,32 +124,20 @@ export async function savePartnerServices(services: PartnerPortalServiceItem[]):
     notes: sanitizeText(service.notes, 800),
     active: service.active,
     sort_order: index,
-    metadata: service.metadata
-  }));
-
-  await db.from("partner_service_items").delete().eq("partner_id", scope.partnerId).eq("property_id", scope.propertyId);
-  if (serviceRows.length > 0) {
-    const { error: serviceError } = await db.from("partner_service_items").insert(serviceRows);
-    if (serviceError) return { ok: false, mode, message: serviceError.message };
-  }
-
-  await db.from("rooms").delete().eq("property_id", scope.propertyId);
-  const roomRows = services.map((service) => ({
-    property_id: scope.propertyId,
-    name: sanitizeText(service.title, 180),
     bed_type: sanitizeText(service.metadata.bedType ?? "", 120) || null,
     capacity: sanitizeText(service.metadata.capacity ?? "2 guests", 80),
     adults: parseCapacity(service.metadata.adults ?? service.metadata.capacity ?? "2"),
     children: parseCapacity(service.metadata.children ?? "0"),
-    price_per_night: parsePrice(service.price) ?? 0,
     breakfast_included: String(service.metadata.breakfast ?? service.notes).toLowerCase().includes("included"),
-    description: sanitizeText(service.description, 800),
-    active: service.active
+    metadata: service.metadata
   }));
-  if (roomRows.length > 0) {
-    const { error: roomError } = await db.from("rooms").insert(roomRows);
-    if (roomError) return { ok: false, mode, message: roomError.message };
-  }
+  const { error } = await supabase.rpc("partner_replace_rooms_services", {
+    actor_user_id: scope.authUserId,
+    partner_uuid: scope.partnerId,
+    property_uuid: scope.propertyId,
+    items
+  });
+  if (error) return { ok: false, mode, message: error.message };
 
   await logPartnerAuditEvent("price_update", { propertyId: scope.propertyId, itemCount: services.length }, scope.partnerId);
   return { ok: true, mode, message: "Rooms and pricing saved to Supabase." };
@@ -154,41 +147,22 @@ export async function savePartnerGallery(gallery: PartnerPortalGalleryItem[]): P
   const { scope, supabase, mode } = await getScopedSupabase();
   if (!supabase || scope.mode !== "supabase") return { ok: false, mode, message: "Partner access is not available." };
 
-  const db = supabase;
   const normalized = gallery.filter((item) => item.path.trim());
-  const hero = normalized.find((item) => item.usage === "hero") ?? normalized[0];
-  if (hero) {
-    await db.from("properties").update({ hero_image_path: hero.path }).eq("id", scope.propertyId).eq("partner_id", scope.partnerId);
-  }
-
-  const mediaRows = normalized.map((item) => ({
+  const items = normalized.map((item) => ({
     filename: item.path.split("/").filter(Boolean).at(-1) ?? "partner-media.jpg",
     path: sanitizeText(item.path, 700),
-    category: item.usage === "hero" || item.usage === "cover" ? "Hero" : "Gallery",
-    file_type: item.usage === "video" ? "video/mp4" : "image/jpeg",
+    usage: item.usage,
     alt_text: sanitizeText(item.altText, 240),
     caption: sanitizeText(item.caption, 240),
-    rights_status: "partner_submitted",
-    archived: false
+    sort_order: item.sortOrder
   }));
-
-  const { data: mediaAssets, error: mediaError } = await db.from("media_assets").upsert(mediaRows, { onConflict: "path" }).select("id, path");
-  if (mediaError) return { ok: false, mode, message: mediaError.message };
-
-  await db.from("property_media").delete().eq("property_id", scope.propertyId);
-  const links = (mediaAssets ?? []).map((asset: { id: string; path: string }) => {
-    const item = normalized.find((entry) => entry.path === asset.path);
-    return {
-      property_id: scope.propertyId,
-      media_asset_id: asset.id,
-      usage: item?.usage === "hero" || item?.usage === "cover" ? "hero" : "gallery",
-      sort_order: item?.sortOrder ?? normalized.findIndex((entry) => entry.path === asset.path)
-    };
+  const { error } = await supabase.rpc("partner_replace_gallery", {
+    actor_user_id: scope.authUserId,
+    partner_uuid: scope.partnerId,
+    property_uuid: scope.propertyId,
+    items
   });
-  if (links.length > 0) {
-    const { error: linkError } = await db.from("property_media").insert(links);
-    if (linkError) return { ok: false, mode, message: linkError.message };
-  }
+  if (error) return { ok: false, mode, message: error.message };
 
   await logPartnerAuditEvent("gallery_update", { propertyId: scope.propertyId, itemCount: normalized.length }, scope.partnerId);
   return { ok: true, mode, message: "Gallery saved to Supabase." };
@@ -229,22 +203,36 @@ export async function savePartnerDocuments(documents: PartnerPortalDocument[]): 
 export async function updatePartnerBooking(params: {
   bookingId: string;
   status?: Extract<BookingStatus, "confirmed" | "rejected" | "completed" | "cancelled">;
-  internalNotes?: string;
 }) {
   const { scope, supabase, mode } = await getScopedSupabase();
   if (!supabase || scope.mode !== "supabase") return { ok: false, mode, message: "Partner access is not available." };
 
+  const allowedStatuses = new Set(["confirmed", "rejected", "completed", "cancelled"]);
+  if (params.status && !allowedStatuses.has(params.status)) {
+    return { ok: false, mode, message: "That booking transition is not available to partners." };
+  }
+
   const payload: Database["public"]["Tables"]["bookings"]["Update"] = {};
   if (params.status) payload.booking_status = params.status;
-  if (typeof params.internalNotes === "string") payload.internal_notes = sanitizeText(params.internalNotes, 1200) || null;
   if (Object.keys(payload).length === 0) return { ok: true, mode, message: "No booking changes to save." };
 
-  const { error } = await supabase
+  const allowedCurrentStatuses: Record<string, string[]> = {
+    confirmed: ["new", "pending"],
+    rejected: ["new", "pending"],
+    completed: ["confirmed"],
+    cancelled: ["new", "pending", "confirmed"]
+  };
+  const { data: updatedBooking, error } = await supabase
     .from("bookings")
     .update(payload)
     .eq("id", params.bookingId)
-    .eq("partner_id", scope.partnerId);
-  if (error) return { ok: false, mode, message: error.message };
+    .eq("partner_id", scope.partnerId)
+    .in("booking_status", allowedCurrentStatuses[params.status ?? ""] ?? [])
+    .select("id")
+    .maybeSingle();
+  if (error || !updatedBooking) {
+    return { ok: false, mode, message: error?.message ?? "Booking transition is not allowed." };
+  }
 
   await logPartnerAuditEvent("booking_update", { bookingId: params.bookingId, status: params.status ?? null }, scope.partnerId);
   return { ok: true, mode, message: "Booking updated." };
@@ -263,4 +251,36 @@ export async function markPartnerNotificationRead(notificationId: string): Promi
 
   await logPartnerAuditEvent("notification_update", { notificationId }, scope.partnerId);
   return { ok: true, mode, message: "Notification marked read." };
+}
+
+export async function savePartnerTransferSchedule(schedule: TransferSchedule): Promise<PartnerPortalActionResult> {
+  const { scope, supabase, mode } = await getScopedSupabase();
+  if (!supabase || scope.mode !== "supabase" || scope.listingType !== "transfer") return { ok: false, mode, message: "Transfer owner access is required." };
+  if (!schedule.daysOfWeek.length || !/^([01]\d|2[0-3]):[0-5]\d/.test(schedule.departureTime)) return { ok: false, mode, message: "Choose operating days and a valid departure time." };
+  const payload = {
+    direction: sanitizeText(schedule.direction, 160), departurePoint: sanitizeText(schedule.departurePoint, 180), arrivalPoint: sanitizeText(schedule.arrivalPoint, 180),
+    daysOfWeek: schedule.daysOfWeek, departureTime: schedule.departureTime, effectiveStart: schedule.effectiveStart ?? "", effectiveEnd: schedule.effectiveEnd ?? "",
+    fridaySpecific: schedule.fridaySpecific, price: schedule.price, currency: schedule.currency, unit: sanitizeText(schedule.unit, 80),
+    vesselCapacity: schedule.vesselCapacity, vesselDetails: sanitizeText(schedule.vesselDetails ?? "", 500), luggagePolicy: sanitizeText(schedule.luggagePolicy ?? "", 800),
+    pickupDropoff: sanitizeText(schedule.pickupDropoff ?? "", 800), cancellationNotice: sanitizeText(schedule.cancellationNotice ?? "", 800),
+    weatherNotice: sanitizeText(schedule.weatherNotice ?? "", 800), active: schedule.active
+  };
+  const exceptions = schedule.exceptions.map((item) => ({ date: item.date, departureTime: item.departureTime ?? "", cancelled: item.cancelled, notice: sanitizeText(item.notice ?? "", 400) }));
+  const { error } = await supabase.rpc("partner_save_transfer_schedule", { actor_user_id: scope.authUserId, partner_uuid: scope.partnerId, transfer_uuid: scope.listingId, schedule_uuid: schedule.id.startsWith("new-") ? null : schedule.id, payload: payload as unknown as Json, exceptions: exceptions as unknown as Json });
+  return error ? { ok: false, mode, message: error.message } : { ok: true, mode, message: "Transfer schedule saved." };
+}
+
+export async function savePartnerManualAvailability(entries: Array<{ roomId?: string; date: string; roomsAvailable: number | null; rate: number | null; currency: string }>): Promise<PartnerPortalActionResult> {
+  const { scope, supabase, mode } = await getScopedSupabase();
+  if (!supabase || scope.mode !== "supabase" || scope.listingType !== "property") return { ok: false, mode, message: "Property owner access is required." };
+  const normalized = entries.map((item) => ({ roomId: item.roomId ?? "", date: item.date, roomsAvailable: item.roomsAvailable, rate: item.rate, currency: item.currency, restrictions: {} }));
+  const { error } = await supabase.rpc("partner_save_manual_availability", { actor_user_id: scope.authUserId, partner_uuid: scope.partnerId, property_uuid: scope.propertyId, entries: normalized as unknown as Json });
+  return error ? { ok: false, mode, message: error.message } : { ok: true, mode, message: "Manual availability saved." };
+}
+
+export async function setPartnerAvailabilityProvider(provider: AvailabilityProvider): Promise<PartnerPortalActionResult> {
+  const { scope, supabase, mode } = await getScopedSupabase();
+  if (!supabase || scope.mode !== "supabase" || scope.listingType !== "property") return { ok: false, mode, message: "Property owner access is required." };
+  const { error } = await supabase.rpc("partner_set_availability_provider", { actor_user_id: scope.authUserId, partner_uuid: scope.partnerId, property_uuid: scope.propertyId, provider_name: provider });
+  return error ? { ok: false, mode, message: error.message } : { ok: true, mode, message: "Availability source saved. No OTA password is stored." };
 }

@@ -161,6 +161,10 @@ const accommodationFields: OnboardingFieldDefinition[] = [
   { key: "extraBedPolicy", label: "Extra bed policy", placeholder: "Available on request, fee..." },
   { key: "cancellationPolicy", label: "Cancellation policy", placeholder: "Free cancellation until..." },
   { key: "airportTransfer", label: "Airport transfer assistance", placeholder: "Public speedboat, private transfer..." },
+  { key: "excursionAssistance", label: "Excursion assistance", placeholder: "Available services or booking support" },
+  { key: "bicycleRentalAssistance", label: "Bicycle rental assistance", placeholder: "Availability and terms" },
+  { key: "localGuestSupport", label: "Local guest support", placeholder: "Support available to guests" },
+  { key: "receptionHours", label: "Reception hours", placeholder: "Example: Daily 07:00-23:00" },
   { key: "bikiniBeachDistance", label: "Bikini beach distance", placeholder: "Example: 7 minutes walk" },
   { key: "roomPhotos", label: "Room photos", placeholder: "Paste image paths or describe required photos", type: "textarea" },
   { key: "availabilityMethod", label: "Availability update method", placeholder: "WhatsApp, Google Sheet, portal..." }

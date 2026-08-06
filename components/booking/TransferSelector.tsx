@@ -14,7 +14,7 @@ export function TransferSelector({ services, selectedIds, onToggle }: TransferSe
         <label className="bookingCheckboxOption" key={service.id}>
           <input checked={selectedIds.includes(service.id)} onChange={() => onToggle(service)} type="checkbox" />
           <span>{service.name}</span>
-          <small>${service.price}</small>
+          <small>{service.price ? `$${service.price}` : "Price on request"}</small>
         </label>
       ))}
     </fieldset>

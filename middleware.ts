@@ -8,19 +8,14 @@ const publicPartnerRoutes = new Set([
   "/partner/reset-password"
 ]);
 
-export function proxy(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
-  if (publicPartnerRoutes.has(pathname)) {
+  if (publicPartnerRoutes.has(pathname) || process.env.NEXT_PUBLIC_DATA_MODE !== "supabase") {
     return NextResponse.next();
   }
 
-  if (process.env.NEXT_PUBLIC_DATA_MODE !== "supabase") {
-    return NextResponse.next();
-  }
-
-  const hasPartnerSession = Boolean(request.cookies.get(partnerAccessTokenCookie)?.value);
-  if (hasPartnerSession) {
+  if (request.cookies.get(partnerAccessTokenCookie)?.value) {
     return NextResponse.next();
   }
 

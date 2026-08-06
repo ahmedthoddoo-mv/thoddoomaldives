@@ -1,6 +1,8 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useMemo, useState, useTransition } from "react";
+import { submitContactEnquiry } from "@/app/contact/actions";
+import { TurnstileWidget } from "@/components/security/TurnstileWidget";
 import {
   formatPlannerMessage,
   formatPlannerValue,
@@ -28,7 +30,15 @@ export default function ContactBookingHub({
   plannedTrip: PlannedTrip | null;
 }) {
   const [form, setForm] = useState<PlannedTrip>(plannedTrip ?? emptyTrip);
+  const [guestName, setGuestName] = useState("");
+  const [guestEmail, setGuestEmail] = useState("");
+  const [guestWhatsapp, setGuestWhatsapp] = useState("");
   const [request, setRequest] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [websiteField, setWebsiteField] = useState("");
+  const [submitMessage, setSubmitMessage] = useState("");
+  const [submitErrors, setSubmitErrors] = useState<string[]>([]);
+  const [isSubmitting, startSubmitting] = useTransition();
 
   const currentTrip = useMemo(
     () => ({
@@ -62,18 +72,29 @@ export default function ContactBookingHub({
     }));
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setSubmitMessage("");
+    setSubmitErrors([]);
+    startSubmitting(async () => {
+      const result = await submitContactEnquiry({
+        name: guestName,
+        email: guestEmail,
+        whatsapp: guestWhatsapp,
+        request,
+        turnstileToken,
+        websiteField,
+        plannedTrip: currentTrip
+      });
 
-    const message = `${formatPlannerMessage(currentTrip)}
+      if (!result.ok) {
+        setSubmitMessage(result.message);
+        setSubmitErrors(result.errors ?? []);
+        return;
+      }
 
-Additional Request:
-${request.trim() || "Not specified"}`;
-
-    window.open(
-      `https://wa.me/9609142538?text=${encodeURIComponent(message)}`,
-      "_blank"
-    );
+      setSubmitMessage(result.message);
+    });
   }
 
   if (!plannedTrip) {
@@ -226,6 +247,37 @@ ${request.trim() || "Not specified"}`;
               </label>
 
               <label className="grid gap-2 md:col-span-2">
+                <FieldLabel>Name</FieldLabel>
+                <input
+                  value={guestName}
+                  onChange={(event) => setGuestName(event.target.value)}
+                  className="rounded-xl border p-3"
+                  placeholder="Your name"
+                />
+              </label>
+
+              <label className="grid gap-2">
+                <FieldLabel>Email</FieldLabel>
+                <input
+                  type="email"
+                  value={guestEmail}
+                  onChange={(event) => setGuestEmail(event.target.value)}
+                  className="rounded-xl border p-3"
+                  placeholder="you@example.com"
+                />
+              </label>
+
+              <label className="grid gap-2">
+                <FieldLabel>WhatsApp</FieldLabel>
+                <input
+                  value={guestWhatsapp}
+                  onChange={(event) => setGuestWhatsapp(event.target.value)}
+                  className="rounded-xl border p-3"
+                  placeholder="+960 700 0000"
+                />
+              </label>
+
+              <label className="grid gap-2 md:col-span-2">
                 <FieldLabel>Additional Request</FieldLabel>
                 <textarea
                   value={request}
@@ -234,14 +286,52 @@ ${request.trim() || "Not specified"}`;
                   placeholder="Example: airport arrival time, room preference, private excursion request..."
                 />
               </label>
+
+              <div className="srOnlyText md:col-span-2" aria-hidden="true">
+                <label htmlFor="contact-website-field">Website</label>
+                <input
+                  id="contact-website-field"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={websiteField}
+                  onChange={(event) => setWebsiteField(event.target.value)}
+                />
+              </div>
             </div>
+
+            <TurnstileWidget widgetId="contact-enquiry" onToken={setTurnstileToken} />
+
+            {submitErrors.length > 0 ? (
+              <div className="bookingValidationPanel mt-6" role="alert">
+                <strong>Please fix these details</strong>
+                <ul>
+                  {submitErrors.map((error) => (
+                    <li key={error}>{error}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+
+            {submitMessage ? (
+              <p className="mt-6 text-sm text-slate-700">{submitMessage}</p>
+            ) : null}
 
             <button
               type="submit"
+              disabled={isSubmitting || !turnstileToken}
               className="mt-6 w-full rounded-full bg-slate-900 px-6 py-4 font-semibold text-white transition hover:bg-slate-700"
             >
-              Send Inquiry
+              {isSubmitting ? "Sending..." : "Send Inquiry"}
             </button>
+
+            <a
+              href={`https://wa.me/9609142538?text=${encodeURIComponent(`${formatPlannerMessage(currentTrip)}\n\nAdditional Request:\n${request.trim() || "Not specified"}`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="platformButtonSecondary mt-4 inline-block text-center"
+            >
+              Continue on WhatsApp
+            </a>
           </form>
         </div>
       </div>

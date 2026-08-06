@@ -1,9 +1,15 @@
 "use server";
 
+import { headers } from "next/headers";
 import { platformConfig } from "@/lib/config/platform";
+import { sendEmail } from "@/lib/email/client";
+import { checkRateLimit } from "@/lib/security/rateLimit";
+import { getClientIp } from "@/lib/security/request";
+import { verifyTurnstileToken } from "@/lib/security/turnstile";
+import { buildAdminNotificationEmail } from "@/lib/email/templates/admin-notification";
+import { buildPartnerApplicationEmail } from "@/lib/email/templates/partner-application";
 import { validateCategoryAnswers, validatePricingRows } from "@/lib/partner-onboarding/onboardingSchemas";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
-import type { SupabaseDatabaseClient } from "@/lib/supabase/server";
 import { getDataMode } from "@/lib/supabase/status";
 import type { Tables } from "@/lib/supabase/types";
 import type { PartnerApplicationRecord, PartnerApplicationBusinessType } from "@/types/partner-application";
@@ -88,17 +94,6 @@ function checkSubmissionRateLimit(input: SmartPartnerApplicationInput) {
   return true;
 }
 
-async function createApplicationReference(db: SupabaseDatabaseClient) {
-  const year = new Date().getFullYear();
-  const { count, error } = await db
-    .from("partner_applications")
-    .select("id", { count: "exact", head: true })
-    .gte("submitted_at", `${year}-01-01T00:00:00.000Z`);
-
-  if (error) throw error;
-  return `ITM-APP-${year}-${String((count ?? 0) + 1).padStart(6, "0")}`;
-}
-
 function buildApplicationSummary(input: SmartPartnerApplicationInput, reference: string) {
   const priceLines = input.prices
     .filter((price) => price.itemName.trim())
@@ -181,6 +176,27 @@ export async function submitSmartPartnerApplication(input: SmartPartnerApplicati
     };
   }
 
+  if (input.websiteField?.trim()) {
+    return { ok: false, mode: "supabase", message: "Application could not be submitted.", errors: ["Please complete the security check and try again."] };
+  }
+
+  const requestHeaders = await headers();
+  const remoteIp = getClientIp(requestHeaders);
+  const ipRateLimit = checkRateLimit({ bucket: "partner-application", key: remoteIp, limit: 5, windowMs: 30 * 60 * 1000 });
+  if (!ipRateLimit.allowed) {
+    return {
+      ok: false,
+      mode: "supabase",
+      message: "Too many submission attempts.",
+      errors: [`Please wait about ${ipRateLimit.retryAfterSeconds} seconds and try again.`]
+    };
+  }
+
+  const turnstileOk = await verifyTurnstileToken({ token: input.turnstileToken, remoteIp, expectedAction: "turnstile-spin-v2" });
+  if (!turnstileOk) {
+    return { ok: false, mode: "supabase", message: "Application could not be submitted.", errors: ["Please complete the security check and try again."] };
+  }
+
   const canonicalInput = { ...input, businessType: normalizeBusinessType(input.businessType) };
   const errors = validateApplication(canonicalInput);
   if (errors.length > 0) {
@@ -210,7 +226,9 @@ export async function submitSmartPartnerApplication(input: SmartPartnerApplicati
   const businessType = normalizeBusinessType(canonicalInput.businessType);
   let reference = "";
   try {
-    reference = await createApplicationReference(db);
+    const { data, error } = await db.rpc("next_partner_application_reference");
+    if (error || typeof data !== "string") throw error ?? new Error("Reference function returned no value.");
+    reference = data;
   } catch (error) {
     logSupabaseWriteError("create_application_reference", error);
     return {
@@ -234,6 +252,14 @@ export async function submitSmartPartnerApplication(input: SmartPartnerApplicati
   }
 
   const metadata = {
+    schemaVersion: 1,
+    common: {
+      phone: normalizePhone(canonicalInput.phone),
+      googleMapsLocation: sanitizeText(canonicalInput.googleMapsLink, 600),
+      registrationNumber: sanitizeText(canonicalInput.registrationNumber, 160),
+      fullDescription: sanitizeText(canonicalInput.fullDescription, 2400),
+      membershipNotes: sanitizeText(canonicalInput.notes, 1200)
+    },
     googleMapsLink: sanitizeText(canonicalInput.googleMapsLink, 600),
     registrationNumber: sanitizeText(canonicalInput.registrationNumber, 160),
     fullDescription: sanitizeText(canonicalInput.fullDescription, 2400),
@@ -388,11 +414,34 @@ export async function submitSmartPartnerApplication(input: SmartPartnerApplicati
   const summary = buildApplicationSummary(canonicalInput, reference);
   const officialWhatsapp = platformConfig.whatsappNumbers.partnerships.replace(/\D/g, "");
   const whatsappUrl = `https://wa.me/${officialWhatsapp}?text=${encodeURIComponent(summary)}`;
+  const siteUrl = platformConfig.companyContact.website.replace(/\/$/, "");
+  const reviewLink = `${siteUrl}/admin/applications/${applicationRow.id}`;
+  const applicantEmail = buildPartnerApplicationEmail({
+    businessName: canonicalInput.businessName,
+    reference,
+    reviewLink,
+    siteUrl
+  });
+  const adminEmail = buildAdminNotificationEmail({
+    title: `New partner application: ${canonicalInput.businessName}`,
+    summary: `${canonicalInput.businessName} submitted partner application ${reference}.`,
+    adminUrl: reviewLink,
+    siteUrl
+  });
+  const emailResults = await Promise.allSettled([
+    sendEmail({ to: { address: canonicalInput.email.trim().toLowerCase(), name: canonicalInput.businessName }, ...applicantEmail }),
+    sendEmail({ to: platformConfig.companyContact.email, ...adminEmail })
+  ]);
+  const emailWarnings = emailResults.flatMap((result) => {
+    if (result.status === "rejected") return ["Email delivery failed."];
+    if (result.value.skipped) return [result.value.reason];
+    return [];
+  });
 
   return {
     ok: true,
     mode: "supabase",
-    message: `Application ${reference} submitted successfully.`,
+    message: `Application ${reference} submitted successfully.${emailWarnings.length > 0 ? ` ${emailWarnings.join(" ")}` : ""}`,
     reference,
     application: mapSavedApplication(applicationRow, canonicalInput),
     whatsappUrl,

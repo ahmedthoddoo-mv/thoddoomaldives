@@ -1,8 +1,6 @@
 "use client";
 
 import { BookingWidget } from "@/components/booking/BookingWidget";
-import ExperienceCard from "@/components/cards/ExperienceCard";
-import TestimonialCard from "@/components/cards/TestimonialCard";
 import PropertyAmenities from "@/components/property/PropertyAmenities";
 import PropertyGallery from "@/components/property/PropertyGallery";
 import PropertyMapPlaceholder from "@/components/property/PropertyMapPlaceholder";
@@ -12,17 +10,8 @@ import { VerifiedBadge } from "@/components/partner/VerifiedBadge";
 import Badge from "@/components/ui/Badge";
 import Container from "@/components/ui/Container";
 import SectionTitle from "@/components/ui/SectionTitle";
-import { testimonials } from "@/data/testimonials";
-import { ExperienceRepository } from "@/lib/repositories";
 import { generateGuesthouseLink } from "@/lib/whatsapp";
 import type { Guesthouse } from "@/types/guesthouse";
-
-const trustItems = [
-  "Verified Local Partner",
-  "Fast WhatsApp Support",
-  "Breakfast Included",
-  "Transfer Assistance",
-];
 
 export default function PropertyPage({
   guesthouse,
@@ -35,17 +24,11 @@ export default function PropertyPage({
     phone: guesthouse.whatsapp,
     guesthouse: guesthouse.name,
   });
-  const experiences = ExperienceRepository.findAll();
-  const relatedExperiences = experiences.filter((experience) =>
-    guesthouse.relatedExperienceSlugs.includes(experience.slug)
-  );
-  const guestReviews = testimonials.filter((testimonial) =>
-    guesthouse.testimonialIds.includes(testimonial.id)
-  );
   const bookingRooms = guesthouse.rooms.map((room) => ({
     id: room.id ?? room.name.toLowerCase().replaceAll(" ", "-"),
     name: room.name,
-    nightlyRate: Number(room.price.replace(/[^0-9]/g, "")) || 0,
+    nightlyRate: room.nightlyRate ?? null,
+    currency: room.currency,
     capacity: room.capacity
   }));
 
@@ -84,7 +67,7 @@ export default function PropertyPage({
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center rounded-full bg-green-600 px-7 py-4 font-semibold text-white transition hover:bg-green-700"
                 >
-                  Book Now on WhatsApp
+                  Request availability on WhatsApp
                 </a>
                 <a
                   href="#rooms"
@@ -117,17 +100,6 @@ export default function PropertyPage({
                 </div>
               </dl>
 
-              <section className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                {trustItems.map((item) => (
-                  <div
-                    key={item}
-                    className="rounded-2xl border border-cyan-100 bg-cyan-50/70 p-4"
-                  >
-                    <p className="text-sm font-bold text-cyan-900">{item}</p>
-                  </div>
-                ))}
-              </section>
-
               <section id="rooms" className="mt-16 scroll-mt-28">
                 <SectionTitle eyebrow="Rooms" title="Choose Your Room" />
                 <div className="mt-8 grid gap-8">
@@ -151,45 +123,54 @@ export default function PropertyPage({
 
               <section className="mt-16">
                 <BookingWidget
-                  crmRecordId="crm-thoddoo-sun-sky"
-                  partnerId="partner-thoddoo-sun-sky"
                   propertyId={guesthouse.id}
                   propertyName={guesthouse.name}
                   propertySlug={guesthouse.slug}
                   rooms={bookingRooms}
+                  optionalServices={(guesthouse.services ?? []).map((service) => ({
+                    id: service.id,
+                    name: service.name,
+                    price: service.price,
+                    type: service.name.toLowerCase().includes("transfer") ? "transfer" : "custom"
+                  }))}
                   whatsapp={guesthouse.whatsapp}
+                  availability={guesthouse.availability}
                 />
               </section>
+
+              {guesthouse.services?.length ? (
+                <section className="mt-16">
+                  <SectionTitle eyebrow="Services" title="Optional property services" />
+                  <div className="mt-8 grid gap-5 md:grid-cols-2">
+                    {guesthouse.services.map((service) => (
+                      <article key={service.id} className="rounded-3xl border bg-white p-6 shadow-sm">
+                        <h3 className="text-2xl font-bold">{service.name}</h3>
+                        {service.description ? <p className="mt-3 text-slate-600">{service.description}</p> : null}
+                        <p className="mt-3 font-semibold">
+                          {service.price && service.price > 0
+                            ? `${service.currency} ${service.price} ${service.unit}`
+                            : "Available on request"}
+                        </p>
+                      </article>
+                    ))}
+                  </div>
+                </section>
+              ) : null}
 
               <section className="mt-16">
                 <SectionTitle eyebrow="Policies" title="Stay policies" />
                 <div className="mt-8 grid gap-5 md:grid-cols-3">
                   {[
-                    ["Check-in", "From 14:00. Early check-in can be requested."],
-                    ["Check-out", "By 12:00. Late check-out depends on availability."],
-                    ["Booking", "No payment is collected online. Confirm details through WhatsApp."]
-                  ].map(([title, text]) => (
+                    guesthouse.checkIn ? ["Check-in", `From ${guesthouse.checkIn}.`] : null,
+                    guesthouse.checkOut ? ["Check-out", `By ${guesthouse.checkOut}.`] : null,
+                    ["Enquiry", "The property will confirm availability and the final price."]
+                  ].filter((item): item is string[] => Boolean(item)).map(([title, text]) => (
                     <article key={title} className="rounded-3xl border bg-white p-6 shadow-sm">
                       <h3 className="text-2xl font-bold">{title}</h3>
                       <p className="mt-3 leading-7 text-slate-600">{text}</p>
                     </article>
                   ))}
-                </div>
-              </section>
-
-              <section className="mt-16">
-                <SectionTitle eyebrow="Transfers" title="Arrival support" />
-                <div className="mt-8 grid gap-5 md:grid-cols-3">
-                  {[
-                    ["Airport Transfer", "Coordinate airport arrival support and speedboat guidance."],
-                    ["Speedboat Transfer", "Public and private options can be requested with your booking."],
-                    ["Ferry Transfer", "Budget-friendly ferry guidance for flexible travelers."]
-                  ].map(([title, text]) => (
-                    <article key={title} className="rounded-3xl border bg-white p-6 shadow-sm">
-                      <h3 className="text-2xl font-bold">{title}</h3>
-                      <p className="mt-3 leading-7 text-slate-600">{text}</p>
-                    </article>
-                  ))}
+                  {guesthouse.about.find((section) => section.title === "Policies")?.body ? <article className="rounded-3xl border bg-white p-6 shadow-sm"><h3 className="text-2xl font-bold">Property policies</h3><p className="mt-3 leading-7 text-slate-600">{guesthouse.about.find((section) => section.title === "Policies")?.body}</p></article> : null}
                 </div>
               </section>
 
@@ -236,36 +217,6 @@ export default function PropertyPage({
                 </div>
               </section>
 
-              {relatedExperiences.length > 0 && (
-                <section className="mt-16">
-                  <SectionTitle
-                    eyebrow="Experiences"
-                    title="Pair Your Stay With Local Experiences"
-                  />
-                  <div className="mt-8 grid gap-8 md:grid-cols-2">
-                    {relatedExperiences.map((experience) => (
-                      <ExperienceCard
-                        key={experience.id}
-                        experience={experience}
-                      />
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {guestReviews.length > 0 && (
-                <section className="mt-16">
-                  <SectionTitle eyebrow="Reviews" title="Guest Reviews" />
-                  <div className="mt-8 grid gap-6 md:grid-cols-3">
-                    {guestReviews.map((testimonial) => (
-                      <TestimonialCard
-                        key={testimonial.id}
-                        testimonial={testimonial}
-                      />
-                    ))}
-                  </div>
-                </section>
-              )}
             </div>
 
             <StickyBookingCard guesthouse={guesthouse} />

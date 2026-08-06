@@ -11,7 +11,12 @@ export default async function PartnerSupportPage() {
   const portalData = await getCurrentPartnerPortalData();
 
   return (
-    <PartnerPortalShell portalData={portalData} title="Support" subtitle="Contact the local team, open WhatsApp support, email support, and review common questions.">
+    <PartnerPortalShell
+      portalData={portalData}
+      title="Support"
+      subtitle="Contact the local team, open WhatsApp support, email support, and review common questions."
+      allowRestrictedContent
+    >
       <PartnerSupportView />
     </PartnerPortalShell>
   );

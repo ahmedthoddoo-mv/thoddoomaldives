@@ -9,7 +9,7 @@ export function PropertySaveStatus({ message, errors = [] }: PropertySaveStatusP
   return (
     <section className={`adminPanel adminPropertyEditorNotice ${errors.length > 0 ? "adminPropertyValidationNotice" : ""}`}>
       <strong>{message}</strong>
-      <span>Demo storage only. Data is saved in this browser and will be replaced by the production database later.</span>
+      <span>Changes are validated and saved through the authenticated database action.</span>
       {errors.length > 0 ? (
         <ul className="adminPropertyValidationList">
           {errors.map((error) => (

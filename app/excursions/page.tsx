@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+
+export const dynamic = "force-dynamic";
 import Link from "next/link";
 import ExperienceCard from "@/components/ExperienceCard";
 import ExcursionInquiryForm from "@/components/ExcursionInquiryForm";
@@ -7,7 +9,7 @@ import {
   type ExperienceCategory,
   type Experience as DisplayExperience
 } from "@/lib/experiences";
-import { getLiveExperiences } from "@/lib/repositories/liveReads";
+import { getLivePublishedExperiences } from "@/lib/repositories/liveReads";
 import { createPageMetadata } from "@/lib/seo";
 import { generateExperienceLink } from "@/lib/whatsapp";
 import type { Experience } from "@/types/experience";
@@ -63,7 +65,7 @@ function toDisplayExperience(experience: Experience): DisplayExperience {
 }
 
 export default async function ExcursionsPage() {
-  const experienceRead = await getLiveExperiences();
+  const experienceRead = await getLivePublishedExperiences();
   const experiences = experienceRead.data.map(toDisplayExperience);
   const featuredExperience = experiences.find((experience) => experience.featured) ?? experiences[0];
   const generalBookingLink = generateExperienceLink({

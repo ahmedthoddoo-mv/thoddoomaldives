@@ -2,11 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { updateRealBookingStatus } from "@/app/booking/actions";
+import { updateAdminBookingStatus } from "@/app/booking/actions";
 import { BookingCard } from "@/components/booking/BookingCard";
 import type { Booking, BookingStatus, PaymentStatus } from "@/types/booking";
 import { calculateBookingAnalytics } from "@/lib/bookings/bookingAnalytics";
-import { getBookingEmailPreviews, updateBookingStatus, useBookingWorkflow } from "@/lib/bookings/bookingWorkflowStore";
 
 const bookingTabs: Array<{ label: string; status?: BookingStatus }> = [
   { label: "Draft", status: "draft" },
@@ -20,13 +19,12 @@ const bookingTabs: Array<{ label: string; status?: BookingStatus }> = [
 
 export function AdminBookingManagement({ bookings }: { bookings: Booking[] }) {
   const router = useRouter();
-  const liveBookings = useBookingWorkflow(bookings);
+  const liveBookings = bookings;
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<BookingStatus | "all">("all");
   const [selectedBookingId, setSelectedBookingId] = useState<string>(liveBookings[0]?.id ?? "");
   const [actionMessage, setActionMessage] = useState("");
   const analytics = calculateBookingAnalytics(liveBookings);
-  const emailPreviews = getBookingEmailPreviews();
   const filteredBookings = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
@@ -54,14 +52,10 @@ export function AdminBookingManagement({ bookings }: { bookings: Booking[] }) {
     });
   }, [liveBookings, query, statusFilter]);
   const selectedBooking = liveBookings.find((booking) => booking.id === selectedBookingId) ?? filteredBookings[0];
-  const selectedEmails = selectedBooking ? emailPreviews.filter((preview) => preview.bookingId === selectedBooking.id) : [];
 
   async function handleStatus(id: string, status?: BookingStatus, paymentStatus?: PaymentStatus) {
-    if (status) {
-      updateBookingStatus(id, status);
-    }
     setSelectedBookingId(id);
-    const result = await updateRealBookingStatus({ bookingId: id, actor: "admin", status, paymentStatus });
+    const result = await updateAdminBookingStatus({ bookingId: id, status, paymentStatus });
     setActionMessage(result.message);
 
     if (result.ok && result.mode === "supabase") {
@@ -75,7 +69,7 @@ export function AdminBookingManagement({ bookings }: { bookings: Booking[] }) {
         <div>
           <span className="inline-flex rounded-full bg-cyan-50 px-4 py-2 text-sm font-semibold text-cyan-700">Booking engine</span>
           <h1>Booking Management</h1>
-          <p>Review demo bookings, commission estimates, guest details, status, and WhatsApp follow-up from one admin queue.</p>
+          <p>Review live enquiries, quoted values, guest details, status, and follow-up from one database-backed queue.</p>
           {actionMessage ? <p className="mutedText">{actionMessage}</p> : null}
         </div>
       </section>
@@ -85,7 +79,7 @@ export function AdminBookingManagement({ bookings }: { bookings: Booking[] }) {
           <article className="adminSystemCard">
             <span>Booking requests</span>
             <strong>{analytics.bookingRequests}</strong>
-            <p>All demo booking records.</p>
+            <p>Live booking and enquiry records.</p>
           </article>
           <article className="adminSystemCard">
             <span>Conversion rate</span>
@@ -98,9 +92,9 @@ export function AdminBookingManagement({ bookings }: { bookings: Booking[] }) {
             <p>Derived from check-in/out dates.</p>
           </article>
           <article className="adminSystemCard">
-            <span>Commission demo</span>
-            <strong>${analytics.commissionDemo}</strong>
-            <p>No payment is collected.</p>
+            <span>Confirmed revenue</span>
+            <strong>${analytics.confirmedRevenue}</strong>
+            <p>Excludes unpriced, cancelled, rejected, and draft enquiries.</p>
           </article>
         </div>
       </section>
@@ -158,7 +152,7 @@ export function AdminBookingManagement({ bookings }: { bookings: Booking[] }) {
         {filteredBookings.length === 0 ? (
           <section className="adminEmptyState">
             <strong>No bookings found</strong>
-            <p>Clear search or status filters to return to the full demo booking queue.</p>
+            <p>No live booking records match the current filters.</p>
           </section>
         ) : null}
       </section>
@@ -179,20 +173,9 @@ export function AdminBookingManagement({ bookings }: { bookings: Booking[] }) {
             <div><span>Date</span><strong>{selectedBooking.arrival}</strong></div>
             <div><span>Status</span><strong>{selectedBooking.status}</strong></div>
             <div><span>Payment</span><strong>{selectedBooking.paymentStatus}</strong></div>
-            <div><span>Revenue</span><strong>${selectedBooking.estimatedValue}</strong></div>
-            <div><span>Commission</span><strong>${selectedBooking.commission.companyRevenue}</strong></div>
+            <div><span>Revenue</span><strong>{selectedBooking.estimatedValue === null ? "Price on request" : `$${selectedBooking.estimatedValue}`}</strong></div>
+            <div><span>Commission</span><strong>{selectedBooking.commission.companyRevenue === null ? "Not quoted" : `$${selectedBooking.commission.companyRevenue}`}</strong></div>
           </div>
-          {selectedEmails.length > 0 ? (
-            <div className="bookingEmailPreviewPanel">
-              <h3>Email previews</h3>
-              {selectedEmails.map((preview) => (
-                <details key={preview.id}>
-                  <summary>{preview.subject}</summary>
-                  <pre>{preview.body}</pre>
-                </details>
-              ))}
-            </div>
-          ) : null}
         </section>
       ) : null}
     </div>

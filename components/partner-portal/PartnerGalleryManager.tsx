@@ -2,33 +2,10 @@
 
 import { useState } from "react";
 import { savePartnerGallery } from "@/app/partner/actions";
-import { partnerGallery } from "@/data/partnerPortal";
-import { getMediaForEntity } from "@/lib/platform/selectors";
 import type { PartnerPortalGalleryItem } from "@/lib/partner-portal/partnerAccess";
 
-export function PartnerGalleryManager({ initialGallery }: { initialGallery?: PartnerPortalGalleryItem[] }) {
-  const linkedImages = getMediaForEntity("partner", "partner-thoddoo-sun-sky").map((asset) => ({
-    id: asset.id,
-    path: asset.path,
-    caption: asset.caption,
-    altText: asset.altText,
-    usage: asset.isHero ? "hero" : "gallery",
-    sortOrder: 0
-  }));
-  const [images, setImages] = useState<PartnerPortalGalleryItem[]>(
-    initialGallery !== undefined
-      ? initialGallery
-      : linkedImages.length > 0
-        ? linkedImages as PartnerPortalGalleryItem[]
-        : partnerGallery.map((image, index) => ({
-            id: image.id,
-            path: image.path,
-            caption: image.caption,
-            altText: image.caption,
-            usage: image.isHero ? "hero" : "gallery",
-            sortOrder: index
-          }))
-  );
+export function PartnerGalleryManager({ initialGallery = [] }: { initialGallery?: PartnerPortalGalleryItem[] }) {
+  const [images, setImages] = useState<PartnerPortalGalleryItem[]>(initialGallery);
   const [notice, setNotice] = useState("Gallery ready.");
 
   function markHero(id: string) {
@@ -58,18 +35,13 @@ export function PartnerGalleryManager({ initialGallery }: { initialGallery?: Par
   return (
     <div className="partnerPortalStack">
       <section className="partnerPortalPanel partnerPortalUploadPanel">
-        <div>
-          <p className="eyebrow">Upload placeholder</p>
-          <h2>Partner Gallery Upload</h2>
-          <p>Real upload storage is not connected. This panel is ready for a future media service integration.</p>
-        </div>
-        <button onClick={() => setNotice("Upload placeholder queued. Connect to storage later.")} type="button">
-          Upload Placeholder
-        </button>
+        <div><p className="eyebrow">Gallery metadata</p><h2>Partner Gallery</h2><p>Edit captions, ordering, and the hero selection for existing owned media.</p></div>
         <button onClick={saveGallery} type="button">
           Save Gallery
         </button>
       </section>
+
+      {images.length === 0 ? <section className="partnerPortalPanel"><h2>No media uploaded</h2><p>Contact an administrator to add approved storage assets.</p></section> : null}
 
       <section className="partnerPortalGalleryGrid">
         {images.map((image) => (

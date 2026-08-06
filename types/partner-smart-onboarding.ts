@@ -38,6 +38,7 @@ export type SmartPartnerApplicationInput = {
   businessType: SmartBusinessType;
   businessName: string;
   contactPerson: string;
+  phone: string;
   whatsapp: string;
   email: string;
   island: string;
@@ -56,4 +57,6 @@ export type SmartPartnerApplicationInput = {
   media: PartnerApplicationMediaInput[];
   verificationDocuments: PartnerVerificationDocumentInput[];
   antiSpamAnswer: string;
+  turnstileToken: string;
+  websiteField: string;
 };

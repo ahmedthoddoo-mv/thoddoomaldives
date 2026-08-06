@@ -1,9 +1,8 @@
-import {
-  ExperienceRepository,
-  PropertyRepository,
-  RestaurantRepository,
-  TransferRepository
-} from "@/lib/repositories";
+import { getLivePublishedExperiences, getLivePublishedGuesthouses, getLivePublishedRestaurants, getLivePublishedTransfers } from "@/lib/repositories/liveReads";
+import type { Guesthouse } from "@/types/guesthouse";
+import type { Experience } from "@/types/experience";
+import type { Restaurant } from "@/types/restaurant";
+import type { Transfer } from "@/types/transfer";
 import type { TripPlan, TripPlanRecommendation } from "@/types/trip-plan";
 import type { TripRequest } from "@/types/trip-request";
 
@@ -64,11 +63,19 @@ function buildPackingChecklist(tripRequest: TripRequest) {
   return items;
 }
 
-export function generateDreamTripPlan(tripRequest: TripRequest): TripPlan {
-  const guesthouses = PropertyRepository.findPublicAll();
-  const experiences = ExperienceRepository.findAll();
-  const restaurants = RestaurantRepository.findAll();
-  const transfers = TransferRepository.findAll();
+export type PlannerCatalog = { guesthouses: Guesthouse[]; experiences: Experience[]; restaurants: Restaurant[]; transfers: Transfer[] };
+
+export async function loadPlannerCatalog(): Promise<PlannerCatalog> {
+  const [guesthouses, experiences, restaurants, transfers] = await Promise.all([
+    getLivePublishedGuesthouses(), getLivePublishedExperiences(), getLivePublishedRestaurants(), getLivePublishedTransfers()
+  ]);
+  const failed = [guesthouses, experiences, restaurants, transfers].find((result) => result.source === "supabase_error");
+  if (failed) throw new Error(`Dream Planner live data is unavailable: ${failed.error ?? "Supabase read failed."}`);
+  return { guesthouses: guesthouses.data, experiences: experiences.data, restaurants: restaurants.data, transfers: transfers.data };
+}
+
+export function generateDreamTripPlan(tripRequest: TripRequest, catalog: PlannerCatalog): TripPlan {
+  const { guesthouses, experiences, restaurants, transfers } = catalog;
 
   const recommendedGuesthouses = guesthouses.slice(0, 1).map((guesthouse) =>
     toRecommendation({

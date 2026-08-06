@@ -62,12 +62,15 @@ iThoddoo Maldives`;
  */
 export function generateTransferLink({
   phone = DEFAULT_PHONE,
+  transfer,
 }: {
   phone?: string;
+  transfer?: string;
 }) {
   const message = `Hi,
 
 I need airport transfer to Thoddoo.
+${transfer ? `\n🚤 Transfer: ${transfer}` : ""}
 
 ✈️ Flight Number:
 🕒 Arrival Time:

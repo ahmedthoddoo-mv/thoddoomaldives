@@ -3,7 +3,6 @@ import { AdminPropertyForm } from "@/components/admin/AdminPropertyForm";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { adminSidebarItems } from "@/data/adminContent";
-import { PropertyRepository } from "@/lib/repositories";
 import { getLiveAdminProperties } from "@/lib/repositories/liveReads";
 
 type EditAdminPropertyPageProps = {
@@ -11,6 +10,8 @@ type EditAdminPropertyPageProps = {
     id: string;
   }>;
 };
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Edit Admin Property",
@@ -20,20 +21,10 @@ export const metadata: Metadata = {
   }
 };
 
-export function generateStaticParams() {
-  const adminManagedProperties = PropertyRepository.findAll();
-
-  return adminManagedProperties.map((property) => ({
-    id: property.id
-  }));
-}
-
 export default async function EditAdminPropertyPage({ params }: EditAdminPropertyPageProps) {
   const { id } = await params;
   const propertyRead = await getLiveAdminProperties();
-  const property =
-    propertyRead.data.find((item) => item.id === id || item.slug === id) ??
-    PropertyRepository.findById(id);
+  const property = propertyRead.data.find((item) => item.id === id || item.slug === id);
 
   return (
     <AdminShell sidebar={<AdminSidebar items={adminSidebarItems} />}>

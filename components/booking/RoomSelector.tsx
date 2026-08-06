@@ -7,6 +7,7 @@ type RoomSelectorProps = {
 };
 
 export function RoomSelector({ rooms, selectedRoomId, onChange }: RoomSelectorProps) {
+  if (rooms.length === 0) return null;
   return (
     <fieldset className="bookingSelectorGroup">
       <legend>Room Type</legend>
@@ -21,7 +22,7 @@ export function RoomSelector({ rooms, selectedRoomId, onChange }: RoomSelectorPr
           />
           <span>
             <strong>{room.name}</strong>
-            <small>{room.capacity} · ${room.nightlyRate}/night</small>
+            <small>{room.capacity} · {room.nightlyRate ? `${room.currency ?? "USD"} ${room.nightlyRate}/night` : "Price on request"}</small>
           </span>
         </label>
       ))}

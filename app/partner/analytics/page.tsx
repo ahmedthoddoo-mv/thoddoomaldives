@@ -12,7 +12,7 @@ export default async function PartnerAnalyticsPage() {
 
   return (
     <PartnerPortalShell portalData={portalData} title="Analytics" subtitle="Track page views, booking requests, WhatsApp clicks, countries, stay length, and revenue estimates.">
-      <PartnerAnalyticsView />
+      <PartnerAnalyticsView bookings={portalData.bookings} />
     </PartnerPortalShell>
   );
 }

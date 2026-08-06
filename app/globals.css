@@ -1158,6 +1158,301 @@
   font-weight: 900;
 }
 
+.partnerAccessPage {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 12% -10%, rgba(12, 164, 151, 0.24), transparent 30rem),
+    radial-gradient(circle at 94% 8%, rgba(185, 130, 33, 0.2), transparent 28rem),
+    #030b09;
+  color: #eef7f3;
+}
+
+.partnerAccessTopNav {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(3, 11, 9, 0.82);
+  backdrop-filter: blur(18px);
+}
+
+.partnerAccessTopBar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 14px 20px;
+}
+
+.partnerAccessBrand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: #fff;
+  font-weight: 900;
+}
+
+.partnerAccessBrand span {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #087f7a, #b98221);
+}
+
+.partnerAccessPublicNav {
+  display: none;
+}
+
+.partnerAccessPublicNav a {
+  color: rgba(238, 247, 243, 0.85);
+  font-size: 0.84rem;
+  font-weight: 800;
+  padding: 8px 10px;
+  border-radius: 999px;
+}
+
+.partnerAccessPublicNav a:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.partnerAccessAccount {
+  justify-self: end;
+}
+
+.partnerAccessAccountMenu {
+  position: relative;
+}
+
+.partnerAccessAccountMenu summary {
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  padding: 6px 10px 6px 6px;
+}
+
+.partnerAccessAccountMenu summary::-webkit-details-marker {
+  display: none;
+}
+
+.partnerAccessAvatar {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(12, 164, 151, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  font-size: 0.75rem;
+  font-weight: 900;
+}
+
+.partnerAccessAccountLabel {
+  max-width: min(34vw, 220px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.partnerAccessAccountPanel {
+  position: absolute;
+  right: 0;
+  margin-top: 8px;
+  min-width: 230px;
+  display: grid;
+  gap: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  background: rgba(3, 11, 9, 0.96);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.36);
+  padding: 12px;
+}
+
+.partnerAccessAccountPanel p {
+  margin: 0;
+  color: rgba(238, 247, 243, 0.72);
+  font-size: 0.83rem;
+}
+
+.partnerAccessAccountPanel a,
+.partnerAccessAccountPanel button {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+  font: inherit;
+  text-align: left;
+  padding: 8px 10px;
+}
+
+.partnerAccessMobileMenu {
+  display: block;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px 14px;
+}
+
+.partnerAccessMobileMenu summary {
+  width: fit-content;
+  list-style: none;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  padding: 7px 12px;
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.partnerAccessMobileMenu summary::-webkit-details-marker {
+  display: none;
+}
+
+.partnerAccessMobileMenu nav {
+  margin-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.partnerAccessMobileMenu nav a {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  color: rgba(238, 247, 243, 0.88);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 9px 11px;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.partnerAccessContent {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: clamp(28px, 5vw, 56px) 20px 120px;
+}
+
+.partnerAccessStack {
+  display: grid;
+  gap: 18px;
+}
+
+.partnerAccessHeroCard,
+.partnerAccessDetailCard {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.055));
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(16px);
+  padding: clamp(22px, 4vw, 36px);
+}
+
+.partnerAccessHeroCard {
+  display: grid;
+  gap: 12px;
+}
+
+.partnerAccessIcon {
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(12, 164, 151, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.partnerAccessIcon svg {
+  width: 28px;
+  height: 28px;
+  fill: #9ce6db;
+}
+
+.partnerAccessHeroCard h1,
+.partnerAccessDetailCard h2 {
+  margin: 0;
+  color: #fff;
+}
+
+.partnerAccessHeroCard h1 {
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  line-height: 1.05;
+}
+
+.partnerAccessHeroCard p,
+.partnerAccessDetailCard p {
+  margin: 0;
+  color: rgba(238, 247, 243, 0.72);
+  line-height: 1.65;
+}
+
+.partnerAccessMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.partnerAccessMeta span {
+  border-radius: 999px;
+  background: rgba(36, 198, 184, 0.14);
+  color: #9ce6db;
+  padding: 7px 10px;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.partnerAccessActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.partnerAccessActions a {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.86rem;
+  font-weight: 900;
+  padding: 10px 14px;
+}
+
+.partnerAccessActions a:first-child {
+  background: linear-gradient(135deg, #087f7a, #0ca497);
+  border-color: rgba(12, 164, 151, 0.72);
+}
+
+.partnerAccessActions a:last-child {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.partnerAccessBrand:focus-visible,
+.partnerAccessPublicNav a:focus-visible,
+.partnerAccessAccountMenu summary:focus-visible,
+.partnerAccessAccountPanel a:focus-visible,
+.partnerAccessAccountPanel button:focus-visible,
+.partnerAccessMobileMenu summary:focus-visible,
+.partnerAccessMobileMenu nav a:focus-visible,
+.partnerAccessActions a:focus-visible {
+  outline: 2px solid #9ce6db;
+  outline-offset: 2px;
+}
+
 @media (min-width: 760px) {
   .partnerPortalStatsGrid,
   .partnerPortalSnapshotGrid,
@@ -1226,6 +1521,22 @@
   .partnerPortalPlanGrid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
+
+  .partnerAccessTopBar {
+    padding-left: 26px;
+    padding-right: 26px;
+  }
+
+  .partnerAccessPublicNav {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 2px;
+  }
+
+  .partnerAccessMobileMenu {
+    display: none;
+  }
 }
 
 @theme inline {
@@ -1246,6 +1557,18 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.srOnlyText {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* EPIC-016.5 platform consistency */
@@ -1348,6 +1671,35 @@ body {
 .platformCard {
   overflow: hidden;
 }
+
+.transferCardLink {
+  color: inherit;
+  text-decoration: none;
+  transition: box-shadow 180ms ease, transform 180ms ease;
+}
+
+.transferCardLink:hover {
+  box-shadow: 0 24px 70px rgba(23, 32, 28, 0.14);
+  transform: translateY(-2px);
+}
+
+.transferCardLink:focus-visible {
+  outline: 3px solid #087f7a;
+  outline-offset: 4px;
+}
+
+.transferCardAction {
+  display: inline-block;
+  margin-top: 18px;
+  color: #045b58;
+  font-weight: 900;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.transferScheduleSection + .transferScheduleSection { margin-top: 18px; }
+.transferTimetable { display: grid; gap: 10px; margin-top: 20px; }
+.transferTimetable > div { display: flex; justify-content: space-between; gap: 20px; border-bottom: 1px solid rgba(23, 32, 28, 0.1); padding: 10px 0; }
 
 .platformCardBody {
   padding: 22px;
@@ -1480,6 +1832,868 @@ body {
 .platformCard.bg-green-600 h3,
 .platformCard.bg-green-600 p {
   color: #fff;
+}
+
+.transferExperiencePage {
+  background:
+    linear-gradient(180deg, #f8fbfa 0%, #f3f7f5 34%, #eef3f2 100%);
+}
+
+.transferHero {
+  min-height: 78vh;
+  padding-top: 132px;
+  padding-bottom: 44px;
+}
+
+.transferHero::before {
+  background:
+    linear-gradient(180deg, rgba(4, 16, 18, 0.18), rgba(4, 16, 18, 0.88)),
+    linear-gradient(120deg, rgba(4, 93, 88, 0.34), transparent 45%),
+    radial-gradient(circle at 82% 18%, rgba(212, 183, 120, 0.18), transparent 28rem);
+}
+
+.transferHeroLayout {
+  display: grid;
+  gap: 24px;
+}
+
+.transferHeroCopy {
+  display: grid;
+  gap: 18px;
+}
+
+.transferHeroBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.transferHeroChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 8px 12px;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  backdrop-filter: blur(12px);
+}
+
+.transferHeroChip .transferIcon {
+  width: 15px;
+  height: 15px;
+  color: #b9fff8;
+}
+
+.transferHeroActions,
+.transferDepartureFooter,
+.transferDirectionHeader,
+.transferStickyBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.transferGhostButton {
+  border-color: rgba(255, 255, 255, 0.38);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+}
+
+.transferHeroStats {
+  display: grid;
+  gap: 12px;
+  margin: 4px 0 0;
+}
+
+.transferHeroStats div,
+.transferLiveCard,
+.transferFleetCard,
+.transferFactCard,
+.transferFaqCard,
+.transferOverviewCard,
+.transferBookingPanel,
+.transferTimelineCard,
+.transferFleetPanel {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 22px;
+  box-shadow: 0 30px 80px rgba(7, 16, 14, 0.12);
+}
+
+.transferHeroStats div {
+  min-width: 0;
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  padding: 18px;
+}
+
+.transferHeroStats dt,
+.transferTypeBadge,
+.transferFeaturedBadge,
+.transferFridayTag,
+.transferLiveLabel,
+.transferDirectionHeader p,
+.transferFleetCard small {
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.transferHeroStats dt {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.transferHeroStats dd {
+  margin: 10px 0 0;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.transferHeroNote {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.92rem;
+}
+
+.transferLiveCard {
+  align-self: end;
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(9, 19, 21, 0.62);
+  color: #fff;
+  padding: 24px;
+  backdrop-filter: blur(16px);
+}
+
+.transferLiveCard h2 {
+  margin: 8px 0 0;
+  color: #fff;
+  font-size: clamp(1.8rem, 3.5vw, 3rem);
+  line-height: 1.02;
+}
+
+.transferLiveMeta,
+.transferMetaList p,
+.transferReasonList li,
+.transferFactCard {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.transferLiveMeta {
+  margin: 14px 0 0;
+  color: rgba(255, 255, 255, 0.84);
+}
+
+.transferLiveDescription,
+.transferScheduleAlert {
+  margin: 16px 0 0;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.7;
+}
+
+.transferScheduleAlert {
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 12px 14px;
+}
+
+.transferLivePrice,
+.transferDeparturePrice {
+  margin: 18px 0 0;
+  color: #b9fff8;
+  font-size: 1.2rem;
+  font-weight: 900;
+}
+
+.transferInlineLink {
+  display: inline-flex;
+  margin-top: 16px;
+  color: #fff;
+  font-weight: 900;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.transferLiveDivider {
+  height: 1px;
+  margin: 18px 0 0;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.transferDepartureGrid,
+.transferFleetGrid,
+.transferFaqGrid,
+.transferInfoGrid,
+.transferDetailGrid,
+.transferFactGrid {
+  display: grid;
+  gap: 18px;
+}
+
+.transferDepartureCard,
+.transferOverviewCard,
+.transferBookingPanel,
+.transferTimelineCard,
+.transferFleetPanel,
+.transferWhyBookCard,
+.transferInfoPanel,
+.transferFaqCard,
+.transferTimetableCard {
+  border-radius: 24px;
+}
+
+.transferDepartureImage {
+  position: relative;
+  min-height: 320px;
+}
+
+.transferDepartureImageOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px;
+  background: linear-gradient(180deg, rgba(7, 16, 14, 0.28), transparent 42%);
+}
+
+.transferTypeBadge,
+.transferFeaturedBadge,
+.transferFridayTag {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 8px 12px;
+}
+
+.transferTypeBadge {
+  background: rgba(255, 255, 255, 0.88);
+  color: #0e2b28;
+}
+
+.transferFeaturedBadge {
+  background: rgba(208, 177, 111, 0.92);
+  color: #382100;
+}
+
+.transferFridayTag {
+  background: rgba(8, 127, 122, 0.12);
+  color: #045b58;
+}
+
+.transferDepartureHeader {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: start;
+  justify-content: space-between;
+}
+
+.transferDepartureHeader p,
+.transferScheduleNote,
+.transferFleetCard p,
+.transferFactCard p,
+.transferFallbackText {
+  margin: 0;
+}
+
+.transferMetaList {
+  display: grid;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.transferMetaList p {
+  margin: 0;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  border-radius: 18px;
+  background: #f4f8f7;
+  padding: 14px 16px;
+  color: #18312d;
+}
+
+.transferMetaList strong,
+.transferFactCard strong {
+  color: #12201b;
+  font-size: 0.9rem;
+}
+
+.transferMetaList em {
+  color: #52625b;
+  font-style: normal;
+  text-align: right;
+}
+
+.transferHighlightsList,
+.transferReasonList,
+.transferJourneyTimeline {
+  display: grid;
+  gap: 12px;
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.transferHighlightsList li,
+.transferJourneyTimeline li {
+  border-top: 1px solid rgba(18, 32, 27, 0.08);
+  padding-top: 12px;
+  color: #52625b;
+  line-height: 1.7;
+}
+
+.transferShowcasePanel {
+  display: grid;
+  gap: 24px;
+}
+
+.transferFleetCard,
+.transferFactCard,
+.transferFaqCard {
+  background: #fff;
+  padding: 20px;
+}
+
+.transferBookingPanel {
+  border-color: rgba(8, 127, 122, 0.18);
+  background: linear-gradient(180deg, #ffffff 0%, #f5fbf9 100%);
+}
+
+.transferBookingIntro,
+.transferBookingHelper {
+  margin: 0;
+  color: #5d6a64;
+  line-height: 1.7;
+}
+
+.transferBookingForm {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.transferBookingFieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.transferBookingFieldset legend,
+.transferBookingField > span {
+  display: block;
+  margin-bottom: 8px;
+  color: #12201b;
+  font-size: 0.88rem;
+  font-weight: 900;
+}
+
+.transferBookingChoices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.transferBookingChoice {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(18, 32, 27, 0.12);
+  border-radius: 999px;
+  background: #fff;
+  padding: 9px 12px;
+  color: #18312d;
+  font-size: 0.84rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.transferBookingChoice input {
+  accent-color: #087f7a;
+}
+
+.transferBookingField {
+  display: grid;
+  gap: 0;
+}
+
+.transferBookingField input {
+  width: 100%;
+  border: 1px solid rgba(18, 32, 27, 0.12);
+  border-radius: 16px;
+  background: #fff;
+  color: #12201b;
+  padding: 13px 14px;
+  font: inherit;
+}
+
+.transferBookingActions {
+  display: grid;
+  gap: 12px;
+}
+
+.transferBookingActions .platformButton {
+  width: 100%;
+}
+
+.transferBookingLink {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px solid rgba(18, 32, 27, 0.12);
+  border-radius: 999px;
+  background: #fff;
+  color: #045b58;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.transferBookingLink .transferIcon {
+  width: 18px;
+  height: 18px;
+}
+
+.transferBookingHelper {
+  margin-top: 16px;
+  font-size: 0.92rem;
+}
+
+.transferFleetCard {
+  display: grid;
+  gap: 0;
+  padding: 0;
+}
+
+.transferFleetVisual {
+  min-height: 190px;
+  background-position: center;
+  background-size: cover;
+}
+
+.transferFleetBody {
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+}
+
+.transferFleetKicker {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  background: #eef8f6;
+  color: #045b58;
+  padding: 7px 10px;
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.transferFleetKicker .transferIcon {
+  width: 15px;
+  height: 15px;
+}
+
+.transferFleetMeta {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.transferFleetMeta div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 18px;
+  border-radius: 16px;
+  background: #f4f8f7;
+  padding: 12px 14px;
+}
+
+.transferFleetMeta dt {
+  color: #52625b;
+  font-size: 0.8rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.transferFleetMeta dd {
+  margin: 0;
+  color: #12201b;
+  font-weight: 900;
+}
+
+.transferFleetNotes {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 18px;
+  color: #52625b;
+  line-height: 1.6;
+}
+
+.transferFleetCard h3,
+.transferFaqCard h3 {
+  margin: 14px 0 8px;
+  font-size: 1.18rem;
+}
+
+.transferReasonList li {
+  grid-template-columns: auto minmax(0, 1fr);
+  border-radius: 18px;
+  background: #f4f8f7;
+  padding: 14px 16px;
+}
+
+.transferReasonList p,
+.transferFactCard p {
+  color: #52625b;
+  line-height: 1.7;
+}
+
+.transferInfoPanel {
+  padding: 24px;
+}
+
+.transferInfoPanel .platformSectionHeader {
+  margin-bottom: 18px;
+}
+
+.transferInfoPanel ul {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: #43514b;
+}
+
+.transferInfoPanel li {
+  border-top: 1px solid rgba(18, 32, 27, 0.08);
+  padding-top: 12px;
+  line-height: 1.7;
+}
+
+.transferDetailLiveCard {
+  max-width: 420px;
+}
+
+.transferFactGrid {
+  margin-top: 22px;
+}
+
+.transferFactCard {
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px 12px;
+  border: 1px solid rgba(18, 32, 27, 0.08);
+  border-radius: 20px;
+  box-shadow: none;
+}
+
+.transferFactCard strong,
+.transferFactCard p {
+  grid-column: 2;
+}
+
+.transferTimetableCard .platformCardBody {
+  padding: 24px;
+}
+
+.transferDirectionHeader {
+  margin-bottom: 18px;
+}
+
+.transferDirectionHeader p {
+  margin: 0;
+  color: #5d6a64;
+}
+
+.transferTimetable {
+  gap: 12px;
+}
+
+.transferTimetableRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: start;
+  border-bottom: 1px solid rgba(23, 32, 28, 0.1);
+  padding: 12px 0;
+}
+
+.transferTimetableRow strong {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.transferTimetableTimes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.transferTimetableTime {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: #eef8f6;
+  color: #045b58;
+  padding: 8px 10px;
+  font-size: 0.85rem;
+  font-weight: 900;
+}
+
+.transferTimetableTimeFriday {
+  background: rgba(8, 127, 122, 0.12);
+  color: #045b58;
+}
+
+.transferTimetableFriday {
+  border-radius: 18px;
+  background: linear-gradient(90deg, rgba(8, 127, 122, 0.08), rgba(8, 127, 122, 0));
+  padding-inline: 14px;
+}
+
+.transferScheduleSummary {
+  margin-bottom: 18px;
+}
+
+.transferScheduleExceptions {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.transferScheduleExceptions h4 {
+  margin: 0;
+  color: #12201b;
+  font-size: 1rem;
+}
+
+.transferScheduleExceptions ul {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.transferScheduleExceptions li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  border-radius: 16px;
+  background: #f4f8f7;
+  padding: 12px 14px;
+  color: #52625b;
+  line-height: 1.6;
+}
+
+.transferScheduleExceptions .transferIcon {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+}
+
+.transferTimelineCard ol {
+  counter-reset: transfer-step;
+}
+
+.transferJourneyTimeline li {
+  position: relative;
+  padding-left: 56px;
+}
+
+.transferJourneyTimeline li::before {
+  counter-increment: transfer-step;
+  content: counter(transfer-step);
+  position: absolute;
+  left: 0;
+  top: 8px;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: #087f7a;
+  color: #fff;
+  font-weight: 900;
+}
+
+.transferStickyOffset {
+  padding-bottom: 40px;
+}
+
+.transferStickyBar {
+  position: sticky;
+  bottom: 12px;
+  z-index: 20;
+  width: min(calc(100% - 24px), 1120px);
+  margin: 0 auto 12px;
+  border: 1px solid rgba(18, 32, 27, 0.08);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 24px 50px rgba(18, 32, 27, 0.16);
+  padding: 12px 14px;
+  backdrop-filter: blur(16px);
+}
+
+.transferStickyBar div {
+  display: grid;
+}
+
+.transferStickyBar strong {
+  color: #12201b;
+}
+
+.transferStickyBar span {
+  color: #5d6a64;
+}
+
+.transferIcon {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  color: #087f7a;
+}
+
+.transferClosingCta {
+  position: relative;
+  overflow: hidden;
+}
+
+.transferClosingCta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 80% 20%, rgba(212, 183, 120, 0.16), transparent 20rem);
+  pointer-events: none;
+}
+
+.transferDetailPage .transferHeroLayout {
+  align-items: start;
+}
+
+.transferMobileBookingBar {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  left: 12px;
+  z-index: 30;
+  display: grid;
+  gap: 12px;
+  border: 1px solid rgba(18, 32, 27, 0.08);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 24px 50px rgba(18, 32, 27, 0.16);
+  padding: 14px;
+  backdrop-filter: blur(16px);
+}
+
+.transferMobileBookingBar div {
+  display: grid;
+  gap: 4px;
+}
+
+.transferMobileBookingBar strong {
+  color: #12201b;
+  font-size: 1rem;
+}
+
+.transferMobileBookingBar span {
+  color: #5d6a64;
+  line-height: 1.5;
+}
+
+@media (min-width: 760px) {
+  .transferHeroLayout,
+  .transferInfoGrid,
+  .transferDetailGrid {
+    grid-template-columns: minmax(0, 1.3fr) minmax(320px, 0.7fr);
+    align-items: end;
+  }
+
+  .transferHeroStats,
+  .transferFactGrid,
+  .transferFleetGrid,
+  .transferFaqGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .transferDepartureGrid {
+    gap: 24px;
+  }
+}
+
+@media (min-width: 1040px) {
+  .transferHeroStats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .transferFleetGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 759px) {
+  .transferHero {
+    min-height: 72vh;
+    padding-top: 116px;
+  }
+
+  .transferHeroActions,
+  .platformButtonRow,
+  .transferStickyBar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .transferMetaList p,
+  .transferTimetableRow {
+    grid-template-columns: auto 1fr;
+  }
+
+  .transferMetaList em,
+  .transferTimetableRow span {
+    text-align: left;
+  }
+
+  .transferTimetableRow {
+    flex-direction: column;
+  }
+
+  .transferStickyBar {
+    bottom: 8px;
+  }
+
+  .transferDetailPage {
+    padding-bottom: 118px;
+  }
+}
+
+@media (min-width: 760px) {
+  .transferMobileBookingBar {
+    display: none;
+  }
 }
 
 .sectionHeader {

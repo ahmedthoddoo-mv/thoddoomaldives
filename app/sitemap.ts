@@ -1,5 +1,7 @@
 import type { MetadataRoute } from "next";
-import { PropertyRepository } from "@/lib/repositories";
+
+export const dynamic = "force-dynamic";
+import { getPublishedStayProperties } from "@/lib/properties/propertyReads";
 import { SITE_URL } from "@/lib/seo";
 
 const staticRoutes = [
@@ -15,9 +17,10 @@ const staticRoutes = [
   { path: "/about", priority: 0.65 },
 ] as const;
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const lastModified = new Date();
-  const guesthouses = PropertyRepository.findPublicAll();
+  const guesthouseRead = await getPublishedStayProperties();
+  const guesthouses = guesthouseRead.data;
 
   return [
     ...staticRoutes.map((route) => ({

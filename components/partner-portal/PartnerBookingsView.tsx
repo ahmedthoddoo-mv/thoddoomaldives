@@ -1,10 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { updatePartnerBooking } from "@/app/partner/actions";
-import { getBookingsForPartner } from "@/lib/platform/selectors";
-import { updateBookingStatus, useBookingWorkflow } from "@/lib/bookings/bookingWorkflowStore";
 import type { Booking, BookingStatus } from "@/types/booking";
 
 const bookingTabs = ["Upcoming", "Pending", "Completed", "Cancelled"] as const;
@@ -14,33 +12,21 @@ type PartnerBookingsViewProps = {
   initialBookings?: Booking[];
 };
 
-export function PartnerBookingsView({ selectedPartnerId = "partner-thoddoo-sun-sky", initialBookings: repositoryBookings }: PartnerBookingsViewProps) {
+export function PartnerBookingsView({ selectedPartnerId = "", initialBookings = [] }: PartnerBookingsViewProps) {
   const router = useRouter();
-  const [notesByBooking, setNotesByBooking] = useState<Record<string, string>>({});
   const [actionMessage, setActionMessage] = useState("");
-  const initialBookings = useMemo(
-    () => (repositoryBookings && repositoryBookings.length > 0 ? repositoryBookings : getBookingsForPartner(selectedPartnerId)),
-    [repositoryBookings, selectedPartnerId]
-  );
-  const bookings = useBookingWorkflow(initialBookings).filter((booking) => booking.partnerId === selectedPartnerId);
+  const bookings = initialBookings.filter((booking) => booking.partnerId === selectedPartnerId);
 
   async function handlePartnerUpdate({
     bookingId,
     status,
-    internalNotes
   }: {
     bookingId: string;
     status?: Extract<BookingStatus, "confirmed" | "rejected" | "completed" | "cancelled">;
-    internalNotes?: string;
   }) {
-    if (status) {
-      updateBookingStatus(bookingId, status);
-    }
-
     const result = await updatePartnerBooking({
       bookingId,
-      status,
-      internalNotes
+      status
     });
 
     setActionMessage(result.message);
@@ -85,9 +71,7 @@ export function PartnerBookingsView({ selectedPartnerId = "partner-thoddoo-sun-s
                   <div>
                     <strong>{booking.guest.name}</strong>
                     <p>{booking.guest.adults + booking.guest.children} guests | CRM {booking.crmRecordId}</p>
-                    <small>
-                      {booking.reference ?? booking.id} | {booking.roomType} | {booking.source} | Commission ${booking.commission.companyRevenue}
-                    </small>
+                    <small>{booking.reference ?? booking.id} | {booking.roomType} | {booking.source}</small>
                     <div className="partnerBookingActions">
                       <button type="button" onClick={() => handlePartnerUpdate({ bookingId: booking.id, status: "confirmed" })}>
                         Confirm
@@ -99,29 +83,15 @@ export function PartnerBookingsView({ selectedPartnerId = "partner-thoddoo-sun-s
                         Complete
                       </button>
                     </div>
-                    <label className="partnerBookingNoteField">
-                      <span>Internal notes</span>
-                      <textarea
-                        onChange={(event) => setNotesByBooking((current) => ({ ...current, [booking.id]: event.target.value }))}
-                        placeholder="Arrival notes, room setup, payment notes..."
-                        value={notesByBooking[booking.id] ?? booking.internalNotes ?? ""}
-                      />
-                    </label>
-                    <button
-                      className="partnerBookingNoteButton"
-                      type="button"
-                      onClick={() => handlePartnerUpdate({ bookingId: booking.id, internalNotes: notesByBooking[booking.id] ?? booking.internalNotes ?? "" })}
-                    >
-                      Save notes
-                    </button>
                   </div>
-                  <span>${booking.estimatedValue}</span>
+                  <span>{booking.estimatedValue === null ? "Price on request" : `$${booking.estimatedValue}`}</span>
                   <small>{booking.arrival} to {booking.departure}</small>
                 </article>
               ))}
           </div>
         </section>
       ))}
+      {bookings.length === 0 ? <section className="partnerPortalPanel"><h2>No bookings yet</h2><p>New enquiries will appear here.</p></section> : null}
     </div>
   );
 }

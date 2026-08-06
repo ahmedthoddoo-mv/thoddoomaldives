@@ -4,7 +4,7 @@ import { membershipFeatures, membershipPlans, partnerOnboardingSteps } from "@/d
 const successStats = [
   { value: "13", label: "Partner categories", detail: "Built for every serious Thoddoo tourism operator." },
   { value: "3", label: "Growth tiers", detail: "Free, Verified, and Premium paths from day one." },
-  { value: "24h", label: "Review target", detail: "Demo operating goal for partner application follow-up." },
+  { value: "24h", label: "Review target", detail: "Target response time for partner application follow-up." },
   { value: "1", label: "Local platform", detail: "Discovery, trust, media, and WhatsApp intent in one place." }
 ];
 
@@ -37,15 +37,15 @@ const whyJoin = [
   },
   {
     icon: "03",
-    title: "Prepare for future booking infrastructure",
-    text: "The partner model is ready for dashboards, analytics, booking tools, campaigns, and AI concierge routing."
+    title: "Manage bookings and business details",
+    text: "The partner portal connects profiles, booking enquiries, services, galleries, and account status."
   }
 ];
 
 const faqs = [
   {
     question: "Is there a setup fee?",
-    answer: "No. This demo partner program keeps onboarding simple and does not include setup fees, payments, or backend billing."
+    answer: "No setup fee is charged through the application workflow. Any commercial terms are confirmed directly before activation."
   },
   {
     question: "Can I keep my existing booking channels?",
@@ -53,11 +53,11 @@ const faqs = [
   },
   {
     question: "What is the difference between Free, Verified, and Premium?",
-    answer: "Free gives basic discoverability, Verified adds trust and growth visibility, and Premium is for partners who want priority media, campaigns, and future analytics."
+    answer: "Free gives basic discoverability, Verified adds trust and growth visibility, and Premium supports richer media and priority campaigns."
   },
   {
     question: "How do I apply?",
-    answer: "Use the Apply Now button to open the partner onboarding form. The current version prepares a WhatsApp submission only."
+    answer: "Use the Apply Now button to submit the structured application for admin review."
   }
 ];
 
@@ -87,9 +87,9 @@ export default function PartnersPage() {
         </div>
 
         <aside className="partnerHeroGlass" aria-label="Partner program summary">
-          <span>Live demo</span>
+          <span>Partner platform</span>
           <strong>Growth Partner OS</strong>
-          <p>Free discovery, verified trust, premium campaigns, and future analytics-ready partner infrastructure.</p>
+          <p>Free discovery, verified trust, premium campaigns, and connected partner management.</p>
           <div className="partnerMiniMetrics">
             <div>
               <strong>3</strong>
@@ -245,10 +245,14 @@ export default function PartnersPage() {
       <section className="partnerFinalCta">
         <div className="partnerLandingContainer">
           <p className="eyebrow">Apply today</p>
-          <h2>Ready to become an iThoddoo Growth Partner?</h2>
-          <p>Submit your business details through the WhatsApp-only onboarding flow. No login, database, or payments.</p>
+          <h2>Join the iThoddoo Maldives Partner Network</h2>
+          <p>
+            Apply to join iThoddoo Maldives and manage your business through a secure partner portal. Submit your details,
+            complete verification, update your listing, manage rates, schedules, photos, and availability, and receive
+            booking enquiries from travelers.
+          </p>
           <Link className="partnerPrimaryButton" href="/partners/onboarding">
-            Apply Now
+            Start Partner Application
           </Link>
         </div>
       </section>

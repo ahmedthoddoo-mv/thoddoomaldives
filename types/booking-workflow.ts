@@ -33,8 +33,9 @@ export type BookingAnalyticsSummary = {
   bookingRequests: number;
   conversionRate: string;
   averageStay: string;
-  revenueDemo: number;
-  commissionDemo: number;
+  quotedValue: number;
+  confirmedRevenue: number;
+  commissionRevenue: number;
 };
 
 export type BookingWorkflowPayload = {

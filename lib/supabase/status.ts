@@ -3,13 +3,7 @@ import { isSupabaseServerConfigured, isSupabaseServiceRoleConfigured } from "@/l
 export const SUPABASE_MIGRATION_VERSION = "202607110001";
 
 export function getDataMode() {
-  const requestedMode = process.env.NEXT_PUBLIC_DATA_MODE;
-
-  if (requestedMode !== "mock" && isSupabaseServerConfigured()) {
-    return "supabase";
-  }
-
-  return "mock";
+  return process.env.NEXT_PUBLIC_DATA_MODE === "mock" ? "mock" : "supabase";
 }
 
 export function getSupabaseStatus() {
@@ -19,7 +13,7 @@ export function getSupabaseStatus() {
     dataMode: getDataMode(),
     supabaseConfigured: configured,
     serviceRoleConfigured: isSupabaseServiceRoleConfigured(),
-    databaseReachable: configured ? "Not checked during build" : "Demo only",
+    databaseReachable: configured ? "Not checked during build" : "Unavailable",
     migrationVersion: SUPABASE_MIGRATION_VERSION
   };
 }

@@ -4,6 +4,15 @@ import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 
+const travelStyles = [
+  { id: "family", label: "Family", icon: "👨‍👩‍👧‍👦" },
+  { id: "couple", label: "Couple", icon: "💑" },
+  { id: "adventure", label: "Adventure", icon: "🏄" },
+  { id: "diving", label: "Diving", icon: "🤿" },
+  { id: "relaxation", label: "Relaxation", icon: "🧘" },
+  { id: "snorkelling", label: "Snorkelling", icon: "🤽" },
+] as const;
+
 const interests = [
   "Snorkeling",
   "Sandbank",
@@ -38,6 +47,7 @@ type TripPlannerState = {
   children: string;
   budgetRange: string;
   accommodationType: string;
+  travelStyle: string;
   interests: string[];
 };
 
@@ -48,6 +58,7 @@ const initialState: TripPlannerState = {
   children: "0",
   budgetRange: budgetRanges[1],
   accommodationType: accommodationTypes[0],
+  travelStyle: "couple",
   interests: [],
 };
 
@@ -79,6 +90,13 @@ export default function TripPlanner() {
     }));
   }
 
+  function setTravelStyle(style: string) {
+    setForm((current) => ({
+      ...current,
+      travelStyle: style,
+    }));
+  }
+
   function toggleInterest(interest: string) {
     setForm((current) => {
       const selected = current.interests.includes(interest);
@@ -103,6 +121,7 @@ export default function TripPlanner() {
       children: form.children,
       budgetRange: form.budgetRange,
       accommodationType: form.accommodationType,
+      travelStyle: form.travelStyle,
     });
 
     form.interests.forEach((interest) => {
@@ -122,16 +141,41 @@ export default function TripPlanner() {
                 Plan Your Maldives Trip
               </p>
               <h2 className="mt-4 text-4xl font-bold leading-tight md:text-5xl">
-                Tell us your dates. We will shape the island plan.
+                Tell us your dates and travel style.
               </h2>
               <p className="mt-5 leading-8 text-slate-600">
                 Share the essentials and our local concierge will help match
-                you with stays, transfers, and experiences in Thoddoo. AI
-                Concierge support will power this flow later.
+                you with stays, transfers, and experiences in Thoddoo that fit
+                your dream island getaway.
               </p>
             </div>
 
             <form onSubmit={handleSubmit} className="grid gap-5">
+              <div className="grid gap-3">
+                <FieldLabel>Your Travel Style</FieldLabel>
+                <div className="flex flex-wrap gap-2">
+                  {travelStyles.map((style) => {
+                    const selected = form.travelStyle === style.id;
+
+                    return (
+                      <button
+                        key={style.id}
+                        type="button"
+                        onClick={() => setTravelStyle(style.id)}
+                        className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                          selected
+                            ? "border-cyan-700 bg-cyan-700 text-white"
+                            : "border-slate-200 bg-white text-slate-700 hover:border-cyan-700"
+                        }`}
+                      >
+                        <span>{style.icon}</span>
+                        <span>{style.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               <div className="grid gap-5 md:grid-cols-2">
                 <div className="grid gap-2">
                   <FieldLabel>Arrival Date</FieldLabel>

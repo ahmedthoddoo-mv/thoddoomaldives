@@ -17,4 +17,6 @@ export type Restaurant = {
   openingHours: string;
   image: string;
   featured: boolean;
+  publicationStatus?: string;
+  verificationStatus?: string;
 };

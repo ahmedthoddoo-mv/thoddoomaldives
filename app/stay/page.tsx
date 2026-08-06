@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+
+export const dynamic = "force-dynamic";
 import { StayDirectoryClient } from "@/components/property/StayDirectoryClient";
 import { getPublishedStayProperties } from "@/lib/properties/propertyReads";
 import { createPageMetadata } from "@/lib/seo";
@@ -45,7 +47,6 @@ export default async function StayPage() {
 
           <StayDirectoryClient
             initialGuesthouses={stayProperties.data}
-            readSource={stayProperties.source}
             error={stayProperties.error}
           />
         </div>

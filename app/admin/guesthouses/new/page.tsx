@@ -1,23 +1,5 @@
-import type { Metadata } from "next";
-import { AdminCmsForm } from "@/components/admin/AdminCmsForm";
-import { AdminShell } from "@/components/admin/AdminShell";
-import { AdminSidebar } from "@/components/admin/AdminSidebar";
-import { adminSidebarItems } from "@/data/adminContent";
-import { getAdminCmsSection } from "@/data/adminCms";
-
-export const metadata: Metadata = {
-  title: "Add Guesthouse",
-  robots: { index: false, follow: false }
-};
+import { redirect } from "next/navigation";
 
 export default function NewGuesthousePage() {
-  const section = getAdminCmsSection("guesthouses");
-
-  return (
-    <AdminShell sidebar={<AdminSidebar items={adminSidebarItems} />}>
-      <div className="adminContent">
-        <AdminCmsForm mode="new" section={section} />
-      </div>
-    </AdminShell>
-  );
+  redirect("/admin/properties/new");
 }
