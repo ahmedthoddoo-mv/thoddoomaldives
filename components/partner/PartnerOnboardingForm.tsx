@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { submitSmartPartnerApplication } from "@/app/partners/onboarding/actions";
 import { PricingEditor, createPricingRow } from "@/components/partner/PricingEditor";
+import { TurnstileWidget } from "@/components/security/TurnstileWidget";
 import { membershipPlans } from "@/data/membershipPlans";
 import { PartnerApplicationRepository } from "@/lib/applications/partnerApplicationRepository";
 import { platformConfig } from "@/lib/config/platform";
@@ -68,7 +69,9 @@ function createInitialApplication(): SmartPartnerApplicationInput {
     prices: [createPricingRow({ unit: schema.pricing.defaultUnit })],
     media: createInitialMedia(),
     verificationDocuments: createVerificationDocuments("guesthouse"),
-    antiSpamAnswer: ""
+    antiSpamAnswer: "",
+    turnstileToken: "",
+    websiteField: ""
   };
 }
 
@@ -250,6 +253,9 @@ export function PartnerOnboardingForm() {
     }
     if (step >= 5 && application.antiSpamAnswer.trim() !== "8") {
       nextErrors.push("Anti-spam answer is required before review.");
+    }
+    if (step >= 5 && !application.turnstileToken.trim()) {
+      nextErrors.push("Complete the security check before submitting.");
     }
     setErrors(nextErrors);
     return nextErrors.length === 0;
@@ -553,6 +559,20 @@ export function PartnerOnboardingForm() {
             <span>Anti-spam: what is 3 + 5?</span>
             <input value={application.antiSpamAnswer} onChange={(event) => updateApplication({ antiSpamAnswer: event.target.value })} />
           </label>
+          <div className="srOnlyText" aria-hidden="true">
+            <label htmlFor="partner-website-field">Website</label>
+            <input
+              id="partner-website-field"
+              tabIndex={-1}
+              autoComplete="off"
+              value={application.websiteField}
+              onChange={(event) => updateApplication({ websiteField: event.target.value })}
+            />
+          </div>
+          <TurnstileWidget
+            widgetId="partner-application"
+            onToken={(token) => updateApplication({ turnstileToken: token })}
+          />
         </div>
       ) : null}
 
@@ -603,7 +623,9 @@ export function PartnerOnboardingForm() {
           {currentStep < 6 ? (
             <button type="button" onClick={goNext}>Next</button>
           ) : (
-            <button disabled={isPending} type="button" onClick={submitApplication}>{isPending ? "Submitting..." : "Submit application"}</button>
+            <button disabled={isPending || !application.turnstileToken} type="button" onClick={submitApplication}>
+              {isPending ? "Submitting..." : "Submit application"}
+            </button>
           )}
           <a href={`https://wa.me/${platformConfig.whatsappNumbers.partnerships.replace(/\D/g, "")}?text=${encodeURIComponent("Hi, I need help with the iThoddoo Growth Partner application.")}`} target="_blank" rel="noopener noreferrer">
             Need help?

@@ -30,6 +30,8 @@ const migrationSql = readFileSync(
 const partnerActionsSource = readFileSync(new URL("../app/partner/actions.ts", import.meta.url), "utf8");
 const bookingActionsSource = readFileSync(new URL("../app/booking/actions.ts", import.meta.url), "utf8");
 const onboardingActionsSource = readFileSync(new URL("../app/partners/onboarding/actions.ts", import.meta.url), "utf8");
+const turnstileSource = readFileSync(new URL("../lib/security/turnstile.ts", import.meta.url), "utf8");
+const turnstileWidgetSource = readFileSync(new URL("../components/security/TurnstileWidget.tsx", import.meta.url), "utf8");
 const reviewMigrationSql = readFileSync(new URL("../supabase/migrations/202607310001_application_review_versions.sql", import.meta.url), "utf8");
 const roomPriceMigrationSql = readFileSync(new URL("../supabase/migrations/202607310002_correct_approved_room_prices.sql", import.meta.url), "utf8");
 const liveReadsSource = readFileSync(new URL("../lib/repositories/liveReads.ts", import.meta.url), "utf8");
@@ -213,8 +215,17 @@ test("authenticated partners have no direct mutation grants on protected base ta
   );
 });
 test("booking enquiries require canonical server-side Turnstile verification", () => {
-  assert.match(bookingActionsSource, /challenges\.cloudflare\.com\/turnstile\/v0\/siteverify/);
-  assert.match(bookingActionsSource, /result\.success === true && result\.action === "turnstile-spin-v2"/);
+  assert.match(bookingActionsSource, /import\s+\{\s*verifyTurnstileToken\s*\}\s+from\s+"@\/lib\/security\/turnstile"/);
+  assert.match(bookingActionsSource, /verifyTurnstileToken\(\{\s*token:\s*input\.turnstileToken,\s*remoteIp,\s*expectedAction:\s*"turnstile-spin-v2"\s*\}\)/);
+  assert.match(turnstileSource, /process\.env\.TURNSTILE_SECRET/);
+  assert.match(turnstileSource, /fetch\("https:\/\/challenges\.cloudflare\.com\/turnstile\/v0\/siteverify"/);
+  assert.match(turnstileSource, /method:\s*"POST"/);
+  assert.match(turnstileSource, /"Content-Type":\s*"application\/x-www-form-urlencoded"/);
+  assert.match(turnstileSource, /if\s*\(!secret\s*\|\|\s*!token\)\s*\{\s*return false;\s*\}/);
+  assert.match(turnstileSource, /if\s*\(!response\.ok\)\s*return false;/);
+  assert.match(turnstileSource, /return result\.success === true && result\.action === input\.expectedAction;/);
+  assert.doesNotMatch(turnstileWidgetSource, /TURNSTILE_SECRET/);
+  assert.match(turnstileWidgetSource, /process\.env\.NEXT_PUBLIC_TURNSTILE_SITE_KEY/);
 });
 test("production data mode cannot default to mock", () => {
   assert.match(dataModeSource, /NEXT_PUBLIC_DATA_MODE === "mock"/);

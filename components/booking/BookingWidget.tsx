@@ -15,7 +15,7 @@ import { PriceCalculator } from "@/components/booking/PriceCalculator";
 import { PropertyAvailabilityCard } from "@/components/booking/PropertyAvailabilityCard";
 import { RoomSelector } from "@/components/booking/RoomSelector";
 import { TransferSelector } from "@/components/booking/TransferSelector";
-import { TurnstileWidget } from "@/components/booking/TurnstileWidget";
+import { TurnstileWidget } from "@/components/security/TurnstileWidget";
 import type { RoomAvailability } from "@/types/availability";
 
 type BookingWidgetProps = {
@@ -50,6 +50,7 @@ export function BookingWidget({ propertyName, propertySlug, propertyId, whatsapp
   const [submitMessage, setSubmitMessage] = useState("");
   const [submitFailed, setSubmitFailed] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState("");
+  const [websiteField, setWebsiteField] = useState("");
 
   const selectedRoom = rooms.find((room) => room.id === selectedRoomId) ?? rooms[0];
 
@@ -118,7 +119,8 @@ export function BookingWidget({ propertyName, propertySlug, propertyId, whatsapp
         guestWhatsapp,
         contactPreference,
         specialRequests,
-        turnstileToken
+        turnstileToken,
+        websiteField
       });
 
       if (!result.ok || !result.enquiry) {
@@ -205,7 +207,17 @@ export function BookingWidget({ propertyName, propertySlug, propertyId, whatsapp
           </label>
 
           <PriceCalculator draft={draft} />
-          <TurnstileWidget onToken={setTurnstileToken} />
+          <div className="srOnlyText" aria-hidden="true">
+            <label htmlFor="booking-website-field">Website</label>
+            <input
+              id="booking-website-field"
+              tabIndex={-1}
+              autoComplete="off"
+              value={websiteField}
+              onChange={(event) => setWebsiteField(event.target.value)}
+            />
+          </div>
+          <TurnstileWidget widgetId="booking-enquiry" onToken={setTurnstileToken} />
 
           {validationErrors.length > 0 ? (
             <div className="bookingValidationPanel" role="alert">

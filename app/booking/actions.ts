@@ -8,6 +8,9 @@ import { sendEmail } from "@/lib/email/client";
 import { buildAdminNotificationEmail } from "@/lib/email/templates/admin-notification";
 import { buildBookingConfirmationEmail } from "@/lib/email/templates/booking-confirmation";
 import type { SendEmailResult } from "@/lib/email/types";
+import { checkRateLimit } from "@/lib/security/rateLimit";
+import { getClientIp } from "@/lib/security/request";
+import { verifyTurnstileToken } from "@/lib/security/turnstile";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
 import type { SupabaseDatabaseClient } from "@/lib/supabase/server";
 import { getDataMode } from "@/lib/supabase/status";
@@ -31,6 +34,7 @@ export type RealBookingInput = {
   contactPreference: ContactPreference;
   specialRequests: string;
   turnstileToken: string;
+  websiteField?: string;
 };
 
 export type RealBookingResult = {
@@ -73,31 +77,6 @@ function validateEmail(email: string) {
 
 function validateContactPreference(value: ContactPreference) {
   return value === "whatsapp" || value === "email" || value === "either";
-}
-
-type TurnstileVerification = {
-  success?: boolean;
-  action?: string;
-  hostname?: string;
-  "error-codes"?: string[];
-};
-
-async function verifyTurnstileToken(token: string) {
-  const secret = process.env.TURNSTILE_SECRET;
-  if (!secret || !token.trim()) return false;
-  const requestHeaders = await headers();
-  const remoteIp = requestHeaders.get("cf-connecting-ip") || requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim();
-  const body = new URLSearchParams({ secret, response: token.trim() });
-  if (remoteIp) body.set("remoteip", remoteIp);
-  const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body,
-    cache: "no-store"
-  });
-  if (!response.ok) return false;
-  const result = await response.json() as TurnstileVerification;
-  return result.success === true && result.action === "turnstile-spin-v2";
 }
 
 function getCapacityLimit(room: Tables<"rooms">) {
@@ -188,7 +167,33 @@ export async function submitRealBookingRequest(input: RealBookingInput): Promise
     };
   }
 
-  if (!(await verifyTurnstileToken(input.turnstileToken))) {
+  if (input.websiteField?.trim()) {
+    return {
+      ok: false,
+      mode: "supabase",
+      message: "Enquiry verification failed.",
+      errors: ["Please complete the security check and try again."]
+    };
+  }
+
+  const requestHeaders = await headers();
+  const remoteIp = getClientIp(requestHeaders);
+  const bookingRateLimit = checkRateLimit({
+    bucket: "booking-enquiry",
+    key: remoteIp,
+    limit: 12,
+    windowMs: 10 * 60 * 1000
+  });
+  if (!bookingRateLimit.allowed) {
+    return {
+      ok: false,
+      mode: "supabase",
+      message: "Too many enquiry attempts.",
+      errors: [`Please wait about ${bookingRateLimit.retryAfterSeconds} seconds and try again.`]
+    };
+  }
+
+  if (!(await verifyTurnstileToken({ token: input.turnstileToken, remoteIp, expectedAction: "turnstile-spin-v2" }))) {
     return {
       ok: false,
       mode: "supabase",

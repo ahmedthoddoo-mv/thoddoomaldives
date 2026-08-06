@@ -2,6 +2,7 @@
 
 import { FormEvent, useMemo, useState, useTransition } from "react";
 import { submitContactEnquiry } from "@/app/contact/actions";
+import { TurnstileWidget } from "@/components/security/TurnstileWidget";
 import {
   formatPlannerMessage,
   formatPlannerValue,
@@ -33,6 +34,8 @@ export default function ContactBookingHub({
   const [guestEmail, setGuestEmail] = useState("");
   const [guestWhatsapp, setGuestWhatsapp] = useState("");
   const [request, setRequest] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [websiteField, setWebsiteField] = useState("");
   const [submitMessage, setSubmitMessage] = useState("");
   const [submitErrors, setSubmitErrors] = useState<string[]>([]);
   const [isSubmitting, startSubmitting] = useTransition();
@@ -79,6 +82,8 @@ export default function ContactBookingHub({
         email: guestEmail,
         whatsapp: guestWhatsapp,
         request,
+        turnstileToken,
+        websiteField,
         plannedTrip: currentTrip
       });
 
@@ -281,7 +286,20 @@ export default function ContactBookingHub({
                   placeholder="Example: airport arrival time, room preference, private excursion request..."
                 />
               </label>
+
+              <div className="srOnlyText md:col-span-2" aria-hidden="true">
+                <label htmlFor="contact-website-field">Website</label>
+                <input
+                  id="contact-website-field"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={websiteField}
+                  onChange={(event) => setWebsiteField(event.target.value)}
+                />
+              </div>
             </div>
+
+            <TurnstileWidget widgetId="contact-enquiry" onToken={setTurnstileToken} />
 
             {submitErrors.length > 0 ? (
               <div className="bookingValidationPanel mt-6" role="alert">
@@ -300,7 +318,7 @@ export default function ContactBookingHub({
 
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !turnstileToken}
               className="mt-6 w-full rounded-full bg-slate-900 px-6 py-4 font-semibold text-white transition hover:bg-slate-700"
             >
               {isSubmitting ? "Sending..." : "Send Inquiry"}

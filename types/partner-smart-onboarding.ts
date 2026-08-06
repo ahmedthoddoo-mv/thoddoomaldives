@@ -57,4 +57,6 @@ export type SmartPartnerApplicationInput = {
   media: PartnerApplicationMediaInput[];
   verificationDocuments: PartnerVerificationDocumentInput[];
   antiSpamAnswer: string;
+  turnstileToken: string;
+  websiteField: string;
 };

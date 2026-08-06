@@ -1,9 +1,13 @@
 "use server";
 
+import { headers } from "next/headers";
 import { sendEmail } from "@/lib/email/client";
 import { platformConfig } from "@/lib/config/platform";
 import { buildAdminNotificationEmail } from "@/lib/email/templates/admin-notification";
 import { buildContactConfirmationEmail } from "@/lib/email/templates/contact-confirmation";
+import { checkRateLimit } from "@/lib/security/rateLimit";
+import { getClientIp } from "@/lib/security/request";
+import { verifyTurnstileToken } from "@/lib/security/turnstile";
 import type { PlannedTrip } from "@/types/planner";
 
 export type ContactEnquiryInput = {
@@ -11,6 +15,8 @@ export type ContactEnquiryInput = {
   email: string;
   whatsapp: string;
   request: string;
+  turnstileToken: string;
+  websiteField?: string;
   plannedTrip: PlannedTrip;
 };
 
@@ -53,6 +59,29 @@ export async function submitContactEnquiry(input: ContactEnquiryInput): Promise<
   };
 
   const errors: string[] = [];
+  if (input.websiteField?.trim()) {
+    return { ok: false, message: "Enquiry verification failed.", errors: ["Please complete the security check and try again."] };
+  }
+
+  const requestHeaders = await headers();
+  const remoteIp = getClientIp(requestHeaders);
+  const contactRateLimit = checkRateLimit({
+    bucket: "contact-enquiry",
+    key: remoteIp,
+    limit: 8,
+    windowMs: 10 * 60 * 1000
+  });
+  if (!contactRateLimit.allowed) {
+    return {
+      ok: false,
+      message: "Too many enquiry attempts.",
+      errors: [`Please wait about ${contactRateLimit.retryAfterSeconds} seconds and try again.`]
+    };
+  }
+  if (!(await verifyTurnstileToken({ token: input.turnstileToken, remoteIp, expectedAction: "turnstile-spin-v2" }))) {
+    return { ok: false, message: "Enquiry verification failed.", errors: ["Please complete the security check and try again."] };
+  }
+
   const emailValid = !email || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const whatsappDigits = whatsapp.replace(/\D/g, "");
   if (!email && whatsappDigits.length < 7) {
