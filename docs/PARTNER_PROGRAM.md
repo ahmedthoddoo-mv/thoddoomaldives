@@ -4,7 +4,7 @@
 
 The Partner Platform is the commercial foundation for Project Atlas. It is designed to become the operating system for local island tourism in Thoddoo: a structured network of verified businesses, services, media, traveler intent, leads, insights, and future booking capabilities.
 
-This epic intentionally does not build authentication, payments, booking, admin dashboards, CRM, or email. It prepares the business architecture those systems will depend on.
+This epic focuses on the commercial architecture that those systems depend on. Authentication, dashboards, CRM, and email are now implemented in the live product.
 
 ## Business Philosophy
 

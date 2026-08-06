@@ -3,25 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { publicNavigationLinks } from "@/lib/navigation";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
-  if (pathname.startsWith("/admin")) {
+  if (pathname.startsWith("/admin") || pathname.startsWith("/partner")) {
     return null;
   }
-
-  const links = [
-    ["Home", "/"],
-    ["Stay", "/stay"],
-    ["Excursions", "/excursions"],
-    ["Transfer", "/transfer"],
-    ["Gallery", "/gallery"],
-    ["Restaurants", "/restaurants"],
-    ["Guide", "/guide"],
-    ["Contact", "/contact"],
-  ];
 
   return (
     <nav className="absolute top-0 z-40 w-full px-4 py-4 text-white md:px-8">
@@ -31,9 +21,9 @@ export default function Navbar() {
         </Link>
 
         <div className="hidden gap-5 text-sm font-semibold md:flex">
-          {links.map(([label, href]) => (
-            <Link key={href} href={href} className="hover:text-cyan-200">
-              {label}
+          {publicNavigationLinks.map((link) => (
+            <Link key={link.href} href={link.href} className="hover:text-cyan-200">
+              {link.label}
             </Link>
           ))}
         </div>
@@ -49,14 +39,14 @@ export default function Navbar() {
       {open && (
         <div className="mt-4 rounded-2xl bg-white p-4 text-slate-900 shadow-xl md:hidden">
           <div className="grid gap-3">
-            {links.map(([label, href]) => (
+            {publicNavigationLinks.map((link) => (
               <Link
-                key={href}
-                href={href}
+                key={link.href}
+                href={link.href}
                 onClick={() => setOpen(false)}
                 className="rounded-xl px-4 py-3 font-semibold hover:bg-slate-100"
               >
-                {label}
+                {link.label}
               </Link>
             ))}
           </div>

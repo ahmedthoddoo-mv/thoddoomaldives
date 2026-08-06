@@ -74,8 +74,18 @@ export type PartnerPortalNotification = {
   actionHref?: string;
 };
 
+export type PartnerPortalSource =
+  | "mock"
+  | "supabase"
+  | "fallback"
+  | "setup_required"
+  | "pending"
+  | "rejected"
+  | "suspended"
+  | "access_denied";
+
 export type PartnerPortalData = {
-  source: "mock" | "supabase" | "fallback" | "setup_required";
+  source: PartnerPortalSource;
   partnerId: string;
   propertyId: string;
   businessType: BusinessType;
@@ -118,6 +128,54 @@ type PartnerPropertyWithRelations = Tables<"properties"> & {
 
 function parseJsonRecord(value: unknown): Record<string, string> {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, string>) : {};
+}
+
+export function getPartnerAccessState(partner: Tables<"partners"> | null | undefined): Exclude<PartnerPortalSource, "mock" | "supabase" | "fallback" | "setup_required"> | "dashboard" {
+  if (!partner) return "access_denied";
+  if (partner.editing_suspended || partner.status === "suspended" || partner.verification_status === "suspended") return "suspended";
+  if (partner.verification_status === "rejected" || partner.status === "archived") return "rejected";
+  if (["new_lead", "contacted", "pending"].includes(partner.status) || ["pending", "unverified"].includes(partner.verification_status)) return "pending";
+  if (partner.status === "verified" || partner.verification_status === "verified") return "dashboard";
+  return "access_denied";
+}
+
+function getRestrictedPortalData(
+  source: Exclude<PartnerPortalSource, "mock" | "supabase" | "fallback">,
+  email: string | null,
+  partner?: Tables<"partners"> | null
+): PartnerPortalData {
+  const businessName = partner?.business_name ?? (source === "access_denied" ? "Access denied" : "Review in progress");
+  const base = getAccountSetupPortalData(email, source);
+  return {
+    ...base,
+    source,
+    profile: {
+      ...base.profile,
+      businessName,
+      email: email ?? base.profile.email
+    },
+    verification: {
+      ...base.verification,
+      status: source === "rejected" || source === "suspended"
+        ? "Rejected"
+        : source === "pending"
+          ? "Pending"
+          : "Missing",
+      adminNotes: [
+        source === "pending"
+          ? "Your partner account is under review. The team will contact you once the review is complete."
+          : source === "rejected"
+            ? "This partner account was not approved. Please contact support for next steps."
+            : source === "suspended"
+              ? "This partner account is suspended. Contact support to resolve the issue."
+              : "This account is not linked to an approved partner record."
+      ]
+    },
+    membership: {
+      ...base.membership,
+      status: source === "pending" ? "Under review" : source === "rejected" ? "Rejected" : source === "suspended" ? "Suspended" : base.membership.status
+    }
+  };
 }
 
 function getAccountSetupPortalData(email: string | null, source: PartnerPortalData["source"] = "setup_required"): PartnerPortalData {
@@ -227,7 +285,11 @@ export async function getCurrentPartnerPortalData(): Promise<PartnerPortalData> 
     return getAccountSetupPortalData(null);
   }
   if (!authState.partner) {
-    return getAccountSetupPortalData(authState.email);
+    return getRestrictedPortalData("access_denied", authState.email);
+  }
+  const accessState = getPartnerAccessState(authState.partner);
+  if (accessState !== "dashboard") {
+    return getRestrictedPortalData(accessState, authState.email, authState.partner);
   }
   const supabase = createSupabaseServiceRoleClient();
   if (!supabase) {
@@ -418,10 +480,20 @@ export async function getAuthorizedPartnerScope() {
     return { mode: "unauthenticated" as const, partnerId: "", partnerSlug: "", propertyId: "", propertySlug: "", listingId: "", listingType: "" };
   }
   if (!authState.partner) {
-    return { mode: "setup_required" as const, partnerId: "", partnerSlug: "", propertyId: "", propertySlug: "", listingId: "", listingType: "", authUserId: authState.userId };
+    return { mode: "access_denied" as const, partnerId: "", partnerSlug: "", propertyId: "", propertySlug: "", listingId: "", listingType: "", authUserId: authState.userId };
   }
-  if (authState.partner.editing_suspended) {
-    return { mode: "suspended" as const, partnerId: authState.partner.id, partnerSlug: authState.partner.slug, propertyId: "", propertySlug: "", listingId: "", listingType: "", authUserId: authState.userId };
+  const accessState = getPartnerAccessState(authState.partner);
+  if (accessState !== "dashboard") {
+    return {
+      mode: accessState,
+      partnerId: authState.partner.id,
+      partnerSlug: authState.partner.slug,
+      propertyId: "",
+      propertySlug: "",
+      listingId: "",
+      listingType: "",
+      authUserId: authState.userId
+    };
   }
 
   const supabase = createSupabaseServiceRoleClient();

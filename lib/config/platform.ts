@@ -28,10 +28,10 @@ export const platformConfig = {
   companyContact: {
     address: "Thoddoo, Alif Alif Atoll, Maldives",
     phone: "+960 914 2538",
-    email: "admin@thoddoomaldives.com",
+    email: "hello@thoddoomaldives.com",
     website: "https://thoddoomaldives.com"
   },
-  supportEmail: "admin@thoddoomaldives.com",
+  supportEmail: "hello@thoddoomaldives.com",
   socialLinks: {
     instagram: "https://instagram.com/ithoddoomaldive",
     facebook: "https://facebook.com/ithoddoomaldive",

@@ -1,6 +1,9 @@
 "use server";
 
 import { platformConfig } from "@/lib/config/platform";
+import { sendEmail } from "@/lib/email/client";
+import { buildAdminNotificationEmail } from "@/lib/email/templates/admin-notification";
+import { buildPartnerApplicationEmail } from "@/lib/email/templates/partner-application";
 import { validateCategoryAnswers, validatePricingRows } from "@/lib/partner-onboarding/onboardingSchemas";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
 import { getDataMode } from "@/lib/supabase/status";
@@ -386,11 +389,34 @@ export async function submitSmartPartnerApplication(input: SmartPartnerApplicati
   const summary = buildApplicationSummary(canonicalInput, reference);
   const officialWhatsapp = platformConfig.whatsappNumbers.partnerships.replace(/\D/g, "");
   const whatsappUrl = `https://wa.me/${officialWhatsapp}?text=${encodeURIComponent(summary)}`;
+  const siteUrl = platformConfig.companyContact.website.replace(/\/$/, "");
+  const reviewLink = `${siteUrl}/admin/applications/${applicationRow.id}`;
+  const applicantEmail = buildPartnerApplicationEmail({
+    businessName: canonicalInput.businessName,
+    reference,
+    reviewLink,
+    siteUrl
+  });
+  const adminEmail = buildAdminNotificationEmail({
+    title: `New partner application: ${canonicalInput.businessName}`,
+    summary: `${canonicalInput.businessName} submitted partner application ${reference}.`,
+    adminUrl: reviewLink,
+    siteUrl
+  });
+  const emailResults = await Promise.allSettled([
+    sendEmail({ to: { address: canonicalInput.email.trim().toLowerCase(), name: canonicalInput.businessName }, ...applicantEmail }),
+    sendEmail({ to: platformConfig.companyContact.email, ...adminEmail })
+  ]);
+  const emailWarnings = emailResults.flatMap((result) => {
+    if (result.status === "rejected") return ["Email delivery failed."];
+    if (result.value.skipped) return [result.value.reason];
+    return [];
+  });
 
   return {
     ok: true,
     mode: "supabase",
-    message: `Application ${reference} submitted successfully.`,
+    message: `Application ${reference} submitted successfully.${emailWarnings.length > 0 ? ` ${emailWarnings.join(" ")}` : ""}`,
     reference,
     application: mapSavedApplication(applicationRow, canonicalInput),
     whatsappUrl,

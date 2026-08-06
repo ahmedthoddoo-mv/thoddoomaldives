@@ -1,6 +1,11 @@
 "use server";
 
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
+import { platformConfig } from "@/lib/config/platform";
+import { sendEmail } from "@/lib/email/client";
+import { buildPartnerApprovedEmail } from "@/lib/email/templates/partner-approved";
+import { buildPartnerPendingEmail } from "@/lib/email/templates/partner-pending";
+import { buildPartnerRejectedEmail } from "@/lib/email/templates/partner-rejected";
 import type { SupabaseDatabaseClient } from "@/lib/supabase/server";
 import { requireAdminSession } from "@/lib/admin/adminAuth";
 import { getDataMode } from "@/lib/supabase/status";
@@ -123,6 +128,7 @@ async function deliverPartnerInvitation(
   reviewer: string,
   partnerId: string
 ) {
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, "");
   const { data: application } = await db
     .from("partner_applications")
     .select("business_name, email")
@@ -134,13 +140,13 @@ async function deliverPartnerInvitation(
     .eq("application_id", applicationId)
     .neq("status", "cancelled")
     .maybeSingle();
-  if (!application || !invitationRecord || invitationRecord.status === "sent" || invitationRecord.status === "accepted") return;
+  if (!application || !invitationRecord || invitationRecord.status === "sent" || invitationRecord.status === "accepted") return false;
   if (
     invitationRecord.status === "sending"
     && invitationRecord.delivery_attempted_at
     && Date.now() - new Date(invitationRecord.delivery_attempted_at).getTime() < 10 * 60 * 1000
   ) {
-    return;
+    return false;
   }
 
   const existingUser = await findAuthUserByEmail(db, application.email);
@@ -156,7 +162,7 @@ async function deliverPartnerInvitation(
       sent_at: invitationRecord.status === "sending" ? new Date().toISOString() : undefined
     }).eq("id", invitationRecord.id).in("status", ["preview", "sending"]);
     if (reconcileError) throw new Error(`Invitation reconciliation failed: ${reconcileError.message}`);
-    return;
+    return true;
   }
 
   if (invitationRecord.status === "sending") {
@@ -179,9 +185,8 @@ async function deliverPartnerInvitation(
     .select("id, idempotency_key")
     .maybeSingle();
   if (claimError) throw new Error(`Invitation claim failed: ${claimError.message}`);
-  if (!claimed) return;
+  if (!claimed) return false;
 
-  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, "");
   const { data: invitation, error: invitationError } = await db.auth.admin.inviteUserByEmail(
     application.email,
     {
@@ -216,12 +221,38 @@ async function deliverPartnerInvitation(
     throw new Error(`Invitation delivery state could not be finalized: ${finalizeError.message}`);
   }
 
+  if (!invitationError) {
+    const approvalEmail = buildPartnerApprovedEmail({
+      businessName: application.business_name,
+      dashboardUrl: `${siteUrl}/partner/dashboard`,
+      setupUrl: `${siteUrl}/partner/business`,
+      supportEmail: platformConfig.companyContact.email,
+      siteUrl
+    });
+    const approvalEmailResult = await sendEmail({
+      to: { address: application.email, name: application.business_name },
+      ...approvalEmail
+    });
+    if (!approvalEmailResult.ok || approvalEmailResult.skipped) {
+      const emailNote = approvalEmailResult.ok
+        ? ("reason" in approvalEmailResult ? approvalEmailResult.reason : "Email delivery was skipped.")
+        : approvalEmailResult.error;
+      console.warn("[partner-approval-email]", {
+        applicationId,
+        skipped: approvalEmailResult.skipped,
+        reason: emailNote
+      });
+    }
+  }
+
   await logPartnerAuditEvent(
     "invitation_preview_created",
     { applicationId, email: application.email, sent: !invitationError },
     partnerId,
     authUserId
   );
+
+  return true;
 }
 
 export async function updateSupabasePartnerApplicationDecision(
@@ -249,7 +280,7 @@ export async function updateSupabasePartnerApplicationDecision(
 
   const { data: existing, error: readError } = await supabase
     .from("partner_applications")
-    .select("review_notes")
+    .select("review_notes, status, business_name, email")
     .eq("id", input.applicationId)
     .maybeSingle();
 
@@ -315,6 +346,51 @@ export async function updateSupabasePartnerApplicationDecision(
       .from("partner_application_verification_documents")
       .update({ status: "rejected", reviewed_at: new Date().toISOString(), reviewed_by: reviewer, admin_note: note || null })
       .eq("application_id", input.applicationId);
+  }
+
+  if (input.action === "start_review" && existing?.business_name && existing?.email && existing.status !== "under_review") {
+    const pendingEmail = buildPartnerPendingEmail({
+      businessName: existing.business_name,
+      supportEmail: platformConfig.companyContact.email,
+      siteUrl: platformConfig.companyContact.website.replace(/\/$/, "")
+    });
+    const emailResult = await sendEmail({
+      to: { address: existing.email, name: existing.business_name },
+      ...pendingEmail
+    });
+    if (!emailResult.ok || emailResult.skipped) {
+      const emailNote = emailResult.ok
+        ? ("reason" in emailResult ? emailResult.reason : "Email delivery was skipped.")
+        : emailResult.error;
+      console.warn("[partner-pending-email]", {
+        applicationId: input.applicationId,
+        skipped: emailResult.skipped,
+        reason: emailNote
+      });
+    }
+  }
+
+  if (input.action === "reject" && existing?.business_name && existing?.email && existing.status !== "rejected") {
+    const rejectedEmail = buildPartnerRejectedEmail({
+      businessName: existing.business_name,
+      supportEmail: platformConfig.companyContact.email,
+      siteUrl: platformConfig.companyContact.website.replace(/\/$/, ""),
+      reason: note || undefined
+    });
+    const emailResult = await sendEmail({
+      to: { address: existing.email, name: existing.business_name },
+      ...rejectedEmail
+    });
+    if (!emailResult.ok || emailResult.skipped) {
+      const emailNote = emailResult.ok
+        ? ("reason" in emailResult ? emailResult.reason : "Email delivery was skipped.")
+        : emailResult.error;
+      console.warn("[partner-rejected-email]", {
+        applicationId: input.applicationId,
+        skipped: emailResult.skipped,
+        reason: emailNote
+      });
+    }
   }
 
   if (input.action === "request_changes") {

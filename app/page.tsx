@@ -4,6 +4,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import TestimonialCard from "@/components/TestimonialCard";
 import TripPlanner from "@/components/planner/TripPlanner";
+import TripTimeline from "@/components/planner/TripTimeline";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
@@ -170,19 +171,23 @@ export default async function Home() {
               Thoddoo Island, Maldives
             </p>
             <h1 className="text-5xl font-bold leading-[0.95] md:text-7xl lg:text-8xl">
-              Discover the Real Maldives
+              Plan Your Perfect
+              <br />
+              Thoddoo Holiday
             </h1>
             <p className="mt-8 max-w-2xl text-lg leading-8 text-white/85 md:text-xl">
-              Luxury stays, unforgettable experiences and local concierge
-              service in Thoddoo.
+              Everything you need for your island escape in one trusted platform. From airport arrival to island adventures, we guide your every step.
             </p>
 
             <div className="mt-10 flex flex-wrap gap-4">
-              <Button href="/stay" variant="light">
-                Book Your Stay
+              <Button href="#trip-planner" variant="light">
+                Start Planning
               </Button>
-              <Button href="/excursions" variant="outline">
-                Explore Experiences
+              <Button href="/stay" variant="outline">
+                Explore Stays
+              </Button>
+              <Button href="/transfer" variant="outline">
+                Transfer Schedule
               </Button>
             </div>
           </div>
@@ -214,6 +219,8 @@ export default async function Home() {
       </section>
 
       <TripPlanner />
+
+      <TripTimeline />
 
       <section className="py-20">
         <Container>

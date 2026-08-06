@@ -3,6 +3,11 @@
 import { headers } from "next/headers";
 import { calculateCommission, calculateNights } from "@/lib/booking";
 import { requireAdminSession } from "@/lib/admin/adminAuth";
+import { platformConfig } from "@/lib/config/platform";
+import { sendEmail } from "@/lib/email/client";
+import { buildAdminNotificationEmail } from "@/lib/email/templates/admin-notification";
+import { buildBookingConfirmationEmail } from "@/lib/email/templates/booking-confirmation";
+import type { SendEmailResult } from "@/lib/email/types";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
 import type { SupabaseDatabaseClient } from "@/lib/supabase/server";
 import { getDataMode } from "@/lib/supabase/status";
@@ -333,11 +338,49 @@ export async function submitRealBookingRequest(input: RealBookingInput): Promise
   const bookingRow = bookingData as unknown as BookingWithRelations;
   const booking = mapBookingRowToDomain(bookingRow, bookingRow.guests ?? undefined, bookingRow.properties ?? undefined, bookingRow.rooms ?? undefined);
   await saveBookingCrmPlaceholders(db, booking, property.partner_id);
+  const siteUrl = platformConfig.companyContact.website.replace(/\/$/, "");
+  const bookingUrl = `${siteUrl}/booking/success?reference=${encodeURIComponent(booking.reference ?? booking.id)}`;
+  const guestEmailResult: Promise<SendEmailResult> = input.guestEmail.trim()
+    ? sendEmail({
+        to: { address: input.guestEmail.trim(), name: input.guestName.trim() || booking.guest.name },
+        ...buildBookingConfirmationEmail({
+          guestName: booking.guest.name,
+          reference: booking.reference ?? booking.id,
+          propertyName: booking.propertyName,
+          checkIn: booking.arrival,
+          checkOut: booking.departure,
+          dashboardUrl: bookingUrl,
+          siteUrl
+        })
+      })
+    : Promise.resolve({
+        ok: true,
+        skipped: true,
+        messageId: null,
+        reason: "Guest email was not provided."
+      } satisfies SendEmailResult);
+  const emailResults = await Promise.allSettled([
+    guestEmailResult,
+    sendEmail({
+      to: platformConfig.companyContact.email,
+      ...buildAdminNotificationEmail({
+        title: `New booking enquiry: ${booking.reference ?? booking.id}`,
+        summary: `${booking.guest.name} sent a booking enquiry for ${booking.propertyName}.`,
+        adminUrl: `${siteUrl}/admin/bookings`,
+        siteUrl
+      })
+    })
+  ]);
+  const emailWarnings = emailResults.flatMap((result) => {
+    if (result.status === "rejected") return ["Email delivery failed."];
+    if (result.value.skipped && result.value.reason !== "Guest email was not provided.") return [result.value.reason];
+    return [];
+  });
 
   return {
     ok: true,
     mode: "supabase",
-    message: `Enquiry ${booking.reference ?? booking.id} has been submitted.`,
+    message: `Enquiry ${booking.reference ?? booking.id} has been submitted.${emailWarnings.length > 0 ? ` ${emailWarnings.join(" ")}` : ""}`,
     enquiry: {
       id: booking.id,
       reference: booking.reference ?? booking.id,
