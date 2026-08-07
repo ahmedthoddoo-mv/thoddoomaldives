@@ -10,9 +10,10 @@ type StayPropertyDetailClientProps = {
   initialGuesthouse?: Guesthouse;
   readSource: PropertyReadSource;
   error?: string;
+  turnstileSiteKey?: string;
 };
 
-export function StayPropertyDetailClient({ initialGuesthouse, error }: StayPropertyDetailClientProps) {
+export function StayPropertyDetailClient({ initialGuesthouse, error, turnstileSiteKey = "" }: StayPropertyDetailClientProps) {
   const guesthouse = initialGuesthouse;
 
   if (!guesthouse) {
@@ -48,7 +49,7 @@ export function StayPropertyDetailClient({ initialGuesthouse, error }: StayPrope
           </div>
         </div>
       ) : null}
-      <PropertyPage guesthouse={guesthouse} />
+      <PropertyPage guesthouse={guesthouse} turnstileSiteKey={turnstileSiteKey} />
     </>
   );
 }

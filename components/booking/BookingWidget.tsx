@@ -22,6 +22,7 @@ type BookingWidgetProps = {
   propertyName: string;
   propertySlug?: string;
   propertyId?: string;
+  turnstileSiteKey?: string;
   whatsapp: string;
   rooms: Room[];
   optionalServices?: BookingService[];
@@ -31,7 +32,16 @@ type BookingWidgetProps = {
 const transferAndMealTypes = new Set<BookingService["type"]>(["transfer", "meal"]);
 const experienceTypes = new Set<BookingService["type"]>(["experience", "rental", "custom"]);
 
-export function BookingWidget({ propertyName, propertySlug, propertyId, whatsapp, rooms, optionalServices = [], availability = [] }: BookingWidgetProps) {
+export function BookingWidget({
+  propertyName,
+  propertySlug,
+  propertyId,
+  turnstileSiteKey = "",
+  whatsapp,
+  rooms,
+  optionalServices = [],
+  availability = []
+}: BookingWidgetProps) {
   const bookingOptionalServices = optionalServices;
   const [isSubmitting, startSubmitting] = useTransition();
   const [checkIn, setCheckIn] = useState("");
@@ -217,7 +227,7 @@ export function BookingWidget({ propertyName, propertySlug, propertyId, whatsapp
               onChange={(event) => setWebsiteField(event.target.value)}
             />
           </div>
-          <TurnstileWidget widgetId="booking-enquiry" onToken={setTurnstileToken} />
+          <TurnstileWidget widgetId="booking-enquiry" siteKey={turnstileSiteKey} onToken={setTurnstileToken} />
 
           {validationErrors.length > 0 ? (
             <div className="bookingValidationPanel" role="alert">

@@ -26,8 +26,10 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
 
 export default function ContactBookingHub({
   plannedTrip,
+  turnstileSiteKey = "",
 }: {
   plannedTrip: PlannedTrip | null;
+  turnstileSiteKey?: string;
 }) {
   const [form, setForm] = useState<PlannedTrip>(plannedTrip ?? emptyTrip);
   const [guestName, setGuestName] = useState("");
@@ -299,7 +301,7 @@ export default function ContactBookingHub({
               </div>
             </div>
 
-            <TurnstileWidget widgetId="contact-enquiry" onToken={setTurnstileToken} />
+            <TurnstileWidget widgetId="contact-enquiry" siteKey={turnstileSiteKey} onToken={setTurnstileToken} />
 
             {submitErrors.length > 0 ? (
               <div className="bookingValidationPanel mt-6" role="alert">

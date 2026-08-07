@@ -45,6 +45,7 @@ export default async function GuesthousePage({ params }: GuesthousePageProps) {
   const { slug } = await params;
   const propertyRead = await getPublishedStayPropertyBySlug(slug);
   const guesthouse = propertyRead.data;
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
 
   const propertyImages =
     guesthouse ? Array.from(new Set([guesthouse.heroImage, ...guesthouse.gallery].filter(Boolean))) : [];
@@ -86,6 +87,7 @@ export default async function GuesthousePage({ params }: GuesthousePageProps) {
           slug={slug}
           readSource={propertyRead.source}
           error={propertyRead.error}
+          turnstileSiteKey={turnstileSiteKey}
         />
       </Suspense>
     </>

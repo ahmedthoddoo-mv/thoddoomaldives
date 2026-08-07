@@ -15,8 +15,10 @@ import type { Guesthouse } from "@/types/guesthouse";
 
 export default function PropertyPage({
   guesthouse,
+  turnstileSiteKey = "",
 }: {
   guesthouse: Guesthouse;
+  turnstileSiteKey?: string;
 }) {
   const galleryImages =
     guesthouse.gallery.length > 0 ? guesthouse.gallery : [guesthouse.heroImage];
@@ -126,6 +128,7 @@ export default function PropertyPage({
                   propertyId={guesthouse.id}
                   propertyName={guesthouse.name}
                   propertySlug={guesthouse.slug}
+                  turnstileSiteKey={turnstileSiteKey}
                   rooms={bookingRooms}
                   optionalServices={(guesthouse.services ?? []).map((service) => ({
                     id: service.id,

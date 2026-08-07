@@ -1,5 +1,7 @@
 import { PartnerOnboardingForm } from "@/components/partner/PartnerOnboardingForm";
 
+export const dynamic = "force-dynamic";
+
 export default function PartnerOnboardingPage() {
   return (
     <main className="partnersPage onboardingPage">
@@ -19,7 +21,7 @@ export default function PartnerOnboardingPage() {
       </section>
 
       <div className="pageContent">
-        <PartnerOnboardingForm />
+        <PartnerOnboardingForm turnstileSiteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ""} />
       </div>
     </main>
   );

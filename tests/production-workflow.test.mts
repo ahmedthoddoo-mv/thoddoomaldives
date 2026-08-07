@@ -30,6 +30,9 @@ const migrationSql = readFileSync(
 const partnerActionsSource = readFileSync(new URL("../app/partner/actions.ts", import.meta.url), "utf8");
 const bookingActionsSource = readFileSync(new URL("../app/booking/actions.ts", import.meta.url), "utf8");
 const onboardingActionsSource = readFileSync(new URL("../app/partners/onboarding/actions.ts", import.meta.url), "utf8");
+const onboardingPageSource = readFileSync(new URL("../app/partners/onboarding/page.tsx", import.meta.url), "utf8");
+const contactPageSource = readFileSync(new URL("../app/contact/page.tsx", import.meta.url), "utf8");
+const stayDetailPageSource = readFileSync(new URL("../app/stay/[slug]/page.tsx", import.meta.url), "utf8");
 const turnstileSource = readFileSync(new URL("../lib/security/turnstile.ts", import.meta.url), "utf8");
 const turnstileWidgetSource = readFileSync(new URL("../components/security/TurnstileWidget.tsx", import.meta.url), "utf8");
 const reviewMigrationSql = readFileSync(new URL("../supabase/migrations/202607310001_application_review_versions.sql", import.meta.url), "utf8");
@@ -225,7 +228,10 @@ test("booking enquiries require canonical server-side Turnstile verification", (
   assert.match(turnstileSource, /if\s*\(!response\.ok\)\s*return false;/);
   assert.match(turnstileSource, /return result\.success === true && result\.action === input\.expectedAction;/);
   assert.doesNotMatch(turnstileWidgetSource, /TURNSTILE_SECRET/);
-  assert.match(turnstileWidgetSource, /process\.env\.NEXT_PUBLIC_TURNSTILE_SITE_KEY/);
+  assert.match(onboardingPageSource, /process\.env\.NEXT_PUBLIC_TURNSTILE_SITE_KEY/);
+  assert.match(contactPageSource, /process\.env\.NEXT_PUBLIC_TURNSTILE_SITE_KEY/);
+  assert.match(stayDetailPageSource, /process\.env\.NEXT_PUBLIC_TURNSTILE_SITE_KEY/);
+  assert.match(turnstileWidgetSource, /data-sitekey=\{siteKey\}/);
 });
 test("partner applications require canonical server-side Turnstile verification", () => {
   assert.match(onboardingActionsSource, /import\s+\{\s*verifyTurnstileToken\s*\}\s+from\s+"@\/lib\/security\/turnstile"/);

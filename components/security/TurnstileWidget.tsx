@@ -13,13 +13,14 @@ declare global {
 export function TurnstileWidget({
   onToken,
   action = "turnstile-spin-v2",
+  siteKey,
   widgetId,
 }: {
   onToken: (token: string) => void;
   action?: string;
+  siteKey?: string;
   widgetId: string;
 }) {
-  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
   const callbackName = `onTurnstileSuccess_${widgetId}`;
   const expiredCallbackName = `onTurnstileExpired_${widgetId}`;
 

@@ -152,7 +152,7 @@ function buildMockApplication(input: SmartPartnerApplicationInput) {
   };
 }
 
-export function PartnerOnboardingForm() {
+export function PartnerOnboardingForm({ turnstileSiteKey = "" }: { turnstileSiteKey?: string }) {
   const [application, setApplication] = useState<SmartPartnerApplicationInput>(() => createInitialApplication());
   const [currentStep, setCurrentStep] = useState(0);
   const [errors, setErrors] = useState<string[]>([]);
@@ -571,6 +571,7 @@ export function PartnerOnboardingForm() {
           </div>
           <TurnstileWidget
             widgetId="partner-application"
+            siteKey={turnstileSiteKey}
             onToken={(token) => updateApplication({ turnstileToken: token })}
           />
         </div>

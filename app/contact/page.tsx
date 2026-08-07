@@ -29,6 +29,7 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
   const excursionLink = generateExperienceLink({
     experience: "Thoddoo Trip Planning",
   });
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
 
   return (
     <main className="platformPage">
@@ -63,7 +64,7 @@ export default async function ContactPage({ searchParams }: ContactPageProps) {
         </div>
       </section>
 
-      <ContactBookingHub plannedTrip={plannedTrip} />
+      <ContactBookingHub plannedTrip={plannedTrip} turnstileSiteKey={turnstileSiteKey} />
 
       <section id="contact-options" className="platformSection">
         <div className="platformContainer">
