@@ -1,6 +1,8 @@
 import { AdminDemoGate } from "@/components/admin/AdminDemoGate";
 import { hasAdminSession } from "@/lib/admin/adminAuth";
 
+console.info("[prod-render-debug] admin-layout:module");
+
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   console.info("[prod-auth-debug] admin-layout:start");
   let hasAccess: boolean;

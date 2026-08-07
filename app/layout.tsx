@@ -85,6 +85,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  console.info("[prod-render-debug] root-layout:start");
   return (
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
