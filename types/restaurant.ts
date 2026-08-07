@@ -20,6 +20,7 @@ export type Restaurant = {
   openingHours: string;
   phone: string | null;
   whatsapp: string | null;
+  partnerWhatsapp: string | null;
   email: string | null;
   website: string | null;
   instagram: string | null;
@@ -30,4 +31,6 @@ export type Restaurant = {
   featured: boolean;
   publicationStatus?: string;
   verificationStatus?: string;
+  membershipTier?: string | null;
+  membershipLabel?: string | null;
 };

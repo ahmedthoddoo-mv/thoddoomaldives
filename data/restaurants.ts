@@ -23,6 +23,9 @@ export const restaurants: Restaurant[] = [
     facebook: null,
     image: "/images/homepage/hero-6.jpg",
     featured: true,
+    membershipTier: "free",
+    membershipLabel: "Free",
+    partnerWhatsapp: null,
   },
   {
     id: "harbour-grill",
@@ -46,6 +49,9 @@ export const restaurants: Restaurant[] = [
     facebook: null,
     image: "/images/hero-thoddoo.jpg",
     featured: false,
+    membershipTier: "free",
+    membershipLabel: "Free",
+    partnerWhatsapp: null,
   },
 ];
 

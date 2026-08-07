@@ -3,8 +3,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import MediaGallery from "@/components/media/MediaGallery";
+import RestaurantContactCard from "@/components/restaurant/RestaurantContactCard";
+import RestaurantInteractiveMenu from "@/components/restaurant/RestaurantInteractiveMenu";
 import RestaurantMenuViewer from "@/components/restaurant/RestaurantMenuViewer";
 import { mediaItemsFromUrls } from "@/lib/business-media/public";
+import { getPublicRestaurantMenuData } from "@/lib/restaurant-menu/server";
+import { normalizeRestaurantMembershipTier } from "@/lib/restaurant-menu/format";
 import { getLivePublishedRestaurantBySlug } from "@/lib/repositories/liveReads";
 import { createPageMetadata } from "@/lib/seo";
 
@@ -13,6 +17,17 @@ export const dynamic = "force-dynamic";
 type RestaurantDetailPageProps = {
   params: Promise<{ slug: string }>;
 };
+
+const PUBLIC_GALLERY_MEDIA_PURPOSES = new Set(["gallery", "cover", "food", "interior", "exterior"]);
+
+function isMenuMediaItem(item: { mediaPurpose?: string | null }) {
+  return item.mediaPurpose === "menu";
+}
+
+function isPublicGalleryMediaItem(item: { mediaPurpose?: string | null }) {
+  const mediaPurpose = item.mediaPurpose?.toLowerCase();
+  return !mediaPurpose || PUBLIC_GALLERY_MEDIA_PURPOSES.has(mediaPurpose);
+}
 
 async function readRestaurant(slug: string) {
   const result = await getLivePublishedRestaurantBySlug(slug);
@@ -52,12 +67,9 @@ export default async function RestaurantDetailPage({ params }: RestaurantDetailP
     notFound();
   }
 
-  // Separate media by purpose: menu items vs gallery photos
   const allMedia = restaurant.media ?? [];
-  const menuItems = allMedia.filter((item) => item.mediaPurpose === "menu");
-  const galleryItems = allMedia.filter((item) => item.mediaPurpose !== "menu");
-
-  // Fall back to legacy URLs if no business_media records exist yet
+  const menuItems = allMedia.filter((item) => isMenuMediaItem(item));
+  const galleryItems = allMedia.filter((item) => !isMenuMediaItem(item) && isPublicGalleryMediaItem(item));
   const publicGalleryItems = galleryItems.length > 0
     ? galleryItems
     : mediaItemsFromUrls(
@@ -70,7 +82,6 @@ export default async function RestaurantDetailPage({ params }: RestaurantDetailP
       );
 
   const featuredMedia = allMedia.find((item) => item.isFeatured) ?? null;
-
   const detailItems = [
     restaurant.cuisine.length > 0 ? { label: "Cuisine", value: restaurant.cuisine.join(", ") } : null,
     restaurant.priceRange ? { label: "Price range", value: restaurant.priceRange } : null,
@@ -78,13 +89,13 @@ export default async function RestaurantDetailPage({ params }: RestaurantDetailP
     restaurant.location ? { label: "Area", value: restaurant.location } : null
   ].filter(Boolean) as Array<{ label: string; value: string }>;
 
-  const hasContact = !!(restaurant.phone || restaurant.email || restaurant.website || restaurant.instagram || restaurant.facebook);
-  const hasAddress = !!(restaurant.address);
-  const hasMap = !!(restaurant.latitude && restaurant.longitude);
+  const menuData = await getPublicRestaurantMenuData(restaurant.id);
+  const verified = restaurant.verificationStatus === "verified";
+  const premium = normalizeRestaurantMembershipTier(restaurant.membershipTier) === "premium";
+  const hasContactSection = Boolean(restaurant.phone || restaurant.address || restaurant.openingHours || restaurant.email || restaurant.website || restaurant.instagram || restaurant.facebook || restaurant.whatsapp || restaurant.partnerWhatsapp);
 
   return (
     <main className="platformPage">
-      {/* ─── HERO ─────────────────────────────────────────────────────── */}
       <section
         className="platformHero"
         style={{ backgroundImage: `linear-gradient(rgba(2, 6, 23, 0.5), rgba(2, 6, 23, 0.65)), url('${restaurant.image}')` }}
@@ -99,6 +110,10 @@ export default async function RestaurantDetailPage({ params }: RestaurantDetailP
           <p className="eyebrow mt-6">Restaurant · Thoddoo, Maldives</p>
           <h1>{restaurant.name}</h1>
           {restaurant.location ? <p className="mt-2 text-lg text-white/80">{restaurant.location}</p> : null}
+          <div className="mt-6 flex flex-wrap gap-2">
+            {verified ? <span className="rounded-full border border-emerald-300/50 bg-emerald-500/20 px-4 py-2 text-sm font-semibold text-emerald-100">✓ Verified by iThoddoo Maldives</span> : null}
+            {premium ? <span className="rounded-full border border-amber-300/50 bg-amber-500/20 px-4 py-2 text-sm font-semibold text-amber-100">Premium Partner</span> : null}
+          </div>
           {restaurant.cuisine.length > 0 ? (
             <div className="platformPillRow mt-6">
               {restaurant.cuisine.map((cuisine) => (
@@ -111,7 +126,6 @@ export default async function RestaurantDetailPage({ params }: RestaurantDetailP
         </div>
       </section>
 
-      {/* ─── ABOUT + DETAILS ──────────────────────────────────────────── */}
       <section className="platformSection">
         <div className="platformContainer">
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.65fr)]">
@@ -161,126 +175,39 @@ export default async function RestaurantDetailPage({ params }: RestaurantDetailP
         </div>
       </section>
 
-      {/* ─── CONTACT & LOCATION ───────────────────────────────────────── */}
-      {(hasContact || hasAddress) ? (
+      {hasContactSection ? (
         <section className="platformSection pt-0">
           <div className="platformContainer">
-            <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
-              <p className="eyebrow">Contact & Location</p>
-              <h2 className="mt-3 text-2xl font-semibold text-slate-950">Find us</h2>
-              <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                {restaurant.phone ? (
-                  <a
-                    href={`tel:${restaurant.phone.replace(/\s+/g, "")}`}
-                    className="flex items-center gap-3 rounded-2xl border border-slate-200 px-5 py-4 transition hover:border-slate-400 hover:bg-slate-50"
-                  >
-                    <span className="text-2xl" aria-hidden="true">📞</span>
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Phone</p>
-                      <p className="mt-0.5 font-semibold text-slate-900">{restaurant.phone}</p>
-                    </div>
-                  </a>
-                ) : null}
-                {restaurant.whatsapp ? (
-                  <a
-                    href={`https://wa.me/${restaurant.whatsapp.replace(/\D/g, "")}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/50 px-5 py-4 transition hover:border-emerald-400"
-                  >
-                    <span className="text-2xl" aria-hidden="true">💬</span>
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">WhatsApp</p>
-                      <p className="mt-0.5 font-semibold text-slate-900">{restaurant.whatsapp}</p>
-                    </div>
-                  </a>
-                ) : null}
-                {restaurant.email ? (
-                  <a
-                    href={`mailto:${restaurant.email}`}
-                    className="flex items-center gap-3 rounded-2xl border border-slate-200 px-5 py-4 transition hover:border-slate-400 hover:bg-slate-50"
-                  >
-                    <span className="text-2xl" aria-hidden="true">✉️</span>
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Email</p>
-                      <p className="mt-0.5 font-semibold text-slate-900">{restaurant.email}</p>
-                    </div>
-                  </a>
-                ) : null}
-                {restaurant.website ? (
-                  <a
-                    href={restaurant.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3 rounded-2xl border border-slate-200 px-5 py-4 transition hover:border-slate-400 hover:bg-slate-50"
-                  >
-                    <span className="text-2xl" aria-hidden="true">🌐</span>
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Website</p>
-                      <p className="mt-0.5 font-semibold text-slate-900">{restaurant.website}</p>
-                    </div>
-                  </a>
-                ) : null}
-                {restaurant.instagram ? (
-                  <a
-                    href={`https://instagram.com/${restaurant.instagram.replace(/^@/, "")}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3 rounded-2xl border border-slate-200 px-5 py-4 transition hover:border-slate-400 hover:bg-slate-50"
-                  >
-                    <span className="text-2xl" aria-hidden="true">📸</span>
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Instagram</p>
-                      <p className="mt-0.5 font-semibold text-slate-900">@{restaurant.instagram.replace(/^@/, "")}</p>
-                    </div>
-                  </a>
-                ) : null}
-                {restaurant.facebook ? (
-                  <a
-                    href={restaurant.facebook.startsWith("http") ? restaurant.facebook : `https://facebook.com/${restaurant.facebook}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3 rounded-2xl border border-slate-200 px-5 py-4 transition hover:border-slate-400 hover:bg-slate-50"
-                  >
-                    <span className="text-2xl" aria-hidden="true">📘</span>
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Facebook</p>
-                      <p className="mt-0.5 font-semibold text-slate-900">{restaurant.facebook}</p>
-                    </div>
-                  </a>
-                ) : null}
-              </div>
-
-              {hasAddress ? (
-                <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-5">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Address</p>
-                  <p className="mt-2 text-base font-medium text-slate-900">{restaurant.address}</p>
-                  {hasMap ? (
-                    <a
-                      href={`https://www.google.com/maps/search/?api=1&query=${restaurant.latitude},${restaurant.longitude}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-3 inline-flex rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
-                    >
-                      Get directions →
-                    </a>
-                  ) : null}
-                </div>
-              ) : null}
-            </div>
+            <RestaurantContactCard restaurant={restaurant} membershipTier={restaurant.membershipTier} />
           </div>
         </section>
       ) : null}
 
-      {/* ─── MENU ─────────────────────────────────────────────────────── */}
+      {menuData.categories.length > 0 && menuData.items.length > 0 ? (
+        <section className="platformSection pt-0">
+          <div className="platformContainer">
+            <RestaurantInteractiveMenu
+              restaurantId={restaurant.id}
+              restaurantName={restaurant.name}
+              restaurantSlug={restaurant.slug}
+              membershipTier={restaurant.membershipTier}
+              restaurantWhatsApp={restaurant.whatsapp}
+              partnerWhatsApp={restaurant.partnerWhatsapp}
+              categories={menuData.categories}
+              items={menuData.items}
+            />
+          </div>
+        </section>
+      ) : null}
+
       {menuItems.length > 0 ? (
         <section className="platformSection pt-0">
           <div className="platformContainer">
             <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
-              <p className="eyebrow">Food & Drinks</p>
-              <h2 className="mt-3 text-2xl font-semibold text-slate-950">Menu</h2>
+              <p className="eyebrow">Official menu</p>
+              <h2 className="mt-3 text-2xl font-semibold text-slate-950">{restaurant.name} Menu</h2>
               <p className="mt-2 text-sm text-slate-600">
-                Tap any page to view full size. Use the arrows to navigate between pages.
+                Browse the official menu pages below. The interactive menu is available above for ordering enquiries.
               </p>
               <div className="mt-6">
                 <RestaurantMenuViewer items={menuItems} restaurantName={restaurant.name} />
@@ -290,7 +217,6 @@ export default async function RestaurantDetailPage({ params }: RestaurantDetailP
         </section>
       ) : null}
 
-      {/* ─── PHOTO GALLERY ────────────────────────────────────────────── */}
       {publicGalleryItems.length > 0 ? (
         <section className="platformSection pt-0">
           <div className="platformContainer">
@@ -305,7 +231,6 @@ export default async function RestaurantDetailPage({ params }: RestaurantDetailP
         </section>
       ) : null}
 
-      {/* ─── BACK LINK ────────────────────────────────────────────────── */}
       <section className="platformSection pt-0 pb-16">
         <div className="platformContainer">
           <Link

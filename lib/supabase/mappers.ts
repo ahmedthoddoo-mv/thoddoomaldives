@@ -215,34 +215,42 @@ export function mapMediaRowToDomain(asset: Tables<"media_assets">): MediaAsset {
   };
 }
 
-export function mapRestaurantRowToDomain(restaurant: Tables<"restaurants">, media: BusinessMediaItem[] = []): Restaurant {
-  const gallery = media.length > 0 ? galleryUrlsFromBusinessMedia(media) : restaurant.image_path ? [restaurant.image_path] : [];
-  const image = media.find((item) => item.isCover)?.url ?? gallery[0] ?? restaurant.image_path;
+export function mapRestaurantRowToDomain(restaurant: Partial<Tables<"restaurants">> & Record<string, unknown>, media: BusinessMediaItem[] = []): Restaurant {
+  const gallery = media.length > 0 ? galleryUrlsFromBusinessMedia(media) : restaurant.image_path ? [restaurant.image_path as string] : [];
+  const image = media.find((item) => item.isCover)?.url ?? gallery[0] ?? (restaurant.image_path as string | undefined);
+  const membershipTier = typeof restaurant.membership_plan_name === "string"
+    ? String(restaurant.membership_plan_name).toLowerCase()
+    : typeof restaurant.membership_plan_id === "string"
+      ? "verified"
+      : null;
   return {
-    id: restaurant.id,
-    slug: restaurant.slug,
-    name: restaurant.name,
-    tagline: restaurant.description,
-    description: restaurant.description,
-    cuisine: restaurant.cuisine as RestaurantCuisine[],
-    location: restaurant.location ?? "Thoddoo, Maldives",
-    address: restaurant.address ?? null,
-    latitude: restaurant.latitude ?? null,
-    longitude: restaurant.longitude ?? null,
-    priceRange: restaurant.price_range ?? "$$",
-    openingHours: restaurant.opening_hours ?? "Confirm locally",
-    phone: restaurant.phone ?? null,
-    whatsapp: restaurant.whatsapp ?? null,
-    email: restaurant.email ?? null,
-    website: restaurant.website ?? null,
-    instagram: restaurant.instagram ?? null,
-    facebook: restaurant.facebook ?? null,
-    image,
+    id: String(restaurant.id ?? ""),
+    slug: String(restaurant.slug ?? ""),
+    name: String(restaurant.name ?? ""),
+    tagline: String(restaurant.description ?? ""),
+    description: String(restaurant.description ?? ""),
+    cuisine: (restaurant.cuisine as RestaurantCuisine[]) ?? [],
+    location: String(restaurant.location ?? "Thoddoo, Maldives"),
+    address: typeof restaurant.address === "string" ? restaurant.address : null,
+    latitude: typeof restaurant.latitude === "number" ? restaurant.latitude : null,
+    longitude: typeof restaurant.longitude === "number" ? restaurant.longitude : null,
+    priceRange: typeof restaurant.price_range === "string" ? restaurant.price_range : "$$",
+    openingHours: typeof restaurant.opening_hours === "string" ? restaurant.opening_hours : "Confirm locally",
+    phone: typeof restaurant.phone === "string" ? restaurant.phone : null,
+    whatsapp: typeof restaurant.whatsapp === "string" ? restaurant.whatsapp : null,
+    partnerWhatsapp: typeof restaurant.partner_whatsapp === "string" ? restaurant.partner_whatsapp : null,
+    email: typeof restaurant.email === "string" ? restaurant.email : null,
+    website: typeof restaurant.website === "string" ? restaurant.website : null,
+    instagram: typeof restaurant.instagram === "string" ? restaurant.instagram : null,
+    facebook: typeof restaurant.facebook === "string" ? restaurant.facebook : null,
+    image: image ?? "",
     gallery,
     media,
-    featured: restaurant.featured,
-    publicationStatus: restaurant.publication_status,
-    verificationStatus: restaurant.verification_status
+    featured: Boolean(restaurant.featured),
+    publicationStatus: typeof restaurant.publication_status === "string" ? restaurant.publication_status : undefined,
+    verificationStatus: typeof restaurant.verification_status === "string" ? restaurant.verification_status : undefined,
+    membershipTier: membershipTier ?? null,
+    membershipLabel: typeof restaurant.membership_plan_name === "string" ? String(restaurant.membership_plan_name) : null
   };
 }
 

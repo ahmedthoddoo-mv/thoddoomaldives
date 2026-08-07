@@ -28,6 +28,17 @@ type LegacyPartnerGalleryItem = {
   sortOrder: number;
 };
 
+type PartnerRestaurantMenuDefinition = Array<{
+  name: string;
+  items: Array<{
+    name: string;
+    description?: string;
+    priceMvr?: number;
+    available?: boolean;
+    public?: boolean;
+  }>;
+}>;
+
 function sanitizeText(value: string, maxLength = 1200) {
   return value.replace(/[<>]/g, "").trim().slice(0, maxLength);
 }
@@ -51,6 +62,65 @@ function sanitizeFileName(value: string, fallback: string) {
       ?.replace(/[^a-zA-Z0-9._-]/g, "-")
       .slice(0, 180) || fallback
   );
+}
+
+export async function parsePartnerRestaurantMenuDefinition(value: unknown): Promise<PartnerRestaurantMenuDefinition> {
+  if (typeof value !== "string") return [];
+  const trimmed = value.trim();
+  if (!trimmed) return [];
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((entry): entry is { name: string; items?: Array<Record<string, unknown>> } => Boolean(entry) && typeof entry === "object" && typeof (entry as { name?: unknown }).name === "string")
+      .map((entry) => ({
+        name: entry.name.trim(),
+        items: Array.isArray(entry.items)
+          ? entry.items
+              .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
+              .map((item) => ({
+                name: typeof item.name === "string" ? item.name.trim() : "",
+                description: typeof item.description === "string" ? item.description : undefined,
+                priceMvr: typeof item.priceMvr === "number" ? item.priceMvr : undefined,
+                available: typeof item.available === "boolean" ? item.available : true,
+                public: typeof item.public === "boolean" ? item.public : true
+              }))
+              .filter((item) => item.name)
+          : []
+      }))
+      .filter((entry) => entry.name && entry.items.length > 0);
+  } catch {
+    return [];
+  }
+}
+
+export async function savePartnerRestaurantMenuData(supabase: NonNullable<ReturnType<typeof createSupabaseServiceRoleClient>>, restaurantId: string, definition: PartnerRestaurantMenuDefinition) {
+  if (!restaurantId) return;
+  await supabase.from("restaurant_menu_categories" as any).delete().eq("restaurant_id", restaurantId); // eslint-disable-line @typescript-eslint/no-explicit-any
+  await supabase.from("restaurant_menu_items" as any).delete().eq("restaurant_id", restaurantId); // eslint-disable-line @typescript-eslint/no-explicit-any
+
+  for (const [categoryIndex, category] of definition.entries()) {
+    const { data: categoryRow, error: categoryError } = await supabase
+      .from("restaurant_menu_categories" as any) // eslint-disable-line @typescript-eslint/no-explicit-any
+      .insert({ restaurant_id: restaurantId, name: category.name, slug: category.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"), sort_order: categoryIndex + 1, is_public: true })
+      .select("id")
+      .single();
+    if (categoryError || !categoryRow || !("id" in categoryRow)) continue;
+
+    const itemRows = category.items.map((item, itemIndex) => ({
+      restaurant_id: restaurantId,
+      category_id: (categoryRow as any).id, // eslint-disable-line @typescript-eslint/no-explicit-any
+      name: item.name,
+      description: item.description ?? null,
+      price_mvr: item.priceMvr ?? null,
+      sort_order: itemIndex + 1,
+      is_available: item.available ?? true,
+      is_public: item.public ?? true
+    }));
+    if (itemRows.length > 0) {
+      await supabase.from("restaurant_menu_items" as any).insert(itemRows as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+    }
+  }
 }
 
 async function getScopedSupabase() {

@@ -28,7 +28,8 @@ const fields: Record<AdminBusinessKind, Array<{ key: string; label: string; wide
     { key: "email", label: "Email" }, { key: "website", label: "Website" },
     { key: "instagram", label: "Instagram handle" }, { key: "facebook", label: "Facebook page" },
     { key: "latitude", label: "Latitude" }, { key: "longitude", label: "Longitude" },
-    { key: "description", label: "Description", wide: true }
+    { key: "description", label: "Description", wide: true },
+    { key: "interactiveMenu", label: "Interactive menu JSON", wide: true }
   ]
 };
 

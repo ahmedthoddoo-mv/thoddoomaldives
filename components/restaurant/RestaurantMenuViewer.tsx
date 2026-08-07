@@ -9,6 +9,31 @@ type MenuViewerProps = {
   restaurantName: string;
 };
 
+function formatMenuLabel(value: string | null | undefined, fallbackIndex: number) {
+  if (!value) {
+    return `Page ${fallbackIndex + 1}`;
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return `Page ${fallbackIndex + 1}`;
+  }
+
+  const withoutExtension = trimmed.replace(/\.(webp|png|jpe?g|gif|avif)$/i, "");
+  const cleaned = withoutExtension
+    .replace(/^(food land|restaurant)\s+/i, "")
+    .replace(/\bmenu\b\s*(page)?\b/gi, "")
+    .replace(/[-_]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!cleaned) {
+    return `Page ${fallbackIndex + 1}`;
+  }
+
+  return cleaned.replace(/^page\s*\d+\s*[-–:]\s*/i, "").replace(/^[—-]\s*/, "").trim();
+}
+
 export default function RestaurantMenuViewer({ items, restaurantName }: MenuViewerProps) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
@@ -28,6 +53,7 @@ export default function RestaurantMenuViewer({ items, restaurantName }: MenuView
   }
 
   const activeItem = lightboxIndex !== null ? items[lightboxIndex] : null;
+  const activeItemLabel = activeItem ? formatMenuLabel(activeItem.caption || activeItem.altText || activeItem.fileName, lightboxIndex ?? 0) : "";
 
   return (
     <div>
@@ -35,28 +61,32 @@ export default function RestaurantMenuViewer({ items, restaurantName }: MenuView
         All prices are excluding 8% GST
       </p>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-        {items.map((item, index) => (
-          <button
-            key={item.id}
-            type="button"
-            className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 transition hover:border-amber-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-amber-400"
-            onClick={() => openLightbox(index)}
-          >
-            <img
-              src={item.url}
-              alt={item.altText || `${restaurantName} menu page ${index + 1}`}
-              className="aspect-[3/4] w-full object-cover"
-            />
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-3 text-left text-white">
-              <p className="text-[11px] font-semibold leading-tight">
-                {item.caption || `Page ${index + 1}`}
-              </p>
-            </div>
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 transition group-hover:opacity-100">
-              <span className="rounded-full bg-black/50 px-3 py-1 text-xs font-semibold text-white">View</span>
-            </div>
-          </button>
-        ))}
+        {items.map((item, index) => {
+          const label = formatMenuLabel(item.caption || item.altText || item.fileName, index);
+          return (
+            <button
+              key={item.id}
+              type="button"
+              className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 transition hover:border-amber-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-amber-400"
+              onClick={() => openLightbox(index)}
+              aria-label={`Open ${label} menu page`}
+            >
+              <img
+                src={item.url}
+                alt={item.altText || `${restaurantName} menu page ${index + 1}`}
+                className="aspect-[3/4] w-full object-cover"
+              />
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-3 text-left text-white">
+                <p className="text-[11px] font-semibold leading-tight">
+                  {label}
+                </p>
+              </div>
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 transition group-hover:opacity-100">
+                <span className="rounded-full bg-black/50 px-3 py-1 text-xs font-semibold text-white">View</span>
+              </div>
+            </button>
+          );
+        })}
       </div>
 
       {activeItem !== null && lightboxIndex !== null ? (
@@ -103,7 +133,8 @@ export default function RestaurantMenuViewer({ items, restaurantName }: MenuView
               className="max-h-[86vh] w-auto rounded-2xl object-contain"
             />
             <div className="mt-3 text-center text-sm text-white/70">
-              {activeItem.caption ? `${activeItem.caption} — ` : ""}
+              {activeItemLabel}
+              {activeItemLabel ? ` — ` : ""}
               Page {lightboxIndex + 1} of {items.length}
             </div>
           </div>

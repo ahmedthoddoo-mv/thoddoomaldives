@@ -20,6 +20,14 @@ import {
   validateEnquiry,
   validateOwnedIds
 } from "../lib/production/workflow.mts";
+import {
+  buildIThoddooRestaurantEnquiryMessage,
+  buildRestaurantWhatsAppMessage,
+  isPremiumRestaurant,
+  isVerifiedRestaurant,
+  normalizeRestaurantMembershipTier,
+  resolveRestaurantMenuCta
+} from "../lib/restaurant-menu/format.ts";
 
 const application = { id: "app-1", email: "OWNER@EXAMPLE.COM", businessName: "Island Inn", category: "guesthouse" };
 const validEnquiry = {
@@ -65,6 +73,9 @@ const businessMediaUploadRouteSource = readFileSync(new URL("../app/api/business
 const restaurantsPageSource = readFileSync(new URL("../app/restaurants/page.tsx", import.meta.url), "utf8");
 const restaurantCardSource = readFileSync(new URL("../components/cards/RestaurantCard.tsx", import.meta.url), "utf8");
 const restaurantDetailPageSource = readFileSync(new URL("../app/restaurants/[slug]/page.tsx", import.meta.url), "utf8");
+const restaurantContactCardSource = readFileSync(new URL("../components/restaurant/RestaurantContactCard.tsx", import.meta.url), "utf8");
+const restaurantInteractiveMenuSource = readFileSync(new URL("../components/restaurant/RestaurantInteractiveMenu.tsx", import.meta.url), "utf8");
+const restaurantMenuFormatSource = readFileSync(new URL("../lib/restaurant-menu/format.ts", import.meta.url), "utf8");
 const restaurantRepositorySource = readFileSync(new URL("../lib/repositories/supabase/SupabaseRestaurantRepository.ts", import.meta.url), "utf8");
 const menuViewerSource = readFileSync(new URL("../components/restaurant/RestaurantMenuViewer.tsx", import.meta.url), "utf8");
 
@@ -455,6 +466,123 @@ test("transfer slug lookup can resolve only published verified public-view rows"
   assert.match(transferDetailSource, /getLivePublishedTransferDetail/);
   assert.match(transferDetailSource, /if \(!detail\) notFound\(\)/);
 });
+test("restaurant menu helpers normalize membership and build WhatsApp messages", () => {
+  assert.equal(normalizeRestaurantMembershipTier("Premium"), "premium");
+  assert.equal(normalizeRestaurantMembershipTier("verified"), "verified");
+  assert.equal(normalizeRestaurantMembershipTier(""), "free");
+  assert.equal(isVerifiedRestaurant("premium"), true);
+  assert.equal(isVerifiedRestaurant("verified"), true);
+  assert.equal(isPremiumRestaurant("verified"), false);
+  const message = buildRestaurantWhatsAppMessage({
+    restaurantName: "Food Land",
+    items: [{ name: "Chicken Teriyaki", quantity: 2, priceMvr: 175 }],
+    estimatedMenuValue: 350
+  });
+  assert.match(message, /Hello Food Land/);
+  assert.match(message, /Chicken Teriyaki × 2/);
+  assert.match(message, /MVR 350/);
+  assert.match(message, /Estimated menu value: MVR 350/);
+  assert.match(message, /Menu prices exclude 8% GST/);
+});
+
+test("restaurant menu CTA uses direct restaurant WhatsApp for Premium with valid number", () => {
+  const cta = resolveRestaurantMenuCta({
+    restaurantName: "Food Land",
+    restaurantSlug: "food-land",
+    membershipTier: "premium",
+    restaurantWhatsApp: "+960 987-9911",
+    partnerWhatsApp: null,
+    ithoddooWhatsapp: "+960 914 2538",
+    items: [{ name: "Rice Chicken Satay", quantity: 2, priceMvr: 135 }],
+    estimatedMenuValue: 270
+  });
+  assert.ok(cta);
+  assert.equal(cta.kind, "restaurant_menu_whatsapp");
+  assert.match(cta.label, /Send selection to Food Land on WhatsApp/);
+  assert.match(cta.href, /^https:\/\/wa\.me\/9609879911\?text=/);
+});
+
+test("restaurant menu CTA falls back to iThoddoo for Verified and Free tiers", () => {
+  const verifiedCta = resolveRestaurantMenuCta({
+    restaurantName: "Food Land",
+    restaurantSlug: "food-land",
+    membershipTier: "verified",
+    restaurantWhatsApp: "+960 987-9911",
+    partnerWhatsApp: null,
+    ithoddooWhatsapp: "+960 914 2538",
+    items: [{ name: "Chicken Teriyaki", quantity: 1, priceMvr: 175 }],
+    estimatedMenuValue: 175
+  });
+  assert.ok(verifiedCta);
+  assert.equal(verifiedCta.kind, "restaurant_menu_ithoddoo_enquiry");
+  assert.equal(verifiedCta.label, "Send enquiry through iThoddoo Maldives");
+
+  const freeCta = resolveRestaurantMenuCta({
+    restaurantName: "Food Land",
+    restaurantSlug: "food-land",
+    membershipTier: "free",
+    restaurantWhatsApp: "+960 987-9911",
+    partnerWhatsApp: null,
+    ithoddooWhatsapp: "+960 914 2538",
+    items: [{ name: "Chicken Teriyaki", quantity: 1, priceMvr: 175 }],
+    estimatedMenuValue: 175
+  });
+  assert.ok(freeCta);
+  assert.equal(freeCta.kind, "restaurant_menu_ithoddoo_enquiry");
+  assert.equal(freeCta.label, "Send enquiry through iThoddoo Maldives");
+});
+
+test("restaurant menu CTA falls back to iThoddoo when Premium restaurant has no WhatsApp", () => {
+  const cta = resolveRestaurantMenuCta({
+    restaurantName: "Food Land",
+    restaurantSlug: "food-land",
+    membershipTier: "premium",
+    restaurantWhatsApp: null,
+    partnerWhatsApp: null,
+    ithoddooWhatsapp: "+960 914 2538",
+    items: [{ name: "Foodland Special Rice", quantity: 1, priceMvr: 145 }],
+    estimatedMenuValue: 145
+  });
+  assert.ok(cta);
+  assert.equal(cta.kind, "restaurant_menu_ithoddoo_enquiry");
+  assert.equal(cta.label, "Send enquiry through iThoddoo Maldives");
+  assert.doesNotMatch(cta.href, /wa\.me\/undefined|wa\.me\/null/);
+});
+
+test("iThoddoo restaurant enquiry message includes selected items quantities totals and GST note", () => {
+  const message = buildIThoddooRestaurantEnquiryMessage({
+    restaurantName: "Food Land",
+    restaurantSlug: "food-land",
+    platformDomain: "thoddoomaldives.com",
+    items: [
+      { name: "Chicken Teriyaki", quantity: 1, priceMvr: 175 },
+      { name: "Foodland Special Rice", quantity: 1, priceMvr: 145 },
+      { name: "Rice Chicken Satay", quantity: 2, priceMvr: 135 }
+    ],
+    estimatedMenuValue: 590
+  });
+  assert.match(message, /Food Land/);
+  assert.match(message, /Chicken Teriyaki × 1 — MVR 175/);
+  assert.match(message, /Rice Chicken Satay × 2 — MVR 270/);
+  assert.match(message, /Estimated menu value: MVR 590/);
+  assert.match(message, /Menu prices exclude 8% GST/);
+  assert.match(message, /Restaurant page: https:\/\/thoddoomaldives\.com\/restaurants\/food-land/);
+});
+
+test("restaurant menu CTA returns null for empty cart", () => {
+  const cta = resolveRestaurantMenuCta({
+    restaurantName: "Food Land",
+    restaurantSlug: "food-land",
+    membershipTier: "verified",
+    restaurantWhatsApp: null,
+    partnerWhatsApp: null,
+    ithoddooWhatsapp: "+960 914 2538",
+    items: [],
+    estimatedMenuValue: 0
+  });
+  assert.equal(cta, null);
+});
+
 test("repair tooling is dry-run by default and requires explicit safe apply inputs", () => {
   assert.match(repairSource, /const apply = has\("--apply"\)/);
   assert.match(repairSource, /--confirm-project-ref/);
@@ -487,16 +615,25 @@ test("restaurant admin save function persists new contact fields", () => {
   assert.match(restaurantContactMigrationSql, /longitude=excluded\.longitude/);
 });
 test("restaurant detail page renders phone call link when phone is present", () => {
-  assert.match(restaurantDetailPageSource, /tel:\$\{restaurant\.phone/);
-  assert.match(restaurantDetailPageSource, /restaurant\.phone/);
+  assert.match(restaurantDetailPageSource, /<RestaurantContactCard/);
+  assert.match(restaurantContactCardSource, /tel:\$\{phoneLink\}/);
+  assert.match(restaurantContactCardSource, /normalizePhoneForLink/);
 });
 test("restaurant detail page renders address when present", () => {
-  assert.match(restaurantDetailPageSource, /restaurant\.address/);
-  assert.match(restaurantDetailPageSource, /Contact & Location/);
+  assert.match(restaurantDetailPageSource, /<RestaurantContactCard/);
+  assert.match(restaurantContactCardSource, /restaurant\.address/);
+  assert.match(restaurantContactCardSource, /Business Contact & Location/);
+});
+
+test("restaurant detail page adds dedicated call and directions actions", () => {
+  assert.match(restaurantDetailPageSource, /<RestaurantContactCard/);
+  assert.match(restaurantContactCardSource, /Call \{restaurant\.name\}/);
+  assert.match(restaurantContactCardSource, /Get Directions/);
+  assert.match(restaurantContactCardSource, /buildDirectionsUrl/);
 });
 test("restaurant detail page separates menu from gallery using mediaPurpose", () => {
-  assert.match(restaurantDetailPageSource, /mediaPurpose === "menu"/);
-  assert.match(restaurantDetailPageSource, /mediaPurpose !== "menu"/);
+  assert.match(restaurantDetailPageSource, /isMenuMediaItem/);
+  assert.match(restaurantDetailPageSource, /isPublicGalleryMediaItem/);
   assert.match(restaurantDetailPageSource, /<RestaurantMenuViewer/);
 });
 test("menu viewer provides lightbox with next/prev navigation", () => {
@@ -510,16 +647,24 @@ test("menu viewer shows GST disclaimer", () => {
   assert.match(menuViewerSource, /excluding 8% GST/);
 });
 test("restaurant detail page does not show broken WhatsApp link without confirmed number", () => {
-  assert.match(restaurantDetailPageSource, /restaurant\.whatsapp/);
-  assert.match(restaurantDetailPageSource, /wa\.me/);
+  assert.match(restaurantDetailPageSource, /<RestaurantContactCard/);
+  assert.match(restaurantContactCardSource, /restaurant\.whatsapp/);
+  assert.match(restaurantContactCardSource, /wa\.me/);
   // WhatsApp section must be conditional on whatsapp field being set
-  assert.match(restaurantDetailPageSource, /\{restaurant\.whatsapp \? \(/);
-  assert.doesNotMatch(restaurantDetailPageSource, /wa\.me\/undefined/);
+  assert.match(restaurantContactCardSource, /whatsappLink \? \(/);
+  assert.doesNotMatch(restaurantContactCardSource, /wa\.me\/undefined/);
 });
 test("restaurant detail page hides empty sections automatically", () => {
-  assert.match(restaurantDetailPageSource, /\(hasContact \|\| hasAddress\) \?/);
+  assert.match(restaurantDetailPageSource, /hasContactSection/);
   assert.match(restaurantDetailPageSource, /menuItems\.length > 0 \?/);
   assert.match(restaurantDetailPageSource, /publicGalleryItems\.length > 0 \?/);
+});
+test("interactive menu selected-items panel always has tier-aware CTA and no empty-cart send action", () => {
+  assert.match(restaurantInteractiveMenuSource, /resolveRestaurantMenuCta/);
+  assert.match(restaurantMenuFormatSource, /Send enquiry through iThoddoo Maldives/);
+  assert.match(restaurantMenuFormatSource, /Send selection to \$\{params\.restaurantName\} on WhatsApp/);
+  assert.match(restaurantInteractiveMenuSource, /Select menu items to start an enquiry/);
+  assert.match(restaurantInteractiveMenuSource, /cartEntries\.length === 0/);
 });
 test("media gallery purpose selector allows marking images as menu pages", () => {
   assert.match(mediaGallerySource, /Purpose/);
