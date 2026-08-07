@@ -3,6 +3,7 @@ import { AdminPropertyForm } from "@/components/admin/AdminPropertyForm";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { adminSidebarItems } from "@/data/adminContent";
+import { renderAdminGateIfUnauthenticated } from "@/app/admin/adminPageGuard";
 import { getLiveAdminProperties } from "@/lib/repositories/liveReads";
 
 type EditAdminPropertyPageProps = {
@@ -22,6 +23,9 @@ export const metadata: Metadata = {
 };
 
 export default async function EditAdminPropertyPage({ params }: EditAdminPropertyPageProps) {
+  const gate = await renderAdminGateIfUnauthenticated();
+  if (gate) return gate;
+
   const { id } = await params;
   const propertyRead = await getLiveAdminProperties();
   const property = propertyRead.data.find((item) => item.id === id || item.slug === id);

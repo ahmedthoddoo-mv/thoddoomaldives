@@ -3,6 +3,7 @@ import { ApplicationDetailPanel } from "@/components/admin/ApplicationDetailPane
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { adminSidebarItems } from "@/data/adminContent";
+import { renderAdminGateIfUnauthenticated } from "@/app/admin/adminPageGuard";
 import { getPartnerApplicationsForAdmin } from "@/lib/applications/partnerApplicationReads";
 
 export const metadata: Metadata = {
@@ -20,6 +21,9 @@ type AdminApplicationDetailPageProps = {
 };
 
 export default async function AdminApplicationDetailPage({ params }: AdminApplicationDetailPageProps) {
+  const gate = await renderAdminGateIfUnauthenticated();
+  if (gate) return gate;
+
   const { id } = await params;
   const applicationRead = await getPartnerApplicationsForAdmin();
   const application = applicationRead.applications.find((item) => item.id === id);

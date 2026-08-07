@@ -3,6 +3,7 @@ import { AdminBookingManagement } from "@/components/booking/AdminBookingManagem
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { adminSidebarItems } from "@/data/adminContent";
+import { renderAdminGateIfUnauthenticated } from "@/app/admin/adminPageGuard";
 import { getLiveBookings } from "@/lib/repositories/liveReads";
 
 export const metadata: Metadata = {
@@ -11,6 +12,9 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminBookingsPage() {
+  const gate = await renderAdminGateIfUnauthenticated();
+  if (gate) return gate;
+
   const bookingRead = await getLiveBookings();
 
   return (

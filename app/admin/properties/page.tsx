@@ -3,6 +3,7 @@ import { AdminPropertyManager } from "@/components/admin/AdminPropertyManager";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { adminPropertyActions, adminSidebarItems } from "@/data/adminContent";
+import { renderAdminGateIfUnauthenticated } from "@/app/admin/adminPageGuard";
 import { getLiveAdminProperties } from "@/lib/repositories/liveReads";
 
 export const metadata: Metadata = {
@@ -14,6 +15,9 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminPropertiesPage() {
+  const gate = await renderAdminGateIfUnauthenticated();
+  if (gate) return gate;
+
   const propertyRead = await getLiveAdminProperties();
   const properties = propertyRead.data;
 

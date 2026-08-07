@@ -4,6 +4,7 @@ import { AdminBusinessEditor } from "@/components/admin/AdminBusinessEditor";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { adminSidebarItems } from "@/data/adminContent";
+import { renderAdminGateIfUnauthenticated } from "@/app/admin/adminPageGuard";
 import { SupabaseTransferRepository } from "@/lib/repositories/supabase";
 import { AdminTransferScheduleEditor } from "@/components/admin/AdminTransferScheduleEditor";
 
@@ -17,6 +18,9 @@ export const metadata: Metadata = {
 };
 
 export default async function EditTransferPage({ params }: EditTransferPageProps) {
+  const gate = await renderAdminGateIfUnauthenticated();
+  if (gate) return gate;
+
   const { id } = await params;
   const record = await SupabaseTransferRepository.findById(id);
 

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { adminSidebarItems } from "@/data/adminContent";
+import { renderAdminGateIfUnauthenticated } from "@/app/admin/adminPageGuard";
 import { getLiveAdminProperties, getLiveBookings } from "@/lib/repositories/liveReads";
 import { calculateBookingAnalytics } from "@/lib/bookings/bookingAnalytics";
 
@@ -11,6 +12,9 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminPropertyDashboardPage() {
+  const gate = await renderAdminGateIfUnauthenticated();
+  if (gate) return gate;
+
   const [propertyRead, bookingRead] = await Promise.all([getLiveAdminProperties(), getLiveBookings()]);
   const analytics = calculateBookingAnalytics(bookingRead.data);
   return (

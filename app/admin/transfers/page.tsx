@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AdminBusinessList } from "@/components/admin/AdminBusinessList";
+import { renderAdminGateIfUnauthenticated } from "@/app/admin/adminPageGuard";
 import { getLiveTransfers } from "@/lib/repositories/liveReads";
 
 export const metadata: Metadata = {
@@ -11,6 +12,9 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminTransfersPage() {
+  const gate = await renderAdminGateIfUnauthenticated();
+  if (gate) return gate;
+
   const read = await getLiveTransfers();
   return <AdminBusinessList title="Transfers" singular="transfer" error={read.error} records={read.data.map((item) => ({ id: item.id, title: item.title, slug: item.slug, summary: item.description, category: item.type, featured: item.featured }))} />;
 }

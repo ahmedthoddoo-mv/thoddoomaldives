@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { adminSidebarItems } from "@/data/adminContent";
+import { renderAdminGateIfUnauthenticated } from "@/app/admin/adminPageGuard";
 import { SupabaseMediaRepository } from "@/lib/repositories/supabase";
 
 type AdminMediaDetailPageProps = {
@@ -18,6 +19,9 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminMediaDetailPage({ params }: AdminMediaDetailPageProps) {
+  const gate = await renderAdminGateIfUnauthenticated();
+  if (gate) return gate;
+
   const { id } = await params;
   const asset = await SupabaseMediaRepository.findById(id);
 

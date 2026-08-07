@@ -9,6 +9,7 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminSystemStatus } from "@/components/admin/AdminSystemStatus";
 import { DashboardStats } from "@/components/admin/DashboardStats";
 import { adminQuickActions, adminSidebarItems } from "@/data/adminContent";
+import { renderAdminGateIfUnauthenticated } from "@/app/admin/adminPageGuard";
 import { getPartnerApplicationsForAdmin } from "@/lib/applications/partnerApplicationReads";
 import { getSupabaseHealthCheck } from "@/lib/supabase/health";
 import { getLiveAdminProperties, getLiveBookings, getLiveCrm, getLiveExperiences, getLiveMedia, getLiveRestaurants, getLiveTransfers } from "@/lib/repositories/liveReads";
@@ -23,6 +24,9 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminPage() {
+  const gate = await renderAdminGateIfUnauthenticated();
+  if (gate) return gate;
+
   const [supabaseHealth, applicationRead, properties, bookings, crm, restaurants, experiences, transfers, media] = await Promise.all([
     getSupabaseHealthCheck(), getPartnerApplicationsForAdmin(), getLiveAdminProperties(), getLiveBookings(), getLiveCrm(),
     getLiveRestaurants(), getLiveExperiences(), getLiveTransfers(), getLiveMedia()

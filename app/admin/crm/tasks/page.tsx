@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { AdminCrmShell } from "@/components/admin/AdminCrmShell";
 import { AdminCrmTasks } from "@/components/admin/AdminCrmTasks";
+import { renderAdminGateIfUnauthenticated } from "@/app/admin/adminPageGuard";
 import { getLiveCrm } from "@/lib/repositories/liveReads";
 
 export const metadata: Metadata = {
@@ -12,6 +13,9 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminCrmTasksPage() {
+  const gate = await renderAdminGateIfUnauthenticated();
+  if (gate) return gate;
+
   const crmRead = await getLiveCrm();
   return (
     <AdminCrmShell>

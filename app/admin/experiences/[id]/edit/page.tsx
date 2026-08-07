@@ -4,6 +4,7 @@ import { AdminBusinessEditor } from "@/components/admin/AdminBusinessEditor";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { adminSidebarItems } from "@/data/adminContent";
+import { renderAdminGateIfUnauthenticated } from "@/app/admin/adminPageGuard";
 import { SupabaseExperienceRepository } from "@/lib/repositories/supabase";
 
 type EditExperiencePageProps = {
@@ -16,6 +17,9 @@ export const metadata: Metadata = {
 };
 
 export default async function EditExperiencePage({ params }: EditExperiencePageProps) {
+  const gate = await renderAdminGateIfUnauthenticated();
+  if (gate) return gate;
+
   const { id } = await params;
   const record = await SupabaseExperienceRepository.findById(id);
 
