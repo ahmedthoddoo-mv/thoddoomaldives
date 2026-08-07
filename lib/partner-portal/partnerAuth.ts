@@ -21,23 +21,6 @@ export type PartnerAuthState =
 
 const secureCookie = process.env.NODE_ENV === "production";
 
-function getSafeMessage(error: unknown) {
-  const message = error instanceof Error ? error.message : "";
-  if (!message) return undefined;
-  if (/(token|secret|password|cookie|authorization|bearer|jwt|key)/i.test(message)) return undefined;
-  return message.slice(0, 200);
-}
-
-function getSafeErrorMeta(error: unknown) {
-  const details = error && typeof error === "object" ? error as { name?: unknown; code?: unknown; status?: unknown } : {};
-  return {
-    name: typeof details.name === "string" ? details.name : error instanceof Error ? error.name : "UnknownError",
-    code: typeof details.code === "string" || typeof details.code === "number" ? String(details.code) : undefined,
-    status: typeof details.status === "number" || typeof details.status === "string" ? String(details.status) : undefined,
-    message: getSafeMessage(error)
-  };
-}
-
 export function getPartnerCookieOptions(maxAge: number) {
   return {
     httpOnly: true,
@@ -61,67 +44,42 @@ export async function clearPartnerSessionCookies() {
 }
 
 export async function getPartnerAuthState(): Promise<PartnerAuthState> {
-  console.info("[prod-auth-debug] partner-auth:start");
   if (getDataMode() !== "supabase") {
-    console.info("[prod-auth-debug] partner-auth:data-mode:mock");
     return { status: "mock" };
   }
 
-  try {
-    console.info("[prod-auth-debug] partner-auth:create-client");
-    const supabase = createSupabaseServerClient();
-    const serviceRole = createSupabaseServiceRoleClient();
-    if (!supabase || !serviceRole) {
-      console.warn("[prod-auth-debug] partner-auth:create-client:missing");
-      return { status: "unconfigured", reason: "Supabase partner authentication is not configured." };
-    }
-
-    console.info("[prod-auth-debug] partner-auth:cookies:start");
-    const cookieStore = await cookies();
-    const accessToken = cookieStore.get(partnerAccessTokenCookie)?.value;
-    if (!accessToken) {
-      console.info("[prod-auth-debug] partner-auth:cookies:missing-token");
-      return { status: "unauthenticated", reason: "Partner session is missing." };
-    }
-    console.info("[prod-auth-debug] partner-auth:cookies:token-present");
-
-    console.info("[prod-auth-debug] partner-auth:get-user:start");
-    const { data: userResult, error: userError } = await supabase.auth.getUser(accessToken);
-    if (userError || !userResult.user) {
-      console.warn("[prod-auth-debug] partner-auth:get-user:failed", {
-        code: userError?.code,
-        status: userError?.status,
-        message: getSafeMessage(userError)
-      });
-      return { status: "unauthenticated", reason: "Partner session is invalid or expired." };
-    }
-    console.info("[prod-auth-debug] partner-auth:get-user:success");
-
-    console.info("[prod-auth-debug] partner-auth:lookup-partner:start");
-    const { data: partner, error: partnerError } = await serviceRole
-      .from("partners")
-      .select("*")
-      .eq("auth_user_id", userResult.user.id)
-      .maybeSingle();
-    if (partnerError) {
-      console.error("[prod-auth-debug] partner-auth:lookup-partner:failed", {
-        code: partnerError.code,
-        message: getSafeMessage(partnerError)
-      });
-      throw new Error(`Partner account lookup failed: ${partnerError.message}`);
-    }
-    console.info("[prod-auth-debug] partner-auth:lookup-partner:success");
-
-    return {
-      status: "authenticated",
-      userId: userResult.user.id,
-      email: userResult.user.email ?? null,
-      partner: (partner as Tables<"partners"> | null) ?? null
-    };
-  } catch (error) {
-    console.error("[prod-auth-debug] partner-auth:threw", getSafeErrorMeta(error));
-    throw error;
+  const supabase = createSupabaseServerClient();
+  const serviceRole = createSupabaseServiceRoleClient();
+  if (!supabase || !serviceRole) {
+    return { status: "unconfigured", reason: "Supabase partner authentication is not configured." };
   }
+
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get(partnerAccessTokenCookie)?.value;
+  if (!accessToken) {
+    return { status: "unauthenticated", reason: "Partner session is missing." };
+  }
+
+  const { data: userResult, error: userError } = await supabase.auth.getUser(accessToken);
+  if (userError || !userResult.user) {
+    return { status: "unauthenticated", reason: "Partner session is invalid or expired." };
+  }
+
+  const { data: partner, error: partnerError } = await serviceRole
+    .from("partners")
+    .select("*")
+    .eq("auth_user_id", userResult.user.id)
+    .maybeSingle();
+  if (partnerError) {
+    throw new Error(`Partner account lookup failed: ${partnerError.message}`);
+  }
+
+  return {
+    status: "authenticated",
+    userId: userResult.user.id,
+    email: userResult.user.email ?? null,
+    partner: (partner as Tables<"partners"> | null) ?? null
+  };
 }
 
 export async function logPartnerAuditEvent(

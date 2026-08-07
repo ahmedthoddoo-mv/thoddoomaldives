@@ -126,23 +126,6 @@ type PartnerPropertyWithRelations = Tables<"properties"> & {
   property_media: PropertyMediaWithAsset[];
 };
 
-function getSafeMessage(error: unknown) {
-  const message = error instanceof Error ? error.message : "";
-  if (!message) return undefined;
-  if (/(token|secret|password|cookie|authorization|bearer|jwt|key)/i.test(message)) return undefined;
-  return message.slice(0, 200);
-}
-
-function getSafeErrorMeta(error: unknown) {
-  const details = error && typeof error === "object" ? error as { name?: unknown; code?: unknown; status?: unknown } : {};
-  return {
-    name: typeof details.name === "string" ? details.name : error instanceof Error ? error.name : "UnknownError",
-    code: typeof details.code === "string" || typeof details.code === "number" ? String(details.code) : undefined,
-    status: typeof details.status === "number" || typeof details.status === "string" ? String(details.status) : undefined,
-    message: getSafeMessage(error)
-  };
-}
-
 function parseJsonRecord(value: unknown): Record<string, string> {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, string>) : {};
 }
@@ -290,41 +273,30 @@ function mapNotification(row: Tables<"partner_notifications">): PartnerPortalNot
 }
 
 export async function getCurrentPartnerPortalData(): Promise<PartnerPortalData> {
-  console.info("[prod-auth-debug] partner-access:start");
   if (getDataMode() !== "supabase") {
-    console.info("[prod-auth-debug] partner-access:data-mode:mock");
     return getAccountSetupPortalData(null);
   }
 
-  console.info("[prod-auth-debug] partner-access:get-auth-state:start");
   const authState = await getPartnerAuthState();
-  console.info("[prod-auth-debug] partner-access:get-auth-state:success", { status: authState.status });
   if (authState.status === "unauthenticated") {
-    console.info("[prod-auth-debug] partner-access:redirect-login");
     redirect("/partner/login");
   }
   if (authState.status !== "authenticated") {
-    console.info("[prod-auth-debug] partner-access:setup-required", { status: authState.status });
     return getAccountSetupPortalData(null);
   }
   if (!authState.partner) {
-    console.info("[prod-auth-debug] partner-access:no-partner-record");
     return getRestrictedPortalData("access_denied", authState.email);
   }
   const accessState = getPartnerAccessState(authState.partner);
-  console.info("[prod-auth-debug] partner-access:resolved-access-state", { accessState });
   if (accessState !== "dashboard") {
     return getRestrictedPortalData(accessState, authState.email, authState.partner);
   }
-  console.info("[prod-auth-debug] partner-access:create-service-client");
   const supabase = createSupabaseServiceRoleClient();
   if (!supabase) {
-    console.warn("[prod-auth-debug] partner-access:create-service-client:missing");
     return getAccountSetupPortalData(authState.email, "fallback");
   }
 
   try {
-    console.info("[prod-auth-debug] partner-access:load-dashboard-data:start");
     const db = supabase;
     const [{ data: membershipPlan, error: membershipError }, { data: linkedApplication, error: applicationError }] = await Promise.all([
       authState.partner.membership_plan_id
@@ -492,9 +464,7 @@ export async function getCurrentPartnerPortalData(): Promise<PartnerPortalData> 
       bookings: bookingRows,
       notifications: ((notifications ?? []) as Tables<"partner_notifications">[]).map(mapNotification)
     };
-    console.info("[prod-auth-debug] partner-access:load-dashboard-data:success");
-  } catch (error) {
-    console.error("[prod-auth-debug] partner-access:load-dashboard-data:failed", getSafeErrorMeta(error));
+  } catch {
     console.error("[partner-portal-read] Failed to load partner portal data.");
     return getAccountSetupPortalData(authState.email, "fallback");
   }
