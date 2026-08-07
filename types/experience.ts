@@ -16,6 +16,8 @@ export type Experience = {
   duration: string;
   price: string;
   image: string;
+  gallery?: string[];
+  media?: import("@/types/business-media").BusinessMediaItem[];
   highlights: string[];
   featured: boolean;
   publicationStatus?: string;

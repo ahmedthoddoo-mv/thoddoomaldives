@@ -4,7 +4,9 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { adminSidebarItems } from "@/data/adminContent";
 import { renderAdminGateIfUnauthenticated } from "@/app/admin/adminPageGuard";
+import { listManagedBusinessMedia } from "@/lib/business-media/server";
 import { getLiveAdminProperties } from "@/lib/repositories/liveReads";
+import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
 
 type EditAdminPropertyPageProps = {
   params: Promise<{
@@ -29,6 +31,8 @@ export default async function EditAdminPropertyPage({ params }: EditAdminPropert
   const { id } = await params;
   const propertyRead = await getLiveAdminProperties();
   const property = propertyRead.data.find((item) => item.id === id || item.slug === id);
+  const db = createSupabaseServiceRoleClient();
+  const media = property && db ? await listManagedBusinessMedia(db, "property", property.id) : [];
 
   return (
     <AdminShell sidebar={<AdminSidebar items={adminSidebarItems} />}>
@@ -38,7 +42,7 @@ export default async function EditAdminPropertyPage({ params }: EditAdminPropert
             <p className="mutedText">{propertyRead.error}</p>
           </section>
         ) : null}
-        <AdminPropertyForm mode="edit" property={property} propertyId={id} />
+        <AdminPropertyForm mode="edit" property={property} propertyId={id} initialMedia={media} />
       </div>
     </AdminShell>
   );

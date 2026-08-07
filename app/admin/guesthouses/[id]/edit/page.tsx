@@ -5,7 +5,9 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { adminSidebarItems } from "@/data/adminContent";
 import { renderAdminGateIfUnauthenticated } from "@/app/admin/adminPageGuard";
+import { listManagedBusinessMedia } from "@/lib/business-media/server";
 import { getLiveAdminProperties } from "@/lib/repositories/liveReads";
+import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
 
 type EditGuesthousePageProps = {
   params: Promise<{ id: string }>;
@@ -24,11 +26,13 @@ export default async function EditGuesthousePage({ params }: EditGuesthousePageP
   const propertyRead = await getLiveAdminProperties();
   const property = propertyRead.data.find((item) => item.id === id || item.slug === id);
   if (!property) notFound();
+  const db = createSupabaseServiceRoleClient();
+  const media = db ? await listManagedBusinessMedia(db, "property", property.id) : [];
 
   return (
     <AdminShell sidebar={<AdminSidebar items={adminSidebarItems} />}>
       <div className="adminContent">
-        <AdminPropertyForm mode="edit" property={property} propertyId={property.id} />
+        <AdminPropertyForm mode="edit" property={property} propertyId={property.id} initialMedia={media} />
       </div>
     </AdminShell>
   );

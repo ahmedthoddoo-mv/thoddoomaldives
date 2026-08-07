@@ -134,6 +134,7 @@ export async function saveAdminPropertyToSupabase({
   }
 
   revalidatePath("/admin/properties");
+  revalidatePath("/admin/applications");
   revalidatePath(`/admin/guesthouses/${result.propertyId}/edit`);
   revalidatePath(`/stay/${result.slug}`);
   revalidatePublicListingPaths();

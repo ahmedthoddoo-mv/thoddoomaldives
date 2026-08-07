@@ -36,7 +36,7 @@ export default function PropertyPage({
 
   return (
     <main className="min-h-screen bg-white pb-24 text-slate-900 lg:pb-0">
-      <PropertyGallery images={galleryImages} propertyName={guesthouse.name} />
+      <PropertyGallery images={galleryImages} propertyName={guesthouse.name} media={guesthouse.media} />
 
       <section className="py-12">
         <Container>

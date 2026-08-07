@@ -1,13 +1,28 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import Script from "next/script";
 
-declare global {
-  interface Window {
-    __ithoddooTurnstileHandlers?: Record<string, (token: string) => void>;
-    __ithoddooTurnstileExpiredHandlers?: Record<string, () => void>;
-  }
+const TURNSTILE_SCRIPT_SRC = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+
+function getTurnstile() {
+  return (window as unknown as {
+    turnstile?: {
+      remove?: (widgetId: string) => void;
+      render: (
+        container: HTMLElement,
+        options: {
+          action?: string;
+          callback?: (token: string) => void;
+          "error-callback"?: (errorCode: string) => void;
+          "expired-callback"?: () => void;
+          "unsupported-callback"?: () => void;
+          sitekey: string;
+        },
+      ) => string;
+      reset?: (widgetId?: string) => void;
+    };
+  }).turnstile;
 }
 
 export function TurnstileWidget({
@@ -21,31 +36,58 @@ export function TurnstileWidget({
   siteKey?: string;
   widgetId: string;
 }) {
-  const callbackName = `onTurnstileSuccess_${widgetId}`;
-  const expiredCallbackName = `onTurnstileExpired_${widgetId}`;
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const widgetInstanceIdRef = useRef<string | null>(null);
+  const [scriptReady, setScriptReady] = useState(false);
+  const hasSiteKey = Boolean(siteKey);
 
   useEffect(() => {
-    window.__ithoddooTurnstileHandlers ??= {};
-    window.__ithoddooTurnstileExpiredHandlers ??= {};
-    window.__ithoddooTurnstileHandlers[callbackName] = onToken;
-    window.__ithoddooTurnstileExpiredHandlers[expiredCallbackName] = () => onToken("");
-
-    (window as unknown as Record<string, unknown>)[callbackName] = (token: string) => {
-      const handler = window.__ithoddooTurnstileHandlers?.[callbackName];
-      if (handler) handler(token);
-    };
-    (window as unknown as Record<string, unknown>)[expiredCallbackName] = () => {
-      const handler = window.__ithoddooTurnstileExpiredHandlers?.[expiredCallbackName];
-      if (handler) handler();
-    };
-
     return () => {
-      delete window.__ithoddooTurnstileHandlers?.[callbackName];
-      delete window.__ithoddooTurnstileExpiredHandlers?.[expiredCallbackName];
-      delete (window as unknown as Record<string, unknown>)[callbackName];
-      delete (window as unknown as Record<string, unknown>)[expiredCallbackName];
+      const turnstile = getTurnstile();
+      if (widgetInstanceIdRef.current && turnstile?.remove) {
+        turnstile.remove(widgetInstanceIdRef.current);
+      }
+      widgetInstanceIdRef.current = null;
     };
-  }, [callbackName, expiredCallbackName, onToken]);
+  }, []);
+
+  useEffect(() => {
+    const turnstile = getTurnstile();
+
+    if (!hasSiteKey) {
+      return;
+    }
+
+    if (!containerRef.current) {
+      return;
+    }
+
+    if (!turnstile && !scriptReady) {
+      return;
+    }
+
+    if (!turnstile) {
+      return;
+    }
+
+    if (widgetInstanceIdRef.current) {
+      return;
+    }
+
+    const resolvedSiteKey = siteKey;
+    if (!resolvedSiteKey) {
+      return;
+    }
+
+    widgetInstanceIdRef.current = turnstile.render(containerRef.current, {
+      sitekey: resolvedSiteKey,
+      action,
+      callback: onToken,
+      "expired-callback": () => {
+        onToken("");
+      },
+    });
+  }, [action, hasSiteKey, onToken, scriptReady, siteKey, widgetId]);
 
   if (!siteKey) {
     return <p className="mutedText">Enquiry protection is not configured.</p>;
@@ -53,13 +95,17 @@ export function TurnstileWidget({
 
   return (
     <>
-      <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" strategy="afterInteractive" />
+      <Script
+        src={TURNSTILE_SCRIPT_SRC}
+        strategy="afterInteractive"
+        onLoad={() => {
+          setScriptReady(true);
+        }}
+      />
       <div
-        className="cf-turnstile"
-        data-action={action}
-        data-callback={callbackName}
-        data-expired-callback={expiredCallbackName}
+        ref={containerRef}
         data-sitekey={siteKey}
+        data-widget-id={widgetId}
       />
     </>
   );

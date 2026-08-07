@@ -1,6 +1,7 @@
 import "server-only";
 
 import { redirect } from "next/navigation";
+import { listManagedBusinessMedia } from "@/lib/business-media/server";
 import { createVerificationDocuments } from "@/types/verification-documents";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
 import { getDataMode } from "@/lib/supabase/status";
@@ -9,6 +10,7 @@ import { getPartnerAuthState } from "@/lib/partner-portal/partnerAuth";
 import type { Booking } from "@/types/booking";
 import type { Tables } from "@/lib/supabase/types";
 import type { BusinessType } from "@/types/business-type";
+import type { BusinessMediaItem } from "@/types/business-media";
 
 export type PartnerPortalProfileForm = {
   businessName: string;
@@ -43,14 +45,7 @@ export type PartnerPortalServiceItem = {
   metadata: Record<string, string>;
 };
 
-export type PartnerPortalGalleryItem = {
-  id: string;
-  path: string;
-  caption: string;
-  altText: string;
-  usage: "logo" | "cover" | "hero" | "gallery" | "video";
-  sortOrder: number;
-};
+export type PartnerPortalGalleryItem = BusinessMediaItem;
 
 export type PartnerPortalDocument = {
   id: string;
@@ -128,6 +123,27 @@ type PartnerPropertyWithRelations = Tables<"properties"> & {
 
 function parseJsonRecord(value: unknown): Record<string, string> {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, string>) : {};
+}
+
+function galleryFallbackItem(path: string, businessName: string): Omit<BusinessMediaItem, "businessType" | "businessId"> {
+  return {
+    id: `fallback-${path}`,
+    mediaAssetId: `fallback-asset-${path}`,
+    url: path,
+    fileName: path.split("/").filter(Boolean).at(-1) ?? "business-media.jpg",
+    mimeType: "image/jpeg",
+    width: null,
+    height: null,
+    storageBucket: null,
+    storagePath: null,
+    caption: `${businessName} cover image`,
+    altText: businessName,
+    sortOrder: 0,
+    isCover: true,
+    isFeatured: false,
+    isPublic: true,
+    source: "legacy"
+  };
 }
 
 export function getPartnerAccessState(partner: Tables<"partners"> | null | undefined): Exclude<PartnerPortalSource, "mock" | "supabase" | "fallback" | "setup_required"> | "dashboard" {
@@ -322,6 +338,7 @@ export async function getCurrentPartnerPortalData(): Promise<PartnerPortalData> 
       const listingType = linkedApplication?.listing_type;
       const listingId = linkedApplication?.listing_id;
       if (!listingId || !["transfer", "experience", "restaurant"].includes(listingType ?? "")) return getAccountSetupPortalData(authState.email);
+      const managedBusinessType = listingType as "transfer" | "experience" | "restaurant";
       const listingResult = listingType === "transfer"
         ? await db.from("transfers").select("*").eq("id", listingId).eq("partner_id", authState.partner.id).maybeSingle()
         : listingType === "experience"
@@ -330,13 +347,12 @@ export async function getCurrentPartnerPortalData(): Promise<PartnerPortalData> 
       if (listingResult.error) throw listingResult.error;
       if (!listingResult.data) return getAccountSetupPortalData(authState.email);
       const listing = listingResult.data as unknown as Record<string, unknown>;
-      const [{ data: serviceItems, error: serviceError }, { data: mediaItems, error: mediaError }, { data: bookings, error: bookingError }] = await Promise.all([
+      const [{ data: serviceItems, error: serviceError }, gallery, { data: bookings, error: bookingError }] = await Promise.all([
         db.from("partner_service_items").select("*").eq("partner_id", authState.partner.id).order("sort_order", { ascending: true }),
-        db.from("media_assets").select("*").eq("partner_id", authState.partner.id).eq("visibility", "public").order("sort_order", { ascending: true }),
+        listManagedBusinessMedia(db, managedBusinessType, listingId),
         db.from("bookings").select("*, guests(*), properties(*), rooms(*)").eq("partner_id", authState.partner.id).neq("payment_status", "demo_only").order("created_at", { ascending: false })
       ]);
       if (serviceError) throw serviceError;
-      if (mediaError) throw mediaError;
       if (bookingError) throw bookingError;
       const name = String(listing.name ?? listing.title ?? authState.partner.business_name);
       const description = String(listing.description ?? "");
@@ -347,10 +363,6 @@ export async function getCurrentPartnerPortalData(): Promise<PartnerPortalData> 
         childPrice: item.child_price === null ? "" : String(item.child_price), notes: item.notes ?? "", active: item.active,
         sortOrder: item.sort_order, metadata: parseJsonRecord(item.metadata)
       }));
-      const gallery = ((mediaItems ?? []) as Tables<"media_assets">[]).map((item) => ({
-        id: item.id, path: item.path, caption: item.caption ?? "", altText: item.alt_text ?? name,
-        usage: item.media_type === "hero" ? "hero" as const : "gallery" as const, sortOrder: item.sort_order
-      }));
       return {
         source: "supabase", partnerId: authState.partner.id, propertyId: listingId,
         businessType: linkedApplication.business_type as BusinessType,
@@ -360,7 +372,7 @@ export async function getCurrentPartnerPortalData(): Promise<PartnerPortalData> 
           seoTitle: `${name} | iThoddoo Maldives`, seoDescription: description },
         membership: { plan: membershipPlan?.name ?? "Free", renewalDate: "Not configured", status: membershipPlan ? "Active" : "Not configured" },
         verification: { status: listing.verification_status === "verified" ? "Verified" : "Pending", completion: 100, missingDocuments: [], adminNotes: [] },
-        services, gallery: gallery.length ? gallery : image ? [{ id: "hero", path: image, caption: "Hero image", altText: name, usage: "hero", sortOrder: 0 }] : [],
+        services, gallery: gallery.length ? gallery : image ? [{ ...galleryFallbackItem(image, name), businessType: managedBusinessType, businessId: listingId }] : [],
         documents: [], bookings: ((bookings ?? []) as unknown as BookingWithRelations[]).map((booking) => mapBookingRowToDomain(booking, booking.guests ?? undefined, booking.properties ?? undefined, booking.rooms ?? undefined)), notifications: []
       };
     }
@@ -378,15 +390,7 @@ export async function getCurrentPartnerPortalData(): Promise<PartnerPortalData> 
     if (bookingError) throw bookingError;
 
     const socialLinks = parseJsonRecord(property.social_links);
-    const propertyMedia = Array.isArray(property.property_media) ? property.property_media : [];
-    const gallery = propertyMedia.map((item: PropertyMediaWithAsset, index: number) => ({
-      id: item.media_assets?.id ?? `${property.id}-media-${index}`,
-      path: item.media_assets?.path ?? property.hero_image_path,
-      caption: item.media_assets?.caption ?? item.usage,
-      altText: item.media_assets?.alt_text ?? property.name,
-      usage: item.usage === "hero" ? "hero" : "gallery",
-      sortOrder: item.sort_order ?? index
-    })) as PartnerPortalGalleryItem[];
+    const gallery = await listManagedBusinessMedia(db, "property", property.id);
     const roomServices = (property.rooms ?? []).map(mapServiceFromRoom);
     const serviceRows = ((serviceItems ?? []) as Tables<"partner_service_items">[]).map((item) => ({
       id: item.id,
@@ -459,7 +463,7 @@ export async function getCurrentPartnerPortalData(): Promise<PartnerPortalData> 
         adminNotes: resolvedDocuments.map((document) => document.adminNote).filter(Boolean)
       },
       services: serviceRows.length > 0 ? serviceRows : roomServices,
-      gallery: gallery.length > 0 ? gallery : [{ id: "hero", path: property.hero_image_path, caption: "Hero image", altText: property.name, usage: "hero", sortOrder: 0 }],
+      gallery: gallery.length > 0 ? gallery : [{ ...galleryFallbackItem(property.hero_image_path, property.name), businessType: "property", businessId: property.id }],
       documents: resolvedDocuments,
       bookings: bookingRows,
       notifications: ((notifications ?? []) as Tables<"partner_notifications">[]).map(mapNotification)

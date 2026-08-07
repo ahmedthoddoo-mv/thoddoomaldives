@@ -16,6 +16,8 @@ export type Transfer = {
   arrivalPoint: string;
   scheduleNote: string;
   image: string;
+  gallery?: string[];
+  media?: import("@/types/business-media").BusinessMediaItem[];
   highlights: string[];
   featured: boolean;
   publicationStatus?: string;

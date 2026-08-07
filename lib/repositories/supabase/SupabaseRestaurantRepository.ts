@@ -1,4 +1,5 @@
 import { createSupabaseServerClient, createSupabaseServiceRoleClient } from "@/lib/supabase/server";
+import { getPublicBusinessMediaMap } from "@/lib/business-media/server";
 import { mapRestaurantRowToDomain } from "@/lib/supabase/mappers";
 
 export const SupabaseRestaurantRepository = {
@@ -7,14 +8,15 @@ export const SupabaseRestaurantRepository = {
     if (!supabase) throw new Error("Supabase is not configured.");
     const { data, error } = await supabase.from("restaurants").select("*").order("created_at", { ascending: false });
     if (error) throw error;
-    return (data ?? []).map(mapRestaurantRowToDomain);
+    return (data ?? []).map((row) => mapRestaurantRowToDomain(row));
   },
   async findPublished() {
     const supabase = createSupabaseServerClient();
     if (!supabase) throw new Error("Supabase is not configured.");
     const { data, error } = await supabase.from("public_restaurants").select("*").order("created_at", { ascending: false });
     if (error) throw error;
-    return (data ?? []).map(mapRestaurantRowToDomain);
+    const mediaMap = await getPublicBusinessMediaMap("restaurant", (data ?? []).map((row) => row.id));
+    return (data ?? []).map((row) => mapRestaurantRowToDomain(row, mediaMap.get(row.id) ?? []));
   },
   async findById(id: string) {
     const rows = await this.findAll();

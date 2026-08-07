@@ -5,16 +5,19 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { saveAdminPropertyToSupabase } from "@/app/admin/properties/actions";
 import { PropertyPublishPanel } from "@/components/admin/PropertyPublishPanel";
+import MediaGallery from "@/components/media/MediaGallery";
 import { PropertySaveStatus } from "@/components/admin/PropertySaveStatus";
 import Badge from "@/components/ui/Badge";
 import type { AdminManagedProperty } from "@/data/adminContent";
 import { createPropertySlug, normalizePropertySlug } from "@/lib/properties/propertySlug";
 import { validatePropertyForSave } from "@/lib/properties/propertyValidation";
+import type { BusinessMediaItem } from "@/types/business-media";
 
 type AdminPropertyFormProps = {
   mode: "new" | "edit";
   property?: AdminManagedProperty;
   propertyId?: string;
+  initialMedia?: BusinessMediaItem[];
 };
 
 type PropertyFormState = {
@@ -186,12 +189,13 @@ function createPropertyFromState({
   };
 }
 
-export function AdminPropertyForm({ mode, property }: AdminPropertyFormProps) {
+export function AdminPropertyForm({ mode, property, initialMedia = [] }: AdminPropertyFormProps) {
   const router = useRouter();
   const [isSaving, startSavingTransition] = useTransition();
   const allProperties = property ? [property] : [];
   const activeProperty = property;
   const [form, setForm] = useState<PropertyFormState>(() => stateFromProperty(activeProperty));
+  const [media, setMedia] = useState<BusinessMediaItem[]>(initialMedia);
   const [notice, setNotice] = useState("Ready to save property changes.");
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
@@ -223,6 +227,16 @@ export function AdminPropertyForm({ mode, property }: AdminPropertyFormProps) {
       slug: current.slug ? current.slug : formatSlug(value),
       seoTitle: current.seoTitle ? current.seoTitle : `${value} | iThoddoo Maldives`
     }));
+  }
+
+  function syncMedia(nextMedia: BusinessMediaItem[]) {
+    setMedia(nextMedia);
+    const publicMedia = nextMedia
+      .filter((item) => item.isPublic)
+      .sort((left, right) => left.sortOrder - right.sortOrder);
+    const coverImage = publicMedia.find((item) => item.isCover)?.url ?? publicMedia[0]?.url ?? "";
+    const gallery = publicMedia.map((item) => item.url).join("\n");
+    setForm((current) => ({ ...current, coverImage, gallery }));
   }
 
   function saveWithStatus({
@@ -391,12 +405,12 @@ export function AdminPropertyForm({ mode, property }: AdminPropertyFormProps) {
                 <textarea value={form.roomTypes} onChange={(event) => updateField("roomTypes", event.target.value)} rows={5} />
               </label>
               <label className="adminFormWide">
-                <span>Gallery image paths, one per line</span>
-                <textarea value={form.gallery} onChange={(event) => updateField("gallery", event.target.value)} rows={5} />
+                <span>Public gallery image URLs</span>
+                <textarea value={form.gallery} readOnly rows={5} />
               </label>
               <label className="adminFormWide">
                 <span>Hero image path</span>
-                <input value={form.coverImage} onChange={(event) => updateField("coverImage", event.target.value)} placeholder="/images/hero-thoddoo.jpg" />
+                <input value={form.coverImage} readOnly placeholder="/images/hero-thoddoo.jpg" />
               </label>
               <label className="adminFormWide">
                 <span>Policies, one per line</span>
@@ -404,6 +418,17 @@ export function AdminPropertyForm({ mode, property }: AdminPropertyFormProps) {
               </label>
             </div>
           </section>
+
+          <MediaGallery
+            mode="manage"
+            businessId={mode === "edit" ? property?.id : undefined}
+            businessName={form.name || "Property"}
+            businessType="property"
+            items={media}
+            onItemsChange={syncMedia}
+            title="Property media"
+            description="Manage one reusable gallery for uploads, WebP optimization, captions, ordering, cover imagery, and featured photos."
+          />
 
           <section>
             <h2>Membership & SEO</h2>

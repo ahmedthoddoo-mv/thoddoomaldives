@@ -1,4 +1,5 @@
 import { createSupabaseServerClient, createSupabaseServiceRoleClient } from "@/lib/supabase/server";
+import { getPublicBusinessMediaMap } from "@/lib/business-media/server";
 import { mapTransferRowToDomain } from "@/lib/supabase/mappers";
 import type { TransferSchedule } from "@/types/transfer-schedule";
 
@@ -27,14 +28,15 @@ export const SupabaseTransferRepository = {
     if (!supabase) throw new Error("Supabase is not configured.");
     const { data, error } = await supabase.from("transfers").select("*").order("created_at", { ascending: false });
     if (error) throw error;
-    return (data ?? []).map(mapTransferRowToDomain);
+    return (data ?? []).map((row) => mapTransferRowToDomain(row));
   },
   async findPublished() {
     const supabase = createSupabaseServerClient();
     if (!supabase) throw new Error("Supabase is not configured.");
     const { data, error } = await supabase.from("public_transfers").select("*").order("created_at", { ascending: false });
     if (error) throw error;
-    return (data ?? []).map(mapTransferRowToDomain);
+    const mediaMap = await getPublicBusinessMediaMap("transfer", (data ?? []).map((row) => row.id));
+    return (data ?? []).map((row) => mapTransferRowToDomain(row, mediaMap.get(row.id) ?? []));
   },
   async findById(id: string) {
     const rows = await this.findAll();
@@ -49,7 +51,11 @@ export const SupabaseTransferRepository = {
       .eq("slug", slug)
       .maybeSingle();
     if (error) throw error;
-    return data ? mapTransferRowToDomain(data) : undefined;
+    if (!data) {
+      return undefined;
+    }
+    const mediaMap = await getPublicBusinessMediaMap("transfer", [data.id]);
+    return mapTransferRowToDomain(data, mediaMap.get(data.id) ?? []);
   },
   async findPublishedSchedules(transferId: string) {
     const supabase = createSupabaseServerClient();

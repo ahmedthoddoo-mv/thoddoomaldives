@@ -38,6 +38,7 @@ export type Guesthouse = {
   whatsapp: string;
   heroImage: string;
   gallery: string[];
+  media?: import("@/types/business-media").BusinessMediaItem[];
   amenities: string[];
   about: PropertyContentSection[];
   nearbyAttractions: NearbyAttraction[];

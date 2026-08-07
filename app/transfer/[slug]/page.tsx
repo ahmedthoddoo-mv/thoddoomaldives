@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { mediaItemsFromUrls } from "@/lib/business-media/public";
 import { getLivePublishedTransferDetail } from "@/lib/repositories/liveReads";
 import { createPageMetadata } from "@/lib/seo";
 import { nextTransferDeparture } from "@/lib/transfers/schedule";
@@ -11,6 +12,7 @@ import { TransferMobileBookingBar } from "@/components/transfer/TransferMobileBo
 import { TransferScheduleSection } from "@/components/transfer/TransferScheduleSection";
 import { TransferServiceFacts } from "@/components/transfer/TransferServiceFacts";
 import { TransferTrustSection } from "@/components/transfer/TransferTrustSection";
+import MediaGallery from "@/components/media/MediaGallery";
 import { collectTransferExceptions, groupTransferDirections, groupTransferFleet } from "@/components/transfer/transfer-utils";
 
 export const dynamic = "force-dynamic";
@@ -79,6 +81,9 @@ export default async function TransferDetailPage({ params }: TransferDetailPageP
   const trustNote = "Missing fields are shown honestly or hidden. We do not invent vessel details, availability, or online confirmation.";
   const nextDepartureLabel = nextDeparture ? `${nextDeparture.date} at ${nextDeparture.time}` : "Schedule confirmation required";
   const nextDepartureNotice = nextDeparture?.notice;
+  const galleryItems = transfer.media && transfer.media.length > 0
+    ? transfer.media
+    : mediaItemsFromUrls(transfer.gallery && transfer.gallery.length > 0 ? transfer.gallery : [transfer.image], transfer.title, "transfer", transfer.id);
 
   return (
     <main className="platformPage transferExperiencePage transferDetailPage">
@@ -120,6 +125,18 @@ export default async function TransferDetailPage({ params }: TransferDetailPageP
         pickupDropoff={pickupDropoff}
         safetyInformation={safetyInformation}
       />
+
+      <section className="platformSection">
+        <div className="platformContainer">
+          <MediaGallery
+            mode="public"
+            businessName={transfer.title}
+            items={galleryItems}
+            title="Transfer gallery"
+            description="Review the current public transfer photos, cover image, and featured media."
+          />
+        </div>
+      </section>
 
       <TransferFleetSection
         fleet={fleetGroups}

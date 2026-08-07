@@ -1,5 +1,5 @@
 import { getPartnerApplicationStatusLabel } from "@/data/partnerApplications";
-import type { PartnerApplicationStatus } from "@/types/partner-application";
+import type { PartnerApplicationStatus, PartnerApplicationWorkflowSource } from "@/types/partner-application";
 
 const statusTone: Record<PartnerApplicationStatus, string> = {
   draft: "neutral",
@@ -11,10 +11,22 @@ const statusTone: Record<PartnerApplicationStatus, string> = {
   withdrawn: "neutral"
 };
 
-export function ApplicationStatusBadge({ status }: { status: PartnerApplicationStatus }) {
+export function ApplicationStatusBadge({
+  status,
+  source,
+  linkedPartnerId
+}: {
+  status: PartnerApplicationStatus;
+  source?: PartnerApplicationWorkflowSource;
+  linkedPartnerId?: string;
+}) {
+  const tone = source === "admin_created" && status === "submitted" && !linkedPartnerId
+    ? "gold"
+    : statusTone[status];
+
   return (
-    <span className={`applicationStatusBadge applicationStatusBadge-${statusTone[status]}`}>
-      {getPartnerApplicationStatusLabel(status)}
+    <span className={`applicationStatusBadge applicationStatusBadge-${tone}`}>
+      {getPartnerApplicationStatusLabel(status, { source, linkedPartnerId })}
     </span>
   );
 }

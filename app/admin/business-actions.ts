@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { requireAdminSession } from "@/lib/admin/adminAuth";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
 import type { Json } from "@/lib/supabase/types";
@@ -24,6 +25,7 @@ export async function saveAdminBusinessListing(input: {
   });
   if (error) return { ok: false, message: error.message };
   revalidatePublicListingPaths();
+  revalidatePath("/admin/applications");
   return { ok: true, message: "Business listing saved.", data };
 }
 

@@ -4,7 +4,6 @@ import { logPartnerAuditEvent } from "@/lib/partner-portal/partnerAuth";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
 import type {
   PartnerPortalDocument,
-  PartnerPortalGalleryItem,
   PartnerPortalProfileForm,
   PartnerPortalServiceItem
 } from "@/lib/partner-portal/partnerAccess";
@@ -18,6 +17,15 @@ export type PartnerPortalActionResult = {
   ok: boolean;
   mode: "supabase";
   message: string;
+};
+
+type LegacyPartnerGalleryItem = {
+  id: string;
+  path: string;
+  caption: string;
+  altText: string;
+  usage: "logo" | "cover" | "hero" | "gallery" | "video";
+  sortOrder: number;
 };
 
 function sanitizeText(value: string, maxLength = 1200) {
@@ -143,7 +151,7 @@ export async function savePartnerServices(services: PartnerPortalServiceItem[]):
   return { ok: true, mode, message: "Rooms and pricing saved to Supabase." };
 }
 
-export async function savePartnerGallery(gallery: PartnerPortalGalleryItem[]): Promise<PartnerPortalActionResult> {
+export async function savePartnerGallery(gallery: LegacyPartnerGalleryItem[]): Promise<PartnerPortalActionResult> {
   const { scope, supabase, mode } = await getScopedSupabase();
   if (!supabase || scope.mode !== "supabase") return { ok: false, mode, message: "Partner access is not available." };
 

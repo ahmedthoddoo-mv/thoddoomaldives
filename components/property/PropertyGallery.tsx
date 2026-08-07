@@ -1,134 +1,35 @@
 "use client";
 
-import { useState } from "react";
+import MediaGallery from "@/components/media/MediaGallery";
+import { mediaItemsFromUrls } from "@/lib/business-media/public";
+import type { BusinessMediaItem } from "@/types/business-media";
 
 export default function PropertyGallery({
   images,
   propertyName,
+  media
 }: {
   images: string[];
   propertyName: string;
+  media?: BusinessMediaItem[];
 }) {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [viewerOpen, setViewerOpen] = useState(false);
-  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const items = media && media.length > 0 ? media : mediaItemsFromUrls(images, propertyName);
 
-  const safeImages = images.filter(Boolean);
-  const activeImage = safeImages[activeIndex] ?? safeImages[0];
-
-  if (safeImages.length === 0) {
+  if (items.length === 0) {
     return null;
   }
 
-  function goToImage(index: number) {
-    const lastIndex = safeImages.length - 1;
-
-    if (index < 0) {
-      setActiveIndex(lastIndex);
-      return;
-    }
-
-    if (index > lastIndex) {
-      setActiveIndex(0);
-      return;
-    }
-
-    setActiveIndex(index);
-  }
-
-  function handleTouchEnd(touchEnd: number) {
-    if (touchStart === null) return;
-
-    const distance = touchStart - touchEnd;
-    if (Math.abs(distance) > 40) {
-      goToImage(activeIndex + (distance > 0 ? 1 : -1));
-    }
-
-    setTouchStart(null);
-  }
-
   return (
-    <section className="bg-white pt-24">
+    <div className="bg-white pt-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <div className="grid gap-3 overflow-hidden rounded-3xl lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.65fr)] lg:gap-4">
-          <button
-            type="button"
-            onClick={() => setViewerOpen(true)}
-            className="min-h-[420px] bg-slate-200 bg-cover bg-center text-left shadow-sm transition hover:brightness-95 sm:min-h-[520px] lg:min-h-[620px]"
-            style={{ backgroundImage: `url('${activeImage}')` }}
-            aria-label={`Open ${propertyName} gallery`}
-          />
-
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-1 lg:grid-rows-4 lg:gap-4">
-            {safeImages.slice(0, 4).map((image, index) => (
-              <button
-                type="button"
-                key={image}
-                onClick={() => goToImage(index)}
-                className={`relative min-h-32 bg-slate-200 bg-cover bg-center ring-offset-2 transition hover:brightness-95 sm:min-h-40 lg:min-h-0 ${
-                  index === activeIndex ? "ring-2 ring-cyan-700" : ""
-                }`}
-                style={{ backgroundImage: `url('${image}')` }}
-                aria-label={`View ${propertyName} photo ${index + 1}`}
-              >
-                {index === 3 && safeImages.length > 4 && (
-                  <span className="absolute inset-0 flex items-center justify-center bg-slate-950/45 text-sm font-bold text-white">
-                    View all photos
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
+        <MediaGallery
+          mode="public"
+          businessName={propertyName}
+          items={items}
+          title={`${propertyName} gallery`}
+          description="Explore the current guesthouse gallery, cover photo, and featured imagery."
+        />
       </div>
-
-      {viewerOpen && (
-        <div
-          className="fixed inset-0 z-50 bg-black/95 p-4 text-white"
-          onTouchStart={(event) => setTouchStart(event.touches[0].clientX)}
-          onTouchEnd={(event) =>
-            handleTouchEnd(event.changedTouches[0].clientX)
-          }
-        >
-          <div className="flex items-center justify-between">
-            <p className="font-semibold">{propertyName}</p>
-            <button
-              type="button"
-              onClick={() => setViewerOpen(false)}
-              className="rounded-full bg-white px-4 py-2 font-semibold text-slate-900"
-            >
-              Close
-            </button>
-          </div>
-
-          <div
-            className="mt-4 h-[78vh] rounded-3xl bg-contain bg-center bg-no-repeat"
-            style={{ backgroundImage: `url('${activeImage}')` }}
-            role="img"
-            aria-label={`${propertyName} photo ${activeIndex + 1}`}
-          />
-
-          <div className="mt-4 flex items-center justify-center gap-4">
-            <button
-              type="button"
-              onClick={() => goToImage(activeIndex - 1)}
-              className="rounded-full border border-white/40 px-5 py-3 font-semibold"
-            >
-              Previous
-            </button>
-            <p className="text-sm text-white/70">
-              {activeIndex + 1} / {safeImages.length}
-            </p>
-            <button
-              type="button"
-              onClick={() => goToImage(activeIndex + 1)}
-              className="rounded-full border border-white/40 px-5 py-3 font-semibold"
-            >
-              Next
-            </button>
-          </div>
-        </div>
-      )}
-    </section>
+    </div>
   );
 }

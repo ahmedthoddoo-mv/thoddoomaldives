@@ -16,6 +16,8 @@ export type Restaurant = {
   priceRange: string;
   openingHours: string;
   image: string;
+  gallery?: string[];
+  media?: import("@/types/business-media").BusinessMediaItem[];
   featured: boolean;
   publicationStatus?: string;
   verificationStatus?: string;

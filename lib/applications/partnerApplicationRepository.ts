@@ -295,6 +295,7 @@ export const PartnerApplicationRepository = {
       id,
       businessName: onboardingApplication.businessName,
       businessType,
+      source: "partner_submitted",
       contactPerson: onboardingApplication.contactPerson,
       whatsapp: onboardingApplication.whatsappNumber,
       email: onboardingApplication.email,

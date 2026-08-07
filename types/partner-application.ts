@@ -12,6 +12,7 @@ export type PartnerApplicationStatus =
   | "withdrawn";
 
 export type PartnerApplicationBusinessType = BusinessType;
+export type PartnerApplicationWorkflowSource = "partner_submitted" | "admin_created";
 
 export type PartnerApplicationTimelineType =
   | "submitted"
@@ -46,6 +47,7 @@ export type PartnerApplicationRecord = {
   id: string;
   businessName: string;
   businessType: PartnerApplicationBusinessType;
+  source: PartnerApplicationWorkflowSource;
   contactPerson: string;
   whatsapp: string;
   email: string;
@@ -63,6 +65,7 @@ export type PartnerApplicationRecord = {
   adminNotes: string[];
   requestedChanges: string[];
   linkedPartnerId?: string;
+  linkedPartnerName?: string;
   linkedListingId?: string;
   listingWorkflow: PartnerApplicationListingWorkflow;
   listingPublicationStatus: "draft" | "pending" | "published" | "archived";

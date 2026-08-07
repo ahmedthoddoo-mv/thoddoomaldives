@@ -214,6 +214,31 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["media_assets"]["Row"]>;
         Relationships: [];
       };
+      business_media: {
+        Row: {
+          id: string;
+          business_type: string;
+          business_id: string;
+          media_asset_id: string;
+          partner_id: string | null;
+          application_id: string | null;
+          caption: string | null;
+          alt_text: string | null;
+          sort_order: number;
+          is_cover: boolean;
+          is_featured: boolean;
+          is_public: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["business_media"]["Row"]> & {
+          business_type: string;
+          business_id: string;
+          media_asset_id: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["business_media"]["Row"]>;
+        Relationships: [];
+      };
       restaurants: {
         Row: {
           id: string;
@@ -690,6 +715,27 @@ export type Database = {
         Row: Pick<Database["public"]["Tables"]["media_assets"]["Row"], "id" | "property_id" | "room_id" | "media_type" | "path" | "alt_text" | "caption" | "sort_order" | "width" | "height">;
         Relationships: [];
       };
+      public_business_media: {
+        Row: {
+          id: string;
+          business_type: string;
+          business_id: string;
+          media_asset_id: string;
+          caption: string | null;
+          alt_text: string | null;
+          sort_order: number;
+          is_cover: boolean;
+          is_featured: boolean;
+          path: string;
+          filename: string;
+          file_type: string;
+          width: number | null;
+          height: number | null;
+          storage_bucket: string | null;
+          storage_path: string | null;
+        };
+        Relationships: [];
+      };
       public_transfers: { Row: Database["public"]["Tables"]["transfers"]["Row"]; Relationships: [] };
       public_transfer_schedules: { Row: Omit<Database["public"]["Tables"]["transfer_schedules"]["Row"], "partner_id" | "updated_by" | "created_at" | "updated_at">; Relationships: [] };
       public_transfer_schedule_exceptions: { Row: Omit<Database["public"]["Tables"]["transfer_schedule_exceptions"]["Row"], "updated_by" | "created_at" | "updated_at">; Relationships: [] };
@@ -744,6 +790,35 @@ export type Database = {
       };
       admin_save_business_listing: {
         Args: { admin_user_id: string; listing_type: string; listing_uuid: string | null; listing_payload: Json };
+        Returns: Json;
+      };
+      ensure_admin_listing_application: {
+        Args: {
+          p_listing_uuid: string;
+          p_listing_type: string;
+          p_business_name: string;
+          p_business_type: string;
+          p_island: string;
+          p_address: string;
+          p_short_description: string;
+          p_contact_person?: string;
+          p_whatsapp?: string;
+          p_email?: string;
+          p_existing_application_id?: string | null;
+        };
+        Returns: string;
+      };
+      admin_link_application_listing: {
+        Args: { admin_user_id: string; application_uuid: string; listing_uuid: string };
+        Returns: Json;
+      };
+      admin_assign_application_partner: {
+        Args: {
+          admin_user_id: string;
+          application_uuid: string;
+          reviewer_name: string;
+          partner_uuid?: string | null;
+        };
         Returns: Json;
       };
       partner_replace_rooms_services: {

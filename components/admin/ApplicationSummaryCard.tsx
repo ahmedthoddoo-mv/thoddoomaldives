@@ -7,18 +7,37 @@ function formatDate(value: string) {
 }
 
 export function ApplicationSummaryCard({ application }: { application: PartnerApplicationRecord }) {
+  const sourceLabel = application.source === "admin_created" ? "Admin created" : "Partner submitted";
+  const ownerLabel = application.linkedPartnerName || application.contactPerson || "Not assigned";
+
   return (
     <a className="applicationSummaryCard" href={`/admin/applications/${application.id}`}>
       <div>
         <span>{getPartnerApplicationBusinessTypeLabel(application.businessType)}</span>
-        <ApplicationStatusBadge status={application.status} />
+        <ApplicationStatusBadge
+          status={application.status}
+          source={application.source}
+          linkedPartnerId={application.linkedPartnerId}
+        />
       </div>
       <strong>{application.businessName}</strong>
       <p>{application.description}</p>
       <dl>
         <div>
-          <dt>Plan</dt>
-          <dd>{application.requestedMembershipTier}</dd>
+          <dt>Source</dt>
+          <dd>{sourceLabel}</dd>
+        </div>
+        <div>
+          <dt>Owner</dt>
+          <dd>{ownerLabel}</dd>
+        </div>
+        <div>
+          <dt>Status</dt>
+          <dd>{application.verificationStatus}</dd>
+        </div>
+        <div>
+          <dt>Publication</dt>
+          <dd>{application.listingPublicationStatus}</dd>
         </div>
         <div>
           <dt>Submitted</dt>

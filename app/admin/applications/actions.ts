@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
 import { platformConfig } from "@/lib/config/platform";
 import { sendEmail } from "@/lib/email/client";
@@ -36,6 +37,9 @@ export type AdminApplicationDecisionResult = {
   message: string;
   status?: PartnerApplicationStatus;
   requestedChanges?: string[];
+  partnerId?: string;
+  listingId?: string;
+  listingWorkflow?: string;
 };
 
 export type AdminApplicationReviewInput = {
@@ -120,6 +124,56 @@ async function findAuthUserByEmail(db: SupabaseDatabaseClient, email: string) {
     if (data.users.length < 1000) return null;
   }
   throw new Error("Auth user lookup exceeded the supported pagination limit.");
+}
+
+async function upsertPartnerInvitationPreview(
+  db: SupabaseDatabaseClient,
+  applicationId: string,
+  partnerId: string,
+  reviewer: string
+) {
+  const { data: application, error: applicationError } = await db
+    .from("partner_applications")
+    .select("business_name, email")
+    .eq("id", applicationId)
+    .maybeSingle();
+
+  if (applicationError) throw new Error(`Application lookup failed: ${applicationError.message}`);
+  if (!application?.email) {
+    throw new Error("An owner email is required before sending an invitation.");
+  }
+
+  const { data: existingPreview, error: previewReadError } = await db
+    .from("partner_account_invitations")
+    .select("id")
+    .eq("application_id", applicationId)
+    .eq("partner_id", partnerId)
+    .neq("status", "cancelled")
+    .maybeSingle();
+
+  if (previewReadError) throw new Error(`Invitation lookup failed: ${previewReadError.message}`);
+  if (existingPreview?.id) return existingPreview.id;
+
+  const { data: createdPreview, error: previewInsertError } = await db
+    .from("partner_account_invitations")
+    .insert({
+      application_id: applicationId,
+      partner_id: partnerId,
+      auth_user_id: null,
+      email: application.email.toLowerCase(),
+      invitation_url: `${(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, "")}/partner/login`,
+      status: "preview",
+      created_by: reviewer,
+      notes: "Owner invitation prepared from the admin applications workflow."
+    })
+    .select("id")
+    .single();
+
+  if (previewInsertError || !createdPreview) {
+    throw new Error(previewInsertError?.message ?? "Invitation preview could not be created.");
+  }
+
+  return createdPreview.id;
 }
 
 async function deliverPartnerInvitation(
@@ -308,7 +362,7 @@ export async function updateSupabasePartnerApplicationDecision(
       return { ok: false, message: `Approval failed before completion: ${approvalError.message}` };
     }
     const approval = data && typeof data === "object" && !Array.isArray(data)
-      ? data as { partnerId?: string }
+      ? data as { partnerId?: string; listingId?: string; listingWorkflow?: string }
       : {};
     if (!approval.partnerId) {
       return { ok: false, message: "Approval transaction did not return a partner link." };
@@ -326,6 +380,16 @@ export async function updateSupabasePartnerApplicationDecision(
         message: "Application approval completed, but account invitation delivery needs an administrator retry."
       };
     }
+    revalidatePath("/admin/applications");
+    revalidatePath(`/admin/applications/${input.applicationId}`);
+    return {
+      ok: true,
+      message: decisionMessage,
+      status,
+      partnerId: approval.partnerId,
+      listingId: typeof approval.listingId === "string" ? approval.listingId : undefined,
+      listingWorkflow: typeof approval.listingWorkflow === "string" ? approval.listingWorkflow : undefined
+    };
   } else {
     const { error: updateError } = await supabase
       .from("partner_applications")
@@ -408,10 +472,151 @@ export async function updateSupabasePartnerApplicationDecision(
     body: `${decisionMessage} for application ${input.applicationId}.${note ? ` ${note}` : ""}`
   });
 
+  revalidatePath("/admin/applications");
+  revalidatePath(`/admin/applications/${input.applicationId}`);
+
   return {
     ok: true,
     message: decisionMessage,
     status,
     requestedChanges
+  };
+}
+
+export async function assignExistingPartnerToApplication(input: {
+  applicationId: string;
+  partnerId: string;
+  reviewer: string;
+}) {
+  const admin = await requireAdminSession();
+  if (getDataMode() !== "supabase") {
+    return { ok: false, message: "Mock mode is active." };
+  }
+
+  const supabase = createSupabaseServiceRoleClient();
+  if (!supabase) {
+    return { ok: false, message: "Supabase service role is not configured." };
+  }
+
+  const reviewer = sanitizeText(input.reviewer || "Admin", 120);
+  const { data, error } = await supabase.rpc("admin_assign_application_partner", {
+    admin_user_id: admin.userId,
+    application_uuid: input.applicationId,
+    reviewer_name: reviewer,
+    partner_uuid: input.partnerId
+  });
+
+  if (error || !data || typeof data !== "object" || Array.isArray(data)) {
+    return { ok: false, message: error?.message ?? "Partner assignment failed." };
+  }
+
+  revalidatePath("/admin/applications");
+  revalidatePath(`/admin/applications/${input.applicationId}`);
+  return {
+    ok: true,
+    message: "Existing partner linked to the application and business.",
+    data
+  };
+}
+
+export async function inviteApplicationOwner(input: {
+  applicationId: string;
+  reviewer: string;
+  ownerName: string;
+  ownerEmail: string;
+}) {
+  const admin = await requireAdminSession();
+  if (getDataMode() !== "supabase") {
+    return { ok: false, message: "Mock mode is active." };
+  }
+
+  const supabase = createSupabaseServiceRoleClient();
+  if (!supabase) {
+    return { ok: false, message: "Supabase service role is not configured." };
+  }
+
+  const reviewer = sanitizeText(input.reviewer || "Admin", 120);
+  const ownerName = sanitizeText(input.ownerName, 120);
+  const ownerEmail = sanitizeText(input.ownerEmail, 320).toLowerCase();
+  if (!ownerEmail) {
+    return { ok: false, message: "Owner email is required." };
+  }
+
+  const { error: applicationUpdateError } = await supabase
+    .from("partner_applications")
+    .update({
+      contact_person: ownerName,
+      email: ownerEmail,
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", input.applicationId);
+  if (applicationUpdateError) {
+    return { ok: false, message: applicationUpdateError.message };
+  }
+
+  const { data, error } = await supabase.rpc("admin_assign_application_partner", {
+    admin_user_id: admin.userId,
+    application_uuid: input.applicationId,
+    reviewer_name: reviewer,
+    partner_uuid: null
+  });
+  if (error || !data || typeof data !== "object" || Array.isArray(data)) {
+    return { ok: false, message: error?.message ?? "Owner invitation setup failed." };
+  }
+
+  const assignment = data as { partnerId?: string };
+  if (!assignment.partnerId) {
+    return { ok: false, message: "Owner invitation setup did not return a partner link." };
+  }
+
+  try {
+    await upsertPartnerInvitationPreview(supabase, input.applicationId, assignment.partnerId, reviewer);
+    await deliverPartnerInvitation(supabase, input.applicationId, reviewer, assignment.partnerId);
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "Owner invitation delivery failed."
+    };
+  }
+
+  revalidatePath("/admin/applications");
+  revalidatePath(`/admin/applications/${input.applicationId}`);
+  return {
+    ok: true,
+    message: "Owner invitation sent and linked to the application.",
+    data
+  };
+}
+
+export async function linkExistingBusinessToApplication(input: {
+  applicationId: string;
+  listingId: string;
+}) {
+  const admin = await requireAdminSession();
+  if (getDataMode() !== "supabase") {
+    return { ok: false, message: "Mock mode is active." };
+  }
+
+  const supabase = createSupabaseServiceRoleClient();
+  if (!supabase) {
+    return { ok: false, message: "Supabase service role is not configured." };
+  }
+
+  const { data, error } = await supabase.rpc("admin_link_application_listing", {
+    admin_user_id: admin.userId,
+    application_uuid: input.applicationId,
+    listing_uuid: input.listingId
+  });
+
+  if (error || !data || typeof data !== "object" || Array.isArray(data)) {
+    return { ok: false, message: error?.message ?? "Existing business could not be linked." };
+  }
+
+  revalidatePath("/admin/applications");
+  revalidatePath(`/admin/applications/${input.applicationId}`);
+  return {
+    ok: true,
+    message: "Existing business linked to the application.",
+    data
   };
 }

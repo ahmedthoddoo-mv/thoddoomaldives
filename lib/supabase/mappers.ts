@@ -6,6 +6,7 @@ import type { Experience } from "@/types/experience";
 import type { Restaurant, RestaurantCuisine } from "@/types/restaurant";
 import type { Transfer, TransferType } from "@/types/transfer";
 import type { Tables } from "@/lib/supabase/types";
+import type { BusinessMediaItem } from "@/types/business-media";
 
 function formatRoomPrice(value: number | null, currency: string | null) {
   return value && value > 0 ? `${currency ?? "USD"} ${Number(value).toFixed(0)}/night` : "Price on request";
@@ -42,6 +43,7 @@ type PropertyMapRelations = {
       media_assets?: Tables<"media_assets"> | null;
     }
   >;
+  businessMedia?: BusinessMediaItem[];
 };
 
 function getGalleryFromMedia(property: Tables<"properties">, propertyMedia: PropertyMapRelations["propertyMedia"] = []) {
@@ -54,6 +56,14 @@ function getGalleryFromMedia(property: Tables<"properties">, propertyMedia: Prop
   return uniquePaths.length > 0 ? uniquePaths : [property.hero_image_path];
 }
 
+function galleryUrlsFromBusinessMedia(media: BusinessMediaItem[] = []) {
+  const urls = media
+    .filter((item) => item.isPublic)
+    .sort((left, right) => left.sortOrder - right.sortOrder)
+    .map((item) => item.url);
+  return Array.from(new Set(urls));
+}
+
 export function mapPropertyRowToDomain(
   property: Tables<"properties">,
   relations: Tables<"rooms">[] | PropertyMapRelations = []
@@ -61,9 +71,11 @@ export function mapPropertyRowToDomain(
   const rooms = Array.isArray(relations) ? relations : relations.rooms ?? [];
   const partner = Array.isArray(relations) ? undefined : relations.partner;
   const propertyMedia = Array.isArray(relations) ? [] : relations.propertyMedia ?? [];
+  const businessMedia = Array.isArray(relations) ? [] : relations.businessMedia ?? [];
   const gpsLocation =
     property.latitude !== null && property.longitude !== null ? `${property.latitude}, ${property.longitude}` : "";
-  const gallery = getGalleryFromMedia(property, propertyMedia);
+  const gallery = businessMedia.length > 0 ? galleryUrlsFromBusinessMedia(businessMedia) : getGalleryFromMedia(property, propertyMedia);
+  const coverImage = businessMedia.find((item) => item.isCover)?.url ?? gallery[0] ?? property.hero_image_path;
   const metadata = property.metadata && typeof property.metadata === "object" && !Array.isArray(property.metadata)
     ? property.metadata as { membership?: unknown }
     : {};
@@ -75,8 +87,9 @@ export function mapPropertyRowToDomain(
     island: property.island,
     address: property.address ?? "",
     logo: property.name.split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("") || "IT",
-    coverImage: property.hero_image_path,
+    coverImage,
     gallery,
+    media: businessMedia,
     description: property.short_description,
     shortDescription: property.short_description,
     fullDescription: property.full_description || property.short_description,
@@ -202,7 +215,9 @@ export function mapMediaRowToDomain(asset: Tables<"media_assets">): MediaAsset {
   };
 }
 
-export function mapRestaurantRowToDomain(restaurant: Tables<"restaurants">): Restaurant {
+export function mapRestaurantRowToDomain(restaurant: Tables<"restaurants">, media: BusinessMediaItem[] = []): Restaurant {
+  const gallery = media.length > 0 ? galleryUrlsFromBusinessMedia(media) : restaurant.image_path ? [restaurant.image_path] : [];
+  const image = media.find((item) => item.isCover)?.url ?? gallery[0] ?? restaurant.image_path;
   return {
     id: restaurant.id,
     slug: restaurant.slug,
@@ -213,14 +228,18 @@ export function mapRestaurantRowToDomain(restaurant: Tables<"restaurants">): Res
     location: restaurant.location ?? "Thoddoo, Maldives",
     priceRange: restaurant.price_range ?? "$$",
     openingHours: restaurant.opening_hours ?? "Confirm locally",
-    image: restaurant.image_path,
+    image,
+    gallery,
+    media,
     featured: restaurant.featured,
     publicationStatus: restaurant.publication_status,
     verificationStatus: restaurant.verification_status
   };
 }
 
-export function mapExperienceRowToDomain(experience: Tables<"experiences">): Experience {
+export function mapExperienceRowToDomain(experience: Tables<"experiences">, media: BusinessMediaItem[] = []): Experience {
+  const gallery = media.length > 0 ? galleryUrlsFromBusinessMedia(media) : experience.image_path ? [experience.image_path] : [];
+  const image = media.find((item) => item.isCover)?.url ?? gallery[0] ?? experience.image_path;
   return {
     id: experience.id,
     slug: experience.slug,
@@ -230,7 +249,9 @@ export function mapExperienceRowToDomain(experience: Tables<"experiences">): Exp
     category: experience.category as Experience["category"],
     duration: experience.duration ?? "Confirm timing",
     price: experience.price ?? "Price on request",
-    image: experience.image_path,
+    image,
+    gallery,
+    media,
     highlights: experience.highlights,
     featured: experience.featured,
     publicationStatus: experience.publication_status,
@@ -238,7 +259,9 @@ export function mapExperienceRowToDomain(experience: Tables<"experiences">): Exp
   };
 }
 
-export function mapTransferRowToDomain(transfer: Tables<"transfers">): Transfer {
+export function mapTransferRowToDomain(transfer: Tables<"transfers">, media: BusinessMediaItem[] = []): Transfer {
+  const gallery = media.length > 0 ? galleryUrlsFromBusinessMedia(media) : transfer.image_path ? [transfer.image_path] : [];
+  const image = media.find((item) => item.isCover)?.url ?? gallery[0] ?? transfer.image_path;
   return {
     id: transfer.id,
     slug: transfer.slug,
@@ -250,7 +273,9 @@ export function mapTransferRowToDomain(transfer: Tables<"transfers">): Transfer 
     departurePoint: transfer.departure_point ?? "Confirm locally",
     arrivalPoint: transfer.arrival_point ?? "Thoddoo harbour",
     scheduleNote: transfer.schedule_note ?? "Schedules can change.",
-    image: transfer.image_path,
+    image,
+    gallery,
+    media,
     highlights: transfer.highlights,
     featured: transfer.featured,
     publicationStatus: transfer.publication_status,

@@ -1,4 +1,5 @@
 import { createSupabaseServerClient, createSupabaseServiceRoleClient } from "@/lib/supabase/server";
+import { getPublicBusinessMediaMap } from "@/lib/business-media/server";
 import { mapPropertyRowToDomain } from "@/lib/supabase/mappers";
 import type { Tables } from "@/lib/supabase/types";
 
@@ -38,10 +39,11 @@ async function readPublicProperties(options: { slug?: string; featured?: boolean
   if (!properties?.length) return [];
 
   const ids = properties.map((property) => property.id);
-  const [roomResult, mediaResult, serviceResult] = await Promise.all([
+  const [roomResult, mediaResult, serviceResult, businessMediaMap] = await Promise.all([
     supabase.from("public_rooms").select("*").in("property_id", ids),
     supabase.from("public_property_media").select("*").in("property_id", ids).order("sort_order"),
-    supabase.from("public_property_services").select("*").in("property_id", ids).order("sort_order")
+    supabase.from("public_property_services").select("*").in("property_id", ids).order("sort_order"),
+    getPublicBusinessMediaMap("property", ids)
   ]);
   if (roomResult.error) throw roomResult.error;
   if (mediaResult.error) throw mediaResult.error;
@@ -84,7 +86,8 @@ async function readPublicProperties(options: { slug?: string; featured?: boolean
       }));
     const mapped = mapPropertyRowToDomain(property as Tables<"properties">, {
       rooms: propertyRooms as Tables<"rooms">[],
-      propertyMedia: propertyMedia as NonNullable<PropertyWithRooms["property_media"]>
+      propertyMedia: propertyMedia as NonNullable<PropertyWithRooms["property_media"]>,
+      businessMedia: businessMediaMap.get(property.id) ?? []
     });
     mapped.services = (serviceResult.data ?? []).filter((service) => service.property_id === property.id).map((service) => ({
       id: service.id,

@@ -1,7 +1,8 @@
 import type {
   PartnerApplicationBusinessType,
   PartnerApplicationRecord,
-  PartnerApplicationStatus
+  PartnerApplicationStatus,
+  PartnerApplicationWorkflowSource
 } from "@/types/partner-application";
 import type { MembershipTier } from "@/types/membership";
 import {
@@ -46,6 +47,7 @@ export const defaultPartnerApplications: PartnerApplicationRecord[] = [
     id: "app-palm-garden",
     businessName: "Palm Garden Thoddoo",
     businessType: "guesthouse",
+    source: "partner_submitted",
     contactPerson: "Aisha Rasheed",
     whatsapp: "+960 700 1020",
     email: "hello@palmgarden.example",
@@ -90,6 +92,7 @@ export const defaultPartnerApplications: PartnerApplicationRecord[] = [
     id: "app-lagoon-bite",
     businessName: "Lagoon Bite Cafe",
     businessType: "cafe",
+    source: "partner_submitted",
     contactPerson: "Hassan Shareef",
     whatsapp: "+960 720 4455",
     email: "lagoonbite@example.com",
@@ -132,6 +135,7 @@ export const defaultPartnerApplications: PartnerApplicationRecord[] = [
     id: "app-blue-channel",
     businessName: "Blue Channel Transfers",
     businessType: "speedboat-company",
+    source: "partner_submitted",
     contactPerson: "Ibrahim Latheef",
     whatsapp: "+960 777 3001",
     email: "ops@bluechannel.example",
@@ -178,6 +182,12 @@ export function getPartnerApplicationBusinessTypeLabel(value: PartnerApplication
   return getBusinessTypeLabel(normalizeBusinessType(value));
 }
 
-export function getPartnerApplicationStatusLabel(value: PartnerApplicationStatus) {
+export function getPartnerApplicationStatusLabel(
+  value: PartnerApplicationStatus,
+  options?: { source?: PartnerApplicationWorkflowSource; linkedPartnerId?: string }
+) {
+  if (options?.source === "admin_created" && value === "submitted" && !options.linkedPartnerId) {
+    return "Pending owner assignment";
+  }
   return partnerApplicationStatuses.find((status) => status.value === value)?.label ?? value;
 }

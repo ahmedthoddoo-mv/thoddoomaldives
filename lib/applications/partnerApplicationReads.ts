@@ -6,7 +6,8 @@ import type {
   PartnerApplicationBusinessType,
   PartnerApplicationListingWorkflow,
   PartnerApplicationRecord,
-  PartnerApplicationStatus
+  PartnerApplicationStatus,
+  PartnerApplicationWorkflowSource
 } from "@/types/partner-application";
 import { getBusinessTypeListingWorkflow, normalizeBusinessType } from "@/types/business-type";
 import type { PartnerVerificationDocumentInput, VerificationDocumentStatus } from "@/types/verification-documents";
@@ -53,6 +54,16 @@ type PartnerApplicationRow = {
 type PropertyPublicationRow = {
   id: string;
   publication_status: string;
+};
+
+type ListingPublicationRow = {
+  id: string;
+  publication_status: string;
+};
+
+type PartnerLinkRow = {
+  id: string;
+  business_name: string;
 };
 
 type PartnerApplicationPriceRow = {
@@ -130,6 +141,15 @@ function getListingWorkflow(type: PartnerApplicationBusinessType): PartnerApplic
   return getBusinessTypeListingWorkflow(type);
 }
 
+function getWorkflowSource(metadata: unknown): PartnerApplicationWorkflowSource {
+  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
+    return "partner_submitted";
+  }
+
+  const source = "workflowSource" in metadata ? metadata.workflowSource : "source" in metadata ? metadata.source : null;
+  return source === "admin_created" ? "admin_created" : "partner_submitted";
+}
+
 function byApplicationId<T extends { application_id: string; sort_order: number }>(rows: T[], applicationId: string) {
   return rows
     .filter((row) => row.application_id === applicationId)
@@ -143,9 +163,11 @@ function mapApplication(
   services: PartnerApplicationServiceRow[],
   verificationDocuments: PartnerApplicationVerificationDocumentRow[],
   reviewVersions: PartnerApplicationReviewVersionRow[],
-  propertyPublicationStatus?: string
+  publicationStatus: string | undefined,
+  linkedPartnerName?: string
 ): PartnerApplicationRecord {
   const businessType = normalizeBusinessType(row.business_type);
+  const source = getWorkflowSource(row.metadata);
   const metadata = row.metadata && typeof row.metadata === "object" && !Array.isArray(row.metadata)
     ? row.metadata as {
         fullDescription?: unknown;
@@ -177,6 +199,7 @@ function mapApplication(
     id: row.id,
     businessName: row.business_name,
     businessType,
+    source,
     contactPerson: row.contact_person,
     whatsapp: row.whatsapp,
     email: row.email,
@@ -195,10 +218,11 @@ function mapApplication(
     requestedChanges: row.missing_information ?? [],
     listingWorkflow: getListingWorkflow(businessType),
     linkedPartnerId: row.partner_id ?? undefined,
+    linkedPartnerName,
     linkedListingId: row.listing_id ?? row.property_id ?? undefined,
-    listingPublicationStatus: propertyPublicationStatus
-      && ["draft", "pending", "published", "archived"].includes(propertyPublicationStatus)
-      ? propertyPublicationStatus as PartnerApplicationRecord["listingPublicationStatus"]
+    listingPublicationStatus: publicationStatus
+      && ["draft", "pending", "published", "archived"].includes(publicationStatus)
+      ? publicationStatus as PartnerApplicationRecord["listingPublicationStatus"]
       : "draft",
     verificationStatus: row.status === "approved" ? "verified" : "pending",
     verificationDocuments: documentRecords,
@@ -251,10 +275,12 @@ function mapApplication(
       {
         id: `${row.id}-submitted`,
         type: "submitted",
-        label: "Application submitted",
-        detail: `Supabase application ${row.application_reference ?? row.id} received from smart onboarding.`,
+        label: source === "admin_created" ? "Admin workflow created" : "Application submitted",
+        detail: source === "admin_created"
+          ? `Supabase application ${row.application_reference ?? row.id} was created from the admin business workflow.`
+          : `Supabase application ${row.application_reference ?? row.id} received from smart onboarding.`,
         date: row.submitted_at,
-        actor: "Partner"
+        actor: source === "admin_created" ? "Admin" : "Partner"
       }
     ]
   };
@@ -287,12 +313,37 @@ export async function getPartnerApplicationsForAdmin(): Promise<PartnerApplicati
     const propertyIds = applications
       .map((application) => application.property_id)
       .filter((propertyId): propertyId is string => Boolean(propertyId));
+    const partnerIds = applications
+      .map((application) => application.partner_id)
+      .filter((partnerId): partnerId is string => Boolean(partnerId));
+    const listingIdsByWorkflow = applications.reduce<Record<PartnerApplicationListingWorkflow, string[]>>(
+      (accumulator, application) => {
+        const workflow = getListingWorkflow(normalizeBusinessType(application.business_type));
+        const listingId = application.listing_id ?? application.property_id;
+        if (listingId && workflow !== "business") {
+          accumulator[workflow].push(listingId);
+        }
+        return accumulator;
+      },
+      { property: [], restaurant: [], transfer: [], experience: [], business: [] }
+    );
 
     if (applicationIds.length === 0) {
       return { applications: [], source: "supabase" };
     }
 
-    const [priceResult, mediaResult, serviceResult, verificationResult, reviewVersionResult, propertyResult] = await Promise.all([
+    const [
+      priceResult,
+      mediaResult,
+      serviceResult,
+      verificationResult,
+      reviewVersionResult,
+      propertyResult,
+      restaurantResult,
+      experienceResult,
+      transferResult,
+      partnerResult
+    ] = await Promise.all([
       db.from("partner_application_prices").select("*").in("application_id", applicationIds),
       db.from("partner_application_media").select("*").in("application_id", applicationIds),
       db.from("partner_application_services").select("*").in("application_id", applicationIds),
@@ -300,6 +351,18 @@ export async function getPartnerApplicationsForAdmin(): Promise<PartnerApplicati
       db.from("partner_application_review_versions").select("id, application_id, version, edited_by_name, edited_at").in("application_id", applicationIds).order("version", { ascending: false }),
       propertyIds.length > 0
         ? db.from("properties").select("id, publication_status").in("id", propertyIds)
+        : Promise.resolve({ data: [], error: null }),
+      listingIdsByWorkflow.restaurant.length > 0
+        ? db.from("restaurants").select("id, publication_status").in("id", listingIdsByWorkflow.restaurant)
+        : Promise.resolve({ data: [], error: null }),
+      listingIdsByWorkflow.experience.length > 0
+        ? db.from("experiences").select("id, publication_status").in("id", listingIdsByWorkflow.experience)
+        : Promise.resolve({ data: [], error: null }),
+      listingIdsByWorkflow.transfer.length > 0
+        ? db.from("transfers").select("id, publication_status").in("id", listingIdsByWorkflow.transfer)
+        : Promise.resolve({ data: [], error: null }),
+      partnerIds.length > 0
+        ? db.from("partners").select("id, business_name").in("id", partnerIds)
         : Promise.resolve({ data: [], error: null })
     ]);
 
@@ -327,8 +390,18 @@ export async function getPartnerApplicationsForAdmin(): Promise<PartnerApplicati
     );
     const reviewVersions = readResultRows<PartnerApplicationReviewVersionRow>("partner_application_review_versions", reviewVersionResult);
     const properties = readResultRows<PropertyPublicationRow>("properties", propertyResult);
-    const publicationStatusByPropertyId = new Map(
-      properties.map((property) => [property.id, property.publication_status])
+    const restaurants = readResultRows<ListingPublicationRow>("restaurants", restaurantResult);
+    const experiences = readResultRows<ListingPublicationRow>("experiences", experienceResult);
+    const transfers = readResultRows<ListingPublicationRow>("transfers", transferResult);
+    const partners = readResultRows<PartnerLinkRow>("partners", partnerResult);
+    const publicationStatusByListingId = new Map<string, string>([
+      ...properties.map((property) => [property.id, property.publication_status] as const),
+      ...restaurants.map((listing) => [listing.id, listing.publication_status] as const),
+      ...experiences.map((listing) => [listing.id, listing.publication_status] as const),
+      ...transfers.map((listing) => [listing.id, listing.publication_status] as const)
+    ]);
+    const partnerNameById = new Map(
+      partners.map((partner) => [partner.id, partner.business_name])
     );
 
     return {
@@ -340,9 +413,8 @@ export async function getPartnerApplicationsForAdmin(): Promise<PartnerApplicati
           byApplicationId(services, application.id),
           verificationDocuments.filter((document) => document.application_id === application.id),
           reviewVersions.filter((version) => version.application_id === application.id),
-          application.property_id
-            ? publicationStatusByPropertyId.get(application.property_id)
-            : undefined
+          publicationStatusByListingId.get(application.listing_id ?? application.property_id ?? ""),
+          application.partner_id ? partnerNameById.get(application.partner_id) : undefined
         )
       ),
       source: "supabase"

@@ -12,6 +12,22 @@ import { RequestedChangesList } from "@/components/admin/RequestedChangesList";
 import { ApplicationReviewEditor } from "@/components/admin/ApplicationReviewEditor";
 import type { PartnerApplicationRecord } from "@/types/partner-application";
 
+type OwnerOption = {
+  id: string;
+  businessName: string;
+  status: string;
+  verificationStatus: string;
+};
+
+type ListingOption = {
+  id: string;
+  name: string;
+  slug: string;
+  publicationStatus: string;
+  verificationStatus: string;
+  applicationId?: string;
+};
+
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("en", {
     month: "long",
@@ -23,11 +39,15 @@ function formatDate(value: string) {
 export function ApplicationDetailPanel({
   initialApplication,
   dataSource,
-  readError
+  readError,
+  availableOwners,
+  availableListings
 }: {
   initialApplication?: PartnerApplicationRecord;
   dataSource?: "mock" | "supabase" | "supabase_error";
   readError?: string;
+  availableOwners: OwnerOption[];
+  availableListings: ListingOption[];
 }) {
   const [applicationOverride, setApplicationOverride] = useState<PartnerApplicationRecord>();
   const application = applicationOverride ?? initialApplication;
@@ -48,7 +68,11 @@ export function ApplicationDetailPanel({
     <div className="adminCrmStack">
       <section className="adminContentHero">
         <div>
-          <ApplicationStatusBadge status={application.status} />
+          <ApplicationStatusBadge
+            status={application.status}
+            source={application.source}
+            linkedPartnerId={application.linkedPartnerId}
+          />
           <h1>{application.businessName}</h1>
           <p>{application.description}</p>
           {dataSource === "supabase" ? <p className="mutedText">Data source: Supabase</p> : null}
@@ -72,6 +96,10 @@ export function ApplicationDetailPanel({
             <div>
               <dt>Business type</dt>
               <dd>{getPartnerApplicationBusinessTypeLabel(application.businessType)}</dd>
+            </div>
+            <div>
+              <dt>Source</dt>
+              <dd>{application.source === "admin_created" ? "Admin created" : "Partner submitted"}</dd>
             </div>
             <div>
               <dt>Owner/contact</dt>
@@ -111,13 +139,26 @@ export function ApplicationDetailPanel({
             </div>
             <div>
               <dt>Linked partner</dt>
-              <dd>{application.linkedPartnerId ?? "Not created"}</dd>
+              <dd>{application.linkedPartnerName || application.linkedPartnerId || "Not assigned"}</dd>
             </div>
             <div>
               <dt>Linked listing</dt>
               <dd>{application.linkedListingId ?? "Not created"}</dd>
             </div>
           </dl>
+          {application.linkedListingId ? (
+            <p>
+              <Link
+                href={
+                  application.listingWorkflow === "property"
+                    ? `/admin/guesthouses/${application.linkedListingId}/edit`
+                    : `/admin/${application.listingWorkflow}s/${application.linkedListingId}/edit`
+                }
+              >
+                Edit business
+              </Link>
+            </p>
+          ) : null}
           <h3>Services</h3>
           <p>{application.services}</p>
           {application.submittedFields?.length ? (
@@ -164,6 +205,8 @@ export function ApplicationDetailPanel({
           application={application}
           onChange={setApplicationOverride}
           dataSource={dataSource}
+          availableOwners={availableOwners}
+          availableListings={availableListings}
         />
       </div>
 

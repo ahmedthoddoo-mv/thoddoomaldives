@@ -2,6 +2,9 @@
 
 import { useState, useTransition } from "react";
 import {
+  assignExistingPartnerToApplication,
+  inviteApplicationOwner,
+  linkExistingBusinessToApplication,
   updateSupabasePartnerApplicationDecision,
   type AdminApplicationDecisionAction
 } from "@/app/admin/applications/actions";
@@ -17,6 +20,20 @@ type ApplicationDecisionPanelProps = {
   application: PartnerApplicationRecord;
   onChange: (application: PartnerApplicationRecord) => void;
   dataSource?: "mock" | "supabase" | "supabase_error";
+  availableOwners: Array<{
+    id: string;
+    businessName: string;
+    status: string;
+    verificationStatus: string;
+  }>;
+  availableListings: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    publicationStatus: string;
+    verificationStatus: string;
+    applicationId?: string;
+  }>;
 };
 
 function getTimelineType(action: AdminApplicationDecisionAction): PartnerApplicationTimelineType {
@@ -27,10 +44,20 @@ function getTimelineType(action: AdminApplicationDecisionAction): PartnerApplica
   return "approved";
 }
 
-export function ApplicationDecisionPanel({ application, onChange, dataSource }: ApplicationDecisionPanelProps) {
+export function ApplicationDecisionPanel({
+  application,
+  onChange,
+  dataSource,
+  availableOwners,
+  availableListings
+}: ApplicationDecisionPanelProps) {
   const [reviewer, setReviewer] = useState(application.assignedReviewer || "Admin");
   const [note, setNote] = useState("");
   const [selectedChanges, setSelectedChanges] = useState<string[]>(application.requestedChanges);
+  const [selectedPartnerId, setSelectedPartnerId] = useState(application.linkedPartnerId ?? "");
+  const [ownerName, setOwnerName] = useState(application.contactPerson);
+  const [ownerEmail, setOwnerEmail] = useState(application.email);
+  const [selectedListingId, setSelectedListingId] = useState(application.linkedListingId ?? "");
   const [message, setMessage] = useState("");
   const [isPending, startTransition] = useTransition();
 
@@ -50,7 +77,13 @@ export function ApplicationDecisionPanel({ application, onChange, dataSource }: 
     );
   }
 
-  function applySupabaseResult(action: AdminApplicationDecisionAction, status: PartnerApplicationStatus, responseMessage: string) {
+  function applySupabaseResult(
+    action: AdminApplicationDecisionAction,
+    status: PartnerApplicationStatus,
+    responseMessage: string,
+    linkedPartnerId?: string,
+    linkedListingId?: string
+  ) {
     const verificationDocuments = application.verificationDocuments?.map((document) => {
       if (action === "approve_draft" || action === "approve_publish") {
         return document.status === "missing" ? document : { ...document, status: "approved" as const };
@@ -82,6 +115,11 @@ export function ApplicationDecisionPanel({ application, onChange, dataSource }: 
           : action === "reject"
             ? "rejected"
             : application.verificationStatus,
+      linkedPartnerId: linkedPartnerId ?? application.linkedPartnerId,
+      linkedPartnerName: linkedPartnerId
+        ? application.linkedPartnerName ?? availableOwners.find((owner) => owner.id === linkedPartnerId)?.businessName
+        : application.linkedPartnerName,
+      linkedListingId: linkedListingId ?? application.linkedListingId,
       verificationDocuments,
       updatedDate: new Date().toISOString(),
       timeline: [
@@ -97,6 +135,31 @@ export function ApplicationDecisionPanel({ application, onChange, dataSource }: 
       ]
     });
     setMessage(responseMessage);
+  }
+
+  function applyLinkedPartner(partnerId: string, partnerName?: string, responseMessage?: string) {
+    onChange({
+      ...application,
+      linkedPartnerId: partnerId,
+      linkedPartnerName: partnerName ?? availableOwners.find((owner) => owner.id === partnerId)?.businessName,
+      status: application.status === "submitted" ? "under_review" : application.status,
+      assignedReviewer: reviewer || "Admin",
+      updatedDate: new Date().toISOString()
+    });
+    if (responseMessage) {
+      setMessage(responseMessage);
+    }
+  }
+
+  function applyLinkedListing(listingId: string, responseMessage?: string) {
+    onChange({
+      ...application,
+      linkedListingId: listingId,
+      updatedDate: new Date().toISOString()
+    });
+    if (responseMessage) {
+      setMessage(responseMessage);
+    }
   }
 
   function decide(action: AdminApplicationDecisionAction) {
@@ -133,7 +196,14 @@ export function ApplicationDecisionPanel({ application, onChange, dataSource }: 
         return;
       }
 
-      applySupabaseResult(action, result.status, result.message);
+      if (result.partnerId) {
+        setSelectedPartnerId(result.partnerId);
+      }
+      if (result.listingId) {
+        setSelectedListingId(result.listingId);
+      }
+
+      applySupabaseResult(action, result.status, result.message, result.partnerId, result.listingId);
     });
   }
 
@@ -164,6 +234,121 @@ export function ApplicationDecisionPanel({ application, onChange, dataSource }: 
           Approve and publish listing
         </button>
       </div>
+
+      {application.source === "admin_created" ? (
+        <>
+          <label>
+            Assign existing partner
+            <select value={selectedPartnerId} onChange={(event) => setSelectedPartnerId(event.target.value)}>
+              <option value="">Select a partner</option>
+              {availableOwners.map((owner) => (
+                <option key={owner.id} value={owner.id}>
+                  {owner.businessName} · {owner.status} · {owner.verificationStatus}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="applicationDecisionActions">
+            <button
+              type="button"
+              disabled={isPending || !selectedPartnerId}
+              onClick={() => {
+                startTransition(async () => {
+                  const result = await assignExistingPartnerToApplication({
+                    applicationId: application.id,
+                    partnerId: selectedPartnerId,
+                    reviewer
+                  });
+                  if (!result.ok) {
+                    setMessage(result.message);
+                    return;
+                  }
+                  applyLinkedPartner(selectedPartnerId, undefined, result.message);
+                });
+              }}
+            >
+              Assign owner
+            </button>
+          </div>
+
+          <label>
+            Owner name
+            <input value={ownerName} onChange={(event) => setOwnerName(event.target.value)} />
+          </label>
+          <label>
+            Owner email
+            <input value={ownerEmail} onChange={(event) => setOwnerEmail(event.target.value)} />
+          </label>
+          <div className="applicationDecisionActions">
+            <button
+              type="button"
+              disabled={isPending || !ownerEmail.trim()}
+              onClick={() => {
+                startTransition(async () => {
+                  const result = await inviteApplicationOwner({
+                    applicationId: application.id,
+                    reviewer,
+                    ownerName,
+                    ownerEmail
+                  });
+                  if (!result.ok) {
+                    setMessage(result.message);
+                    return;
+                  }
+                  const linkedPartnerId = typeof result.data === "object" && result.data && !Array.isArray(result.data) && typeof result.data.partnerId === "string"
+                    ? result.data.partnerId
+                    : "";
+                  if (linkedPartnerId) {
+                    setSelectedPartnerId(linkedPartnerId);
+                    applyLinkedPartner(linkedPartnerId, ownerName || undefined, result.message);
+                  } else {
+                    setMessage(result.message);
+                  }
+                });
+              }}
+            >
+              Invite owner
+            </button>
+          </div>
+        </>
+      ) : null}
+
+      {application.source === "partner_submitted" ? (
+        <>
+          <label>
+            Link to existing business
+            <select value={selectedListingId} onChange={(event) => setSelectedListingId(event.target.value)}>
+              <option value="">Select an existing {application.listingWorkflow}</option>
+              {availableListings.map((listing) => (
+                <option key={listing.id} value={listing.id}>
+                  {listing.name} ({listing.slug}) · {listing.verificationStatus} · {listing.publicationStatus}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="applicationDecisionActions">
+            <button
+              type="button"
+              disabled={isPending || !selectedListingId}
+              onClick={() => {
+                startTransition(async () => {
+                  const result = await linkExistingBusinessToApplication({
+                    applicationId: application.id,
+                    listingId: selectedListingId
+                  });
+                  if (!result.ok) {
+                    setMessage(result.message);
+                    return;
+                  }
+                  applyLinkedListing(selectedListingId, result.message);
+                });
+              }}
+            >
+              Link existing business
+            </button>
+          </div>
+        </>
+      ) : null}
 
       <div className="applicationChangeOptions" aria-label="Requested changes">
         {requestedChangeOptions.map((change) => (

@@ -40,6 +40,7 @@ export function adminPropertyToGuesthouse(property: AdminManagedProperty): Guest
     whatsapp: property.whatsapp.replace(/[^0-9]/g, ""),
     heroImage,
     gallery: property.gallery.filter(Boolean),
+    media: property.media,
     amenities: property.amenities,
     about: [
       {

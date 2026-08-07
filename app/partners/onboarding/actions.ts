@@ -133,6 +133,7 @@ function mapSavedApplication(
     id: row.id,
     businessName: row.business_name,
     businessType,
+    source: "partner_submitted",
     contactPerson: row.contact_person,
     whatsapp: row.whatsapp,
     email: row.email,

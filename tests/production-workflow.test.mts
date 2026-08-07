@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import {
+  moveEditableBusinessMediaItem,
+  normalizeEditableBusinessMediaItems
+} from "../lib/business-media/collection.ts";
 import { normalizePartnerApplicationPricingUnit, partnerApplicationPricingUnits } from "../lib/applications/pricingUnits.ts";
 import {
   collisionSafeSlug,
@@ -37,6 +41,7 @@ const turnstileSource = readFileSync(new URL("../lib/security/turnstile.ts", imp
 const turnstileWidgetSource = readFileSync(new URL("../components/security/TurnstileWidget.tsx", import.meta.url), "utf8");
 const reviewMigrationSql = readFileSync(new URL("../supabase/migrations/202607310001_application_review_versions.sql", import.meta.url), "utf8");
 const roomPriceMigrationSql = readFileSync(new URL("../supabase/migrations/202607310002_correct_approved_room_prices.sql", import.meta.url), "utf8");
+const adminCreatedWorkflowMigrationSql = readFileSync(new URL("../supabase/migrations/20260807195000_admin_created_business_workflow.sql", import.meta.url), "utf8");
 const liveReadsSource = readFileSync(new URL("../lib/repositories/liveReads.ts", import.meta.url), "utf8");
 const dataModeSource = readFileSync(new URL("../lib/supabase/status.ts", import.meta.url), "utf8");
 const crmMapperSource = readFileSync(new URL("../lib/supabase/mappers.ts", import.meta.url), "utf8");
@@ -48,6 +53,13 @@ const transferListingSource = readFileSync(new URL("../app/transfer/page.tsx", i
 const transferDetailSource = readFileSync(new URL("../app/transfer/[slug]/page.tsx", import.meta.url), "utf8");
 const supabaseTransferRepositorySource = readFileSync(new URL("../lib/repositories/supabase/SupabaseTransferRepository.ts", import.meta.url), "utf8");
 const repairSource = readFileSync(new URL("../scripts/repair-approved-applications.mjs", import.meta.url), "utf8");
+const applicationActionsSource = readFileSync(new URL("../app/admin/applications/actions.ts", import.meta.url), "utf8");
+const applicationReadsSource = readFileSync(new URL("../lib/applications/partnerApplicationReads.ts", import.meta.url), "utf8");
+const applicationDecisionPanelSource = readFileSync(new URL("../components/admin/ApplicationDecisionPanel.tsx", import.meta.url), "utf8");
+const businessMediaMigrationSql = readFileSync(new URL("../supabase/migrations/20260808120000_business_media_management.sql", import.meta.url), "utf8");
+const mediaGallerySource = readFileSync(new URL("../components/media/MediaGallery.tsx", import.meta.url), "utf8");
+const businessMediaActionsSource = readFileSync(new URL("../app/business-media/actions.ts", import.meta.url), "utf8");
+const businessMediaUploadRouteSource = readFileSync(new URL("../app/api/business-media/upload/route.ts", import.meta.url), "utf8");
 
 test("1 new guesthouse approval has no existing identity match", () => {
   assert.equal(matchIdentity(application, []), null);
@@ -217,6 +229,47 @@ test("authenticated partners have no direct mutation grants on protected base ta
     /revoke insert, update, delete on public\.partners, public\.properties, public\.rooms/
   );
 });
+test("business media normalization keeps one cover and one featured photo", () => {
+  const normalized = normalizeEditableBusinessMediaItems([
+    { id: "a", caption: "", altText: "", sortOrder: 9, isCover: false, isFeatured: true, isPublic: true },
+    { id: "b", caption: "", altText: "", sortOrder: 3, isCover: true, isFeatured: true, isPublic: true },
+    { id: "c", caption: "", altText: "", sortOrder: 1, isCover: false, isFeatured: false, isPublic: false }
+  ]);
+  assert.deepEqual(normalized.map((item) => item.sortOrder), [0, 1, 2]);
+  assert.deepEqual(normalized.filter((item) => item.isCover).map((item) => item.id), ["b"]);
+  assert.deepEqual(normalized.filter((item) => item.isFeatured).map((item) => item.id), ["a"]);
+});
+test("business media reordering moves one item without duplication", () => {
+  const moved = moveEditableBusinessMediaItem([
+    { id: "a", caption: "", altText: "", sortOrder: 0, isCover: true, isFeatured: false, isPublic: true },
+    { id: "b", caption: "", altText: "", sortOrder: 1, isCover: false, isFeatured: false, isPublic: true },
+    { id: "c", caption: "", altText: "", sortOrder: 2, isCover: false, isFeatured: false, isPublic: true }
+  ], "c", "a");
+  assert.deepEqual(moved.map((item) => item.id), ["c", "a", "b"]);
+  assert.equal(moved[1]?.isCover, true);
+});
+test("business media migration creates the reusable table and public view", () => {
+  assert.match(businessMediaMigrationSql, /create table if not exists public\.business_media/);
+  assert.match(businessMediaMigrationSql, /unique \(business_type, business_id, media_asset_id\)/);
+  assert.match(businessMediaMigrationSql, /create or replace view public\.public_business_media as/);
+  assert.match(businessMediaMigrationSql, /insert into storage\.buckets \(id, name, public, file_size_limit, allowed_mime_types\)/);
+});
+test("business media uploads enforce WebP storage and reusable metadata saves", () => {
+  assert.match(businessMediaUploadRouteSource, /const supportedMimeTypes = new Set\(\["image\/webp"\]\)/);
+  assert.match(businessMediaUploadRouteSource, /db\.storage\.from\(uploadBucket\)\.upload/);
+  assert.match(businessMediaUploadRouteSource, /\.from\("business_media"\)\.insert/);
+  assert.match(businessMediaActionsSource, /normalizeEditableBusinessMediaItems/);
+  assert.match(businessMediaActionsSource, /\.from\("business_media"\)\s*\.update/);
+  assert.match(businessMediaActionsSource, /\.from\("media_assets"\)\.delete/);
+});
+test("shared media gallery powers drag-and-drop uploads and management controls", () => {
+  assert.match(mediaGallerySource, /Drag and drop images here/);
+  assert.match(mediaGallerySource, /optimizeImage/);
+  assert.match(mediaGallerySource, /toBlob\(resolve, "image\/webp", 0\.84\)/);
+  assert.match(mediaGallerySource, /Set as cover/);
+  assert.match(mediaGallerySource, /Set as featured/);
+  assert.match(mediaGallerySource, /Hide from public/);
+});
 test("booking enquiries require canonical server-side Turnstile verification", () => {
   assert.match(bookingActionsSource, /import\s+\{\s*verifyTurnstileToken\s*\}\s+from\s+"@\/lib\/security\/turnstile"/);
   assert.match(bookingActionsSource, /verifyTurnstileToken\(\{\s*token:\s*input\.turnstileToken,\s*remoteIp,\s*expectedAction:\s*"turnstile-spin-v2"\s*\}\)/);
@@ -293,6 +346,32 @@ test("all supported listing categories are created idempotently by application I
   }
   assert.match(reviewMigrationSql, /approve_partner_application_all_types/);
   assert.match(reviewMigrationSql, /on conflict \(application_id\)/);
+});
+test("admin-created businesses create linked workflow applications transactionally", () => {
+  assert.match(adminCreatedWorkflowMigrationSql, /create or replace function public\.ensure_admin_listing_application/);
+  assert.match(adminCreatedWorkflowMigrationSql, /"workflowSource", 'admin_created'|workflowSource', 'admin_created'/);
+  assert.match(adminCreatedWorkflowMigrationSql, /admin_save_business_listing[\s\S]*ensure_admin_listing_application/);
+  assert.match(adminCreatedWorkflowMigrationSql, /admin_save_property[\s\S]*ensure_admin_listing_application/);
+  assert.match(adminCreatedWorkflowMigrationSql, /update public\.restaurants[\s\S]*set application_id = saved_application_id/);
+  assert.match(adminCreatedWorkflowMigrationSql, /update public\.properties[\s\S]*set application_id = saved_application_id/);
+});
+test("existing draft listings can be linked to applications without duplicates", () => {
+  assert.match(adminCreatedWorkflowMigrationSql, /create or replace function public\.admin_link_application_listing/);
+  assert.match(adminCreatedWorkflowMigrationSql, /status = 'withdrawn'/);
+  assert.match(adminCreatedWorkflowMigrationSql, /Listing is already linked to another application/);
+  assert.match(
+    adminCreatedWorkflowMigrationSql,
+    /if app\.business_type in \('restaurant', 'cafe'\) then[\s\S]*?if app\.listing_id is not null then[\s\S]*?update public\.restaurants[\s\S]*?else[\s\S]*?insert into public\.restaurants/
+  );
+});
+test("admin applications surface source owner linking and existing business linking controls", () => {
+  assert.match(applicationReadsSource, /source: "admin_created" \? "admin_created" : "partner_submitted"|source,\s*$/m);
+  assert.match(applicationActionsSource, /export async function assignExistingPartnerToApplication/);
+  assert.match(applicationActionsSource, /export async function inviteApplicationOwner/);
+  assert.match(applicationActionsSource, /export async function linkExistingBusinessToApplication/);
+  assert.match(applicationDecisionPanelSource, /Assign existing partner/);
+  assert.match(applicationDecisionPanelSource, /Invite owner/);
+  assert.match(applicationDecisionPanelSource, /Link existing business/);
 });
 test("public business views hide draft and unverified records", () => {
   for (const view of ["public_transfers", "public_experiences", "public_restaurants"]) {

@@ -37,6 +37,7 @@ export type AdminManagedProperty = {
   logo: string;
   coverImage: string;
   gallery: string[];
+  media?: import("@/types/business-media").BusinessMediaItem[];
   description: string;
   shortDescription: string;
   fullDescription: string;
