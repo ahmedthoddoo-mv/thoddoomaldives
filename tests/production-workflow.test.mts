@@ -485,29 +485,38 @@ test("restaurant menu helpers normalize membership and build WhatsApp messages",
   assert.match(message, /Menu prices exclude 8% GST/);
 });
 
-test("restaurant menu CTA uses direct restaurant WhatsApp for Premium with valid number", () => {
+test("Food Land uses direct restaurant WhatsApp when public restaurant WhatsApp exists", () => {
   const cta = resolveRestaurantMenuCta({
-    restaurantName: "Food Land",
-    restaurantSlug: "food-land",
-    membershipTier: "premium",
-    restaurantWhatsApp: "+960 987-9911",
-    partnerWhatsApp: null,
-    ithoddooWhatsapp: "+960 914 2538",
-    items: [{ name: "Rice Chicken Satay", quantity: 2, priceMvr: 135 }],
-    estimatedMenuValue: 270
-  });
-  assert.ok(cta);
-  assert.equal(cta.kind, "restaurant_menu_whatsapp");
-  assert.match(cta.label, /Send selection to Food Land on WhatsApp/);
-  assert.match(cta.href, /^https:\/\/wa\.me\/9609879911\?text=/);
-});
-
-test("restaurant menu CTA falls back to iThoddoo for Verified and Free tiers", () => {
-  const verifiedCta = resolveRestaurantMenuCta({
     restaurantName: "Food Land",
     restaurantSlug: "food-land",
     membershipTier: "verified",
     restaurantWhatsApp: "+960 987-9911",
+    partnerWhatsApp: null,
+    ithoddooWhatsapp: "+960 914 2538",
+    items: [
+      { name: "Chicken Teriyaki", quantity: 1, priceMvr: 175 },
+      { name: "Foodland Special Rice", quantity: 1, priceMvr: 145 },
+      { name: "Rice Chicken Satay", quantity: 2, priceMvr: 135 }
+    ],
+    estimatedMenuValue: 590
+  });
+  assert.ok(cta);
+  assert.equal(cta.kind, "restaurant_menu_whatsapp");
+  assert.equal(cta.label, "Send selection to Food Land on WhatsApp");
+  assert.match(cta.href, /^https:\/\/wa\.me\/9609879911\?text=/);
+  assert.match(cta.message, /Chicken Teriyaki × 1 — MVR 175/);
+  assert.match(cta.message, /Rice Chicken Satay × 2 — MVR 270/);
+  assert.match(cta.message, /Estimated menu value: MVR 590/);
+  assert.match(cta.message, /Menu prices exclude 8% GST/);
+  assert.match(cta.message, /Found via iThoddoo Maldives/);
+});
+
+test("missing restaurant WhatsApp falls back to iThoddoo for Verified and Free tiers", () => {
+  const verifiedCta = resolveRestaurantMenuCta({
+    restaurantName: "Food Land",
+    restaurantSlug: "food-land",
+    membershipTier: "verified",
+    restaurantWhatsApp: null,
     partnerWhatsApp: null,
     ithoddooWhatsapp: "+960 914 2538",
     items: [{ name: "Chicken Teriyaki", quantity: 1, priceMvr: 175 }],
@@ -521,7 +530,7 @@ test("restaurant menu CTA falls back to iThoddoo for Verified and Free tiers", (
     restaurantName: "Food Land",
     restaurantSlug: "food-land",
     membershipTier: "free",
-    restaurantWhatsApp: "+960 987-9911",
+    restaurantWhatsApp: null,
     partnerWhatsApp: null,
     ithoddooWhatsapp: "+960 914 2538",
     items: [{ name: "Chicken Teriyaki", quantity: 1, priceMvr: 175 }],
@@ -532,7 +541,7 @@ test("restaurant menu CTA falls back to iThoddoo for Verified and Free tiers", (
   assert.equal(freeCta.label, "Send enquiry through iThoddoo Maldives");
 });
 
-test("restaurant menu CTA falls back to iThoddoo when Premium restaurant has no WhatsApp", () => {
+test("restaurant menu CTA falls back to iThoddoo when restaurant WhatsApp is missing", () => {
   const cta = resolveRestaurantMenuCta({
     restaurantName: "Food Land",
     restaurantSlug: "food-land",

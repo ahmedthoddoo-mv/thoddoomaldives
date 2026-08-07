@@ -63,7 +63,7 @@ export function buildRestaurantWhatsAppMessage(params: {
     `Hello ${params.restaurantName},`,
     "",
     "I found you through iThoddoo Maldives.",
-    "I would like to enquire about:",
+    "I would like to enquire/order:",
     ""
   ];
 
@@ -86,6 +86,7 @@ export function buildRestaurantWhatsAppMessage(params: {
     "Please confirm availability and final amount.",
     "",
     "Found via iThoddoo Maldives.",
+    `Restaurant: ${params.restaurantName}`,
     "",
     "Thank you."
   );
@@ -151,12 +152,11 @@ export function resolveRestaurantMenuCta(params: {
 }): RestaurantMenuCtaConfig | null {
   if (params.items.length === 0) return null;
 
-  const premiumTier = isPremiumRestaurant(params.membershipTier);
-  const restaurantWhatsapp = normalizeWhatsAppForLink(params.restaurantWhatsApp ?? params.partnerWhatsApp ?? null);
+  const restaurantWhatsapp = normalizeWhatsAppForLink(params.restaurantWhatsApp ?? null);
   const ithoddooWhatsapp = normalizeWhatsAppForLink(params.ithoddooWhatsapp ?? null);
   if (!ithoddooWhatsapp) return null;
 
-  if (premiumTier && restaurantWhatsapp) {
+  if (restaurantWhatsapp) {
     const message = buildRestaurantWhatsAppMessage({
       restaurantName: params.restaurantName,
       items: params.items,
