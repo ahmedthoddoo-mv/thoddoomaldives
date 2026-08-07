@@ -29,6 +29,7 @@ type RawManagedBusinessMediaRow = {
   is_cover: boolean;
   is_featured: boolean;
   is_public: boolean;
+  media_purpose: string;
   media_assets: Pick<
     Tables<"media_assets">,
     "id" | "filename" | "path" | "file_type" | "width" | "height" | "storage_bucket" | "storage_path"
@@ -45,6 +46,7 @@ type RawPublicBusinessMediaRow = {
   sort_order: number;
   is_cover: boolean;
   is_featured: boolean;
+  media_purpose: string;
   path: string;
   filename: string;
   file_type: string;
@@ -90,6 +92,7 @@ function toBusinessMediaItem(row: RawManagedBusinessMediaRow): BusinessMediaItem
     isCover: row.is_cover,
     isFeatured: row.is_featured,
     isPublic: row.is_public,
+    mediaPurpose: (row.media_purpose as BusinessMediaItem["mediaPurpose"]) ?? "gallery",
     source: row.media_assets.storage_path ? "storage" : "legacy"
   };
 }
@@ -113,6 +116,7 @@ function toPublicBusinessMediaItem(row: RawPublicBusinessMediaRow): BusinessMedi
     isCover: row.is_cover,
     isFeatured: row.is_featured,
     isPublic: true,
+    mediaPurpose: (row.media_purpose as BusinessMediaItem["mediaPurpose"]) ?? "gallery",
     source: row.storage_path ? "storage" : "legacy"
   };
 }
@@ -358,7 +362,7 @@ export async function ensureBusinessMediaSeeded(db: ServiceRoleClient, context: 
 async function readManagedBusinessMediaRows(db: ServiceRoleClient, context: BusinessMediaContext) {
   const { data, error } = await db
     .from("business_media")
-    .select("id, business_type, business_id, media_asset_id, caption, alt_text, sort_order, is_cover, is_featured, is_public, media_assets(id, filename, path, file_type, width, height, storage_bucket, storage_path)")
+    .select("id, business_type, business_id, media_asset_id, caption, alt_text, sort_order, is_cover, is_featured, is_public, media_purpose, media_assets(id, filename, path, file_type, width, height, storage_bucket, storage_path)")
     .eq("business_type", context.businessType)
     .eq("business_id", context.businessId)
     .order("is_cover", { ascending: false })

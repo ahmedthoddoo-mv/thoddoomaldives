@@ -70,6 +70,7 @@ export async function saveBusinessMediaMetadata(input: {
         is_cover: item.isCover,
         is_featured: item.isFeatured,
         is_public: item.isPublic,
+        media_purpose: item.mediaPurpose,
         updated_at: new Date().toISOString()
       })
       .eq("id", item.id)

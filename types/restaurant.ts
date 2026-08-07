@@ -13,8 +13,17 @@ export type Restaurant = {
   description: string;
   cuisine: RestaurantCuisine[];
   location: string;
+  address: string | null;
+  latitude: number | null;
+  longitude: number | null;
   priceRange: string;
   openingHours: string;
+  phone: string | null;
+  whatsapp: string | null;
+  email: string | null;
+  website: string | null;
+  instagram: string | null;
+  facebook: string | null;
   image: string;
   gallery?: string[];
   media?: import("@/types/business-media").BusinessMediaItem[];

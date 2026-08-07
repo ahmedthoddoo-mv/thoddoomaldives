@@ -57,6 +57,8 @@ const applicationActionsSource = readFileSync(new URL("../app/admin/applications
 const applicationReadsSource = readFileSync(new URL("../lib/applications/partnerApplicationReads.ts", import.meta.url), "utf8");
 const applicationDecisionPanelSource = readFileSync(new URL("../components/admin/ApplicationDecisionPanel.tsx", import.meta.url), "utf8");
 const businessMediaMigrationSql = readFileSync(new URL("../supabase/migrations/20260808120000_business_media_management.sql", import.meta.url), "utf8");
+const restaurantContactMigrationSql = readFileSync(new URL("../supabase/migrations/20260809100000_restaurant_contact_and_media_purpose.sql", import.meta.url), "utf8");
+const refreshPublicRestaurantsViewSql = readFileSync(new URL("../supabase/migrations/20260809110000_refresh_public_restaurants_view.sql", import.meta.url), "utf8");
 const mediaGallerySource = readFileSync(new URL("../components/media/MediaGallery.tsx", import.meta.url), "utf8");
 const businessMediaActionsSource = readFileSync(new URL("../app/business-media/actions.ts", import.meta.url), "utf8");
 const businessMediaUploadRouteSource = readFileSync(new URL("../app/api/business-media/upload/route.ts", import.meta.url), "utf8");
@@ -64,6 +66,7 @@ const restaurantsPageSource = readFileSync(new URL("../app/restaurants/page.tsx"
 const restaurantCardSource = readFileSync(new URL("../components/cards/RestaurantCard.tsx", import.meta.url), "utf8");
 const restaurantDetailPageSource = readFileSync(new URL("../app/restaurants/[slug]/page.tsx", import.meta.url), "utf8");
 const restaurantRepositorySource = readFileSync(new URL("../lib/repositories/supabase/SupabaseRestaurantRepository.ts", import.meta.url), "utf8");
+const menuViewerSource = readFileSync(new URL("../components/restaurant/RestaurantMenuViewer.tsx", import.meta.url), "utf8");
 
 test("1 new guesthouse approval has no existing identity match", () => {
   assert.equal(matchIdentity(application, []), null);
@@ -235,9 +238,9 @@ test("authenticated partners have no direct mutation grants on protected base ta
 });
 test("business media normalization keeps one cover and one featured photo", () => {
   const normalized = normalizeEditableBusinessMediaItems([
-    { id: "a", caption: "", altText: "", sortOrder: 9, isCover: false, isFeatured: true, isPublic: true },
-    { id: "b", caption: "", altText: "", sortOrder: 3, isCover: true, isFeatured: true, isPublic: true },
-    { id: "c", caption: "", altText: "", sortOrder: 1, isCover: false, isFeatured: false, isPublic: false }
+    { id: "a", caption: "", altText: "", sortOrder: 9, isCover: false, isFeatured: true, isPublic: true, mediaPurpose: "gallery" as const },
+    { id: "b", caption: "", altText: "", sortOrder: 3, isCover: true, isFeatured: true, isPublic: true, mediaPurpose: "gallery" as const },
+    { id: "c", caption: "", altText: "", sortOrder: 1, isCover: false, isFeatured: false, isPublic: false, mediaPurpose: "gallery" as const }
   ]);
   assert.deepEqual(normalized.map((item) => item.sortOrder), [0, 1, 2]);
   assert.deepEqual(normalized.filter((item) => item.isCover).map((item) => item.id), ["b"]);
@@ -245,9 +248,9 @@ test("business media normalization keeps one cover and one featured photo", () =
 });
 test("business media reordering moves one item without duplication", () => {
   const moved = moveEditableBusinessMediaItem([
-    { id: "a", caption: "", altText: "", sortOrder: 0, isCover: true, isFeatured: false, isPublic: true },
-    { id: "b", caption: "", altText: "", sortOrder: 1, isCover: false, isFeatured: false, isPublic: true },
-    { id: "c", caption: "", altText: "", sortOrder: 2, isCover: false, isFeatured: false, isPublic: true }
+    { id: "a", caption: "", altText: "", sortOrder: 0, isCover: true, isFeatured: false, isPublic: true, mediaPurpose: "gallery" as const },
+    { id: "b", caption: "", altText: "", sortOrder: 1, isCover: false, isFeatured: false, isPublic: true, mediaPurpose: "gallery" as const },
+    { id: "c", caption: "", altText: "", sortOrder: 2, isCover: false, isFeatured: false, isPublic: true, mediaPurpose: "gallery" as const }
   ], "c", "a");
   assert.deepEqual(moved.map((item) => item.id), ["c", "a", "b"]);
   assert.equal(moved[1]?.isCover, true);
@@ -460,4 +463,90 @@ test("repair tooling is dry-run by default and requires explicit safe apply inpu
   assert.match(repairSource, /--business/);
   assert.match(repairSource, /--email/);
   assert.match(repairSource, /--category/);
+});
+test("restaurant schema migration adds contact and location fields", () => {
+  assert.match(restaurantContactMigrationSql, /add column if not exists phone/);
+  assert.match(restaurantContactMigrationSql, /add column if not exists whatsapp/);
+  assert.match(restaurantContactMigrationSql, /add column if not exists email/);
+  assert.match(restaurantContactMigrationSql, /add column if not exists website/);
+  assert.match(restaurantContactMigrationSql, /add column if not exists instagram/);
+  assert.match(restaurantContactMigrationSql, /add column if not exists facebook/);
+  assert.match(restaurantContactMigrationSql, /add column if not exists address/);
+  assert.match(restaurantContactMigrationSql, /add column if not exists latitude/);
+  assert.match(restaurantContactMigrationSql, /add column if not exists longitude/);
+});
+test("business_media gains a media_purpose column for gallery vs menu separation", () => {
+  assert.match(restaurantContactMigrationSql, /add column if not exists media_purpose/);
+  assert.match(restaurantContactMigrationSql, /check \(media_purpose in \('gallery','menu','logo','interior','exterior','food','cover'\)\)/);
+});
+test("restaurant admin save function persists new contact fields", () => {
+  assert.match(restaurantContactMigrationSql, /phone=excluded\.phone/);
+  assert.match(restaurantContactMigrationSql, /whatsapp=excluded\.whatsapp/);
+  assert.match(restaurantContactMigrationSql, /address=excluded\.address/);
+  assert.match(restaurantContactMigrationSql, /latitude=excluded\.latitude/);
+  assert.match(restaurantContactMigrationSql, /longitude=excluded\.longitude/);
+});
+test("restaurant detail page renders phone call link when phone is present", () => {
+  assert.match(restaurantDetailPageSource, /tel:\$\{restaurant\.phone/);
+  assert.match(restaurantDetailPageSource, /restaurant\.phone/);
+});
+test("restaurant detail page renders address when present", () => {
+  assert.match(restaurantDetailPageSource, /restaurant\.address/);
+  assert.match(restaurantDetailPageSource, /Contact & Location/);
+});
+test("restaurant detail page separates menu from gallery using mediaPurpose", () => {
+  assert.match(restaurantDetailPageSource, /mediaPurpose === "menu"/);
+  assert.match(restaurantDetailPageSource, /mediaPurpose !== "menu"/);
+  assert.match(restaurantDetailPageSource, /<RestaurantMenuViewer/);
+});
+test("menu viewer provides lightbox with next/prev navigation", () => {
+  assert.match(menuViewerSource, /lightboxIndex/);
+  assert.match(menuViewerSource, /Previous menu page/);
+  assert.match(menuViewerSource, /Next menu page/);
+  assert.match(menuViewerSource, /role="dialog"/);
+  assert.match(menuViewerSource, /aria-modal="true"/);
+});
+test("menu viewer shows GST disclaimer", () => {
+  assert.match(menuViewerSource, /excluding 8% GST/);
+});
+test("restaurant detail page does not show broken WhatsApp link without confirmed number", () => {
+  assert.match(restaurantDetailPageSource, /restaurant\.whatsapp/);
+  assert.match(restaurantDetailPageSource, /wa\.me/);
+  // WhatsApp section must be conditional on whatsapp field being set
+  assert.match(restaurantDetailPageSource, /\{restaurant\.whatsapp \? \(/);
+  assert.doesNotMatch(restaurantDetailPageSource, /wa\.me\/undefined/);
+});
+test("restaurant detail page hides empty sections automatically", () => {
+  assert.match(restaurantDetailPageSource, /\(hasContact \|\| hasAddress\) \?/);
+  assert.match(restaurantDetailPageSource, /menuItems\.length > 0 \?/);
+  assert.match(restaurantDetailPageSource, /publicGalleryItems\.length > 0 \?/);
+});
+test("media gallery purpose selector allows marking images as menu pages", () => {
+  assert.match(mediaGallerySource, /Purpose/);
+  assert.match(mediaGallerySource, /Menu page/);
+  assert.match(mediaGallerySource, /mediaPurpose/);
+});
+test("upload route accepts and stores mediaPurpose for menu category tracking", () => {
+  assert.match(businessMediaUploadRouteSource, /mediaPurpose/);
+  assert.match(businessMediaUploadRouteSource, /"gallery".*"menu".*"logo".*"interior".*"exterior".*"food".*"cover"/);
+  assert.match(businessMediaUploadRouteSource, /media_purpose: mediaPurpose/);
+});
+test("business media actions persist mediaPurpose on metadata save", () => {
+  assert.match(businessMediaActionsSource, /media_purpose: item\.mediaPurpose/);
+});
+test("restaurant detail page Back to Restaurants link is present", () => {
+  assert.match(restaurantDetailPageSource, /All restaurants/);
+  assert.match(restaurantDetailPageSource, /href="\/restaurants"/);
+});
+test("Food Land restaurant detail page uses no hardcoded mock data", () => {
+  assert.doesNotMatch(restaurantDetailPageSource, /food-land/);
+  assert.doesNotMatch(restaurantDetailPageSource, /\+960/);
+  assert.doesNotMatch(restaurantDetailPageSource, /Ameenee Magu/);
+});
+test("public_restaurants view migration exposes all new contact fields", () => {
+  assert.match(refreshPublicRestaurantsViewSql, /drop view if exists public\.public_restaurants/);
+  assert.match(refreshPublicRestaurantsViewSql, /phone, whatsapp, email, website, instagram, facebook/);
+  assert.match(refreshPublicRestaurantsViewSql, /address, latitude, longitude/);
+  assert.match(refreshPublicRestaurantsViewSql, /publication_status = 'published'/);
+  assert.match(refreshPublicRestaurantsViewSql, /verification_status = 'verified'/);
 });

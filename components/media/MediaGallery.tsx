@@ -284,7 +284,8 @@ export default function MediaGallery(props: MediaGalleryProps) {
           sortOrder: index,
           isCover: item.isCover,
           isFeatured: item.isFeatured,
-          isPublic: item.isPublic
+          isPublic: item.isPublic,
+          mediaPurpose: item.mediaPurpose
         }))
       });
       setNotice(result.message);
@@ -496,6 +497,22 @@ export default function MediaGallery(props: MediaGalleryProps) {
                         value={item.altText}
                         onChange={(event) => updateItem(item.id, (current) => ({ ...current, altText: sanitizeText(event.target.value) }))}
                       />
+                    </label>
+                    <label className="grid gap-1 text-xs font-medium text-slate-600">
+                      Purpose
+                      <select
+                        className="rounded-2xl border border-slate-300 px-3 py-2 text-sm text-slate-900"
+                        value={item.mediaPurpose}
+                        onChange={(event) => updateItem(item.id, (current) => ({ ...current, mediaPurpose: event.target.value as BusinessMediaItem["mediaPurpose"] }))}
+                      >
+                        <option value="gallery">Gallery photo</option>
+                        <option value="menu">Menu page</option>
+                        <option value="food">Food photo</option>
+                        <option value="interior">Interior</option>
+                        <option value="exterior">Exterior</option>
+                        <option value="logo">Logo</option>
+                        <option value="cover">Cover photo</option>
+                      </select>
                     </label>
                     <div className="flex flex-wrap gap-2">
                       <button type="button" className="rounded-full border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-900" onClick={() => setCover(item.id)}>

@@ -228,6 +228,7 @@ export type Database = {
           is_cover: boolean;
           is_featured: boolean;
           is_public: boolean;
+          media_purpose: string;
           created_at: string;
           updated_at: string;
         };
@@ -249,6 +250,15 @@ export type Database = {
           location: string | null;
           price_range: string | null;
           opening_hours: string | null;
+          phone: string | null;
+          whatsapp: string | null;
+          email: string | null;
+          website: string | null;
+          instagram: string | null;
+          facebook: string | null;
+          address: string | null;
+          latitude: number | null;
+          longitude: number | null;
           image_path: string;
           publication_status: string;
           verification_status: string;
@@ -726,6 +736,7 @@ export type Database = {
           sort_order: number;
           is_cover: boolean;
           is_featured: boolean;
+          media_purpose: string;
           path: string;
           filename: string;
           file_type: string;

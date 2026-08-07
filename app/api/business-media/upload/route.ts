@@ -65,11 +65,15 @@ export async function POST(request: Request) {
     const publicUrl = db.storage.from(uploadBucket).getPublicUrl(storagePath).data.publicUrl;
     const captionEntry = formData.get("caption");
     const altTextEntry = formData.get("altText");
+    const mediaPurposeEntry = formData.get("mediaPurpose");
     const caption = sanitizeText(typeof captionEntry === "string" ? captionEntry : "", 240);
     const altText = sanitizeText(
       typeof altTextEntry === "string" ? altTextEntry : context.businessName,
       240
     ) || context.businessName;
+    const mediaPurposeRaw = typeof mediaPurposeEntry === "string" ? mediaPurposeEntry : "gallery";
+    const validPurposes = new Set(["gallery","menu","logo","interior","exterior","food","cover"]);
+    const mediaPurpose = validPurposes.has(mediaPurposeRaw) ? mediaPurposeRaw : "gallery";
     const width = Number.parseInt(String(formData.get("width") ?? ""), 10);
     const height = Number.parseInt(String(formData.get("height") ?? ""), 10);
 
@@ -113,7 +117,8 @@ export async function POST(request: Request) {
       sort_order: nextSortOrder,
       is_cover: nextSortOrder === 0,
       is_featured: false,
-      is_public: true
+      is_public: true,
+      media_purpose: mediaPurpose
     });
     if (mediaError) {
       await db.from("media_assets").delete().eq("id", mediaAsset.id);

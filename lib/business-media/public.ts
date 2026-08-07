@@ -24,6 +24,7 @@ export function mediaItemsFromUrls(
     isCover: index === 0,
     isFeatured: false,
     isPublic: true,
+    mediaPurpose: "gallery" as const,
     source: "legacy"
   }));
 }

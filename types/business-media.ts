@@ -1,5 +1,7 @@
 export type BusinessMediaType = "property" | "restaurant" | "experience" | "transfer";
 
+export type BusinessMediaPurpose = "gallery" | "menu" | "logo" | "interior" | "exterior" | "food" | "cover";
+
 export type BusinessMediaItem = {
   id: string;
   businessType: BusinessMediaType;
@@ -18,10 +20,11 @@ export type BusinessMediaItem = {
   isCover: boolean;
   isFeatured: boolean;
   isPublic: boolean;
+  mediaPurpose: BusinessMediaPurpose;
   source: "storage" | "legacy";
 };
 
 export type EditableBusinessMediaItem = Pick<
   BusinessMediaItem,
-  "id" | "caption" | "altText" | "sortOrder" | "isCover" | "isFeatured" | "isPublic"
+  "id" | "caption" | "altText" | "sortOrder" | "isCover" | "isFeatured" | "isPublic" | "mediaPurpose"
 >;

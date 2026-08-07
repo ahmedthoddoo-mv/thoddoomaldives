@@ -142,6 +142,7 @@ function galleryFallbackItem(path: string, businessName: string): Omit<BusinessM
     isCover: true,
     isFeatured: false,
     isPublic: true,
+    mediaPurpose: "gallery",
     source: "legacy"
   };
 }

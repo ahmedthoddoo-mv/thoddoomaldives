@@ -21,9 +21,14 @@ const fields: Record<AdminBusinessKind, Array<{ key: string; label: string; wide
     { key: "highlights", label: "Highlights (one per line)", wide: true }
   ],
   restaurant: [
-    { key: "title", label: "Name" }, { key: "cuisine", label: "Cuisine (one per line)" },
+    { key: "title", label: "Name" }, { key: "cuisine", label: "Cuisine types (one per line)" },
     { key: "openingHours", label: "Opening hours" }, { key: "price", label: "Price range" },
-    { key: "location", label: "Location" }, { key: "description", label: "Description", wide: true }
+    { key: "location", label: "Location / Area" }, { key: "address", label: "Full address" },
+    { key: "phone", label: "Phone" }, { key: "whatsapp", label: "WhatsApp (leave blank if unconfirmed)" },
+    { key: "email", label: "Email" }, { key: "website", label: "Website" },
+    { key: "instagram", label: "Instagram handle" }, { key: "facebook", label: "Facebook page" },
+    { key: "latitude", label: "Latitude" }, { key: "longitude", label: "Longitude" },
+    { key: "description", label: "Description", wide: true }
   ]
 };
 
