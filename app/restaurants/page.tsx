@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-
 export const dynamic = "force-dynamic";
+import RestaurantCard from "@/components/cards/RestaurantCard";
 import { getLivePublishedRestaurants } from "@/lib/repositories/liveReads";
 import { createPageMetadata } from "@/lib/seo";
 
@@ -42,20 +42,7 @@ export default async function RestaurantsPage() {
 
           <div className="platformGrid platformGridTwo">
             {restaurants.map((restaurant) => (
-              <article key={restaurant.id} className="platformCard">
-                <div
-                  className="platformCardImage"
-                  style={{ backgroundImage: `url('${restaurant.image}')` }}
-                />
-                <div className="platformCardBody">
-                  <h3>{restaurant.name}</h3>
-                  <p>{restaurant.description}</p>
-                  <div className="platformPillRow mt-6">
-                    <span className="platformPill">{restaurant.priceRange}</span>
-                    <span className="platformPill">{restaurant.location}</span>
-                  </div>
-                </div>
-              </article>
+              <RestaurantCard key={restaurant.id} restaurant={restaurant} />
             ))}
           </div>
         </div>

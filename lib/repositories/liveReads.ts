@@ -97,6 +97,21 @@ export async function getLivePublishedRestaurants(): Promise<LiveReadResult<Rest
   return safeRead({ source, read: () => source === "mock" ? provider.restaurants.findAll() : SupabaseRestaurantRepository.findPublished(), fallback: () => [] });
 }
 
+export async function getLivePublishedRestaurantBySlug(slug: string): Promise<LiveReadResult<Restaurant | null>> {
+  const provider = getRepositoryProvider();
+  const source = normalizeProviderMode(provider.mode);
+  return safeRead({
+    source,
+    read: async () => {
+      if (source === "mock") {
+        return (await provider.restaurants.findBySlug(slug)) ?? null;
+      }
+      return (await SupabaseRestaurantRepository.findPublishedBySlug(slug)) ?? null;
+    },
+    fallback: () => null
+  });
+}
+
 export async function getLiveExperiences(): Promise<LiveReadResult<Experience[]>> {
   const provider = getRepositoryProvider();
   const source = normalizeProviderMode(provider.mode);

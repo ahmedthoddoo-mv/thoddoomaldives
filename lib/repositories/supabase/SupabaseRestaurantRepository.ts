@@ -18,6 +18,21 @@ export const SupabaseRestaurantRepository = {
     const mediaMap = await getPublicBusinessMediaMap("restaurant", (data ?? []).map((row) => row.id));
     return (data ?? []).map((row) => mapRestaurantRowToDomain(row, mediaMap.get(row.id) ?? []));
   },
+  async findPublishedBySlug(slug: string) {
+    const supabase = createSupabaseServerClient();
+    if (!supabase) throw new Error("Supabase is not configured.");
+    const { data, error } = await supabase
+      .from("public_restaurants")
+      .select("*")
+      .eq("slug", slug)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) {
+      return null;
+    }
+    const mediaMap = await getPublicBusinessMediaMap("restaurant", [data.id]);
+    return mapRestaurantRowToDomain(data, mediaMap.get(data.id) ?? []);
+  },
   async findById(id: string) {
     const rows = await this.findAll();
     return rows.find((row) => row.id === id);

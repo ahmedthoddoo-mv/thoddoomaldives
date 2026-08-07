@@ -60,6 +60,10 @@ const businessMediaMigrationSql = readFileSync(new URL("../supabase/migrations/2
 const mediaGallerySource = readFileSync(new URL("../components/media/MediaGallery.tsx", import.meta.url), "utf8");
 const businessMediaActionsSource = readFileSync(new URL("../app/business-media/actions.ts", import.meta.url), "utf8");
 const businessMediaUploadRouteSource = readFileSync(new URL("../app/api/business-media/upload/route.ts", import.meta.url), "utf8");
+const restaurantsPageSource = readFileSync(new URL("../app/restaurants/page.tsx", import.meta.url), "utf8");
+const restaurantCardSource = readFileSync(new URL("../components/cards/RestaurantCard.tsx", import.meta.url), "utf8");
+const restaurantDetailPageSource = readFileSync(new URL("../app/restaurants/[slug]/page.tsx", import.meta.url), "utf8");
+const restaurantRepositorySource = readFileSync(new URL("../lib/repositories/supabase/SupabaseRestaurantRepository.ts", import.meta.url), "utf8");
 
 test("1 new guesthouse approval has no existing identity match", () => {
   assert.equal(matchIdentity(application, []), null);
@@ -269,6 +273,32 @@ test("shared media gallery powers drag-and-drop uploads and management controls"
   assert.match(mediaGallerySource, /Set as cover/);
   assert.match(mediaGallerySource, /Set as featured/);
   assert.match(mediaGallerySource, /Hide from public/);
+});
+test("restaurants page renders clickable public cards with slug links", () => {
+  assert.match(restaurantsPageSource, /getLivePublishedRestaurants/);
+  assert.match(restaurantsPageSource, /<RestaurantCard key=\{restaurant\.id\} restaurant=\{restaurant\} \/>/);
+  assert.match(restaurantCardSource, /href=\{`\/restaurants\/\$\{restaurant\.slug\}`\}/);
+  assert.match(restaurantCardSource, /aria-label=\{`View \$\{restaurant\.name\}`\}/);
+  assert.match(restaurantCardSource, /platformCard block/);
+});
+test("restaurant detail route is public-safe and media-backed", () => {
+  assert.match(restaurantDetailPageSource, /getLivePublishedRestaurantBySlug/);
+  assert.match(restaurantDetailPageSource, /if \(!restaurant\) \{\s*notFound\(\);/);
+  assert.match(restaurantDetailPageSource, /path:\s*`\/restaurants\/\$\{restaurant\.slug\}`/);
+  assert.match(restaurantDetailPageSource, /<MediaGallery/);
+  assert.match(restaurantDetailPageSource, /businessName=\{restaurant\.name\}/);
+  assert.match(restaurantDetailPageSource, /Back to Restaurants/);
+});
+test("restaurant repository can fetch one published verified slug safely", () => {
+  assert.match(restaurantRepositorySource, /async findPublishedBySlug\(slug: string\)/);
+  assert.match(restaurantRepositorySource, /\.from\("public_restaurants"\)/);
+  assert.match(restaurantRepositorySource, /\.eq\("slug", slug\)/);
+  assert.match(restaurantRepositorySource, /return null;/);
+});
+test("restaurant detail route uses no mock restaurant arrays", () => {
+  assert.doesNotMatch(restaurantDetailPageSource, /mock/i);
+  assert.doesNotMatch(restaurantDetailPageSource, /static array/i);
+  assert.doesNotMatch(restaurantsPageSource, /food-land/);
 });
 test("booking enquiries require canonical server-side Turnstile verification", () => {
   assert.match(bookingActionsSource, /import\s+\{\s*verifyTurnstileToken\s*\}\s+from\s+"@\/lib\/security\/turnstile"/);
