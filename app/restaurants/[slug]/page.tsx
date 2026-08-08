@@ -6,6 +6,7 @@ import MediaGallery from "@/components/media/MediaGallery";
 import RestaurantContactCard from "@/components/restaurant/RestaurantContactCard";
 import RestaurantInteractiveMenu from "@/components/restaurant/RestaurantInteractiveMenu";
 import RestaurantMenuViewer from "@/components/restaurant/RestaurantMenuViewer";
+import RestaurantPromotionCard from "@/components/restaurant/RestaurantPromotionCard";
 import { mediaItemsFromUrls } from "@/lib/business-media/public";
 import { getPublicRestaurantMenuData } from "@/lib/restaurant-menu/server";
 import { normalizeRestaurantMembershipTier } from "@/lib/restaurant-menu/format";
@@ -176,15 +177,17 @@ export default async function RestaurantDetailPage({ params }: RestaurantDetailP
       </section>
 
       {hasContactSection ? (
-        <section className="platformSection pt-0">
+        <section id="contact" className="platformSection pt-0">
           <div className="platformContainer">
             <RestaurantContactCard restaurant={restaurant} membershipTier={restaurant.membershipTier} />
           </div>
         </section>
       ) : null}
 
+      <RestaurantPromotionCard restaurant={restaurant} />
+
       {menuData.categories.length > 0 && menuData.items.length > 0 ? (
-        <section className="platformSection pt-0">
+        <section id="menu" className="platformSection pt-0">
           <div className="platformContainer">
             <RestaurantInteractiveMenu
               restaurantId={restaurant.id}
@@ -200,7 +203,7 @@ export default async function RestaurantDetailPage({ params }: RestaurantDetailP
         </section>
       ) : null}
 
-      {menuItems.length > 0 ? (
+      {menuItems.length > 0 && restaurant.showOriginalMenu ? (
         <section className="platformSection pt-0">
           <div className="platformContainer">
             <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">

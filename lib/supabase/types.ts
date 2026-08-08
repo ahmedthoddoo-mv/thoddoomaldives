@@ -265,6 +265,16 @@ export type Database = {
           application_id: string | null;
           partner_id: string | null;
           featured: boolean;
+          show_original_menu: boolean;
+          promotion_title: string | null;
+          promotion_description: string | null;
+          promotion_media_url: string | null;
+          promotion_cta_label: string | null;
+          promotion_cta_destination: string | null;
+          promotion_active: boolean;
+          promotion_start_date: string | null;
+          promotion_end_date: string | null;
+          promotion_sort_order: number;
           created_at: string;
           updated_at: string;
         };

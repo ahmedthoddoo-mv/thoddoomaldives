@@ -24,10 +24,9 @@ export default async function RestaurantsPage() {
       >
         <div className="platformHeroInner">
           <p className="eyebrow">Restaurants</p>
-          <h1>Eat & Drink in Thoddoo</h1>
+          <h1>Food &amp; Beverage in Thoddoo</h1>
           <p>
-            Discover local cafés, seafood restaurants, fresh tropical fruit and
-            authentic Maldivian cuisine.
+            Discover restaurants, cafés and local dining experiences across Thoddoo.
           </p>
         </div>
       </section>

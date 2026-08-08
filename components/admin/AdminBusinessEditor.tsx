@@ -6,9 +6,11 @@ import { saveAdminBusinessListing, type AdminBusinessKind } from "@/app/admin/bu
 import MediaGallery from "@/components/media/MediaGallery";
 import type { BusinessMediaItem } from "@/types/business-media";
 
-type Values = Record<string, string | boolean | string[]>;
+type Values = Record<string, string | boolean | string[] | number>;
 
-const fields: Record<AdminBusinessKind, Array<{ key: string; label: string; wide?: boolean }>> = {
+type FieldDefinition = { key: string; label: string; wide?: boolean; type?: "text" | "textarea" | "checkbox" };
+
+const fields: Record<AdminBusinessKind, FieldDefinition[]> = {
   transfer: [
     { key: "title", label: "Service title" }, { key: "transferType", label: "Transfer type" },
     { key: "departurePoint", label: "Departure" }, { key: "arrivalPoint", label: "Arrival" },
@@ -29,7 +31,17 @@ const fields: Record<AdminBusinessKind, Array<{ key: string; label: string; wide
     { key: "instagram", label: "Instagram handle" }, { key: "facebook", label: "Facebook page" },
     { key: "latitude", label: "Latitude" }, { key: "longitude", label: "Longitude" },
     { key: "description", label: "Description", wide: true },
-    { key: "interactiveMenu", label: "Interactive menu JSON", wide: true }
+    { key: "interactiveMenu", label: "Interactive menu JSON", wide: true },
+    { key: "showOriginalMenu", label: "Show original menu to guests", type: "checkbox" },
+    { key: "promotionTitle", label: "Promotion title" },
+    { key: "promotionDescription", label: "Promotion description", wide: true },
+    { key: "promotionMediaUrl", label: "Promotion media URL" },
+    { key: "promotionCtaLabel", label: "Promotion CTA label" },
+    { key: "promotionCtaDestination", label: "Promotion CTA destination" },
+    { key: "promotionActive", label: "Promotion active", type: "checkbox" },
+    { key: "promotionStartDate", label: "Promotion start date" },
+    { key: "promotionEndDate", label: "Promotion end date" },
+    { key: "promotionSortOrder", label: "Promotion sort order" }
   ]
 };
 
@@ -53,11 +65,11 @@ export function AdminBusinessEditor({
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [values, setValues] = useState<Values>({ publicationStatus: "draft", verificationStatus: "pending", featured: false, image: "", ...initialValues });
+  const [values, setValues] = useState<Values>({ publicationStatus: "draft", verificationStatus: "pending", featured: false, image: "", showOriginalMenu: false, promotionActive: false, promotionSortOrder: 0, ...initialValues });
   const [media, setMedia] = useState<BusinessMediaItem[]>(initialMedia);
   const [message, setMessage] = useState("");
   function text(key: string) { const value = values[key]; return Array.isArray(value) ? value.join("\n") : String(value ?? ""); }
-  function update(key: string, value: string | boolean) { setValues((current) => ({ ...current, [key]: value })); }
+  function update(key: string, value: string | boolean | number) { setValues((current) => ({ ...current, [key]: value })); }
   function save() { startTransition(async () => { const result = await saveAdminBusinessListing({ kind, id, values }); setMessage(result.message); if (result.ok) { router.push(`/admin/${kind === "experience" ? "experiences" : `${kind}s`}`); router.refresh(); } }); }
   function syncMedia(nextMedia: BusinessMediaItem[]) {
     setMedia(nextMedia);
@@ -68,7 +80,24 @@ export function AdminBusinessEditor({
     <section className="adminPanel">
       <div className="adminSectionHeader"><p className="eyebrow">Live database editor</p><h1>{id ? "Edit" : "Add"} {kind}</h1></div>
       <div className="adminFormGrid">
-        {fields[kind].map((field) => <label className={field.wide ? "adminFormWide" : ""} key={field.key}><span>{field.label}</span>{field.wide ? <textarea rows={4} value={text(field.key)} onChange={(event) => update(field.key, event.target.value)} /> : <input value={text(field.key)} onChange={(event) => update(field.key, event.target.value)} />}</label>)}
+        {fields[kind].map((field) => {
+          if (field.type === "checkbox") {
+            return (
+              <label key={field.key}>
+                <span>{field.label}</span>
+                <input checked={Boolean(values[field.key])} type="checkbox" onChange={(event) => update(field.key, event.target.checked)} />
+              </label>
+            );
+          }
+          return (
+            <label className={field.wide ? "adminFormWide" : ""} key={field.key}>
+              <span>{field.label}</span>
+              {field.wide || field.type === "textarea"
+                ? <textarea rows={4} value={text(field.key)} onChange={(event) => update(field.key, event.target.value)} />
+                : <input value={text(field.key)} onChange={(event) => update(field.key, event.target.value)} />}
+            </label>
+          );
+        })}
         <label className="adminFormWide"><span>Cover image path</span><input value={text("image")} readOnly /></label>
         <label><span>Publication</span><select value={text("publicationStatus")} onChange={(event) => update("publicationStatus", event.target.value)}><option value="draft">Draft</option><option value="published">Published</option><option value="archived">Archived</option></select></label>
         <label><span>Verification</span><select value={text("verificationStatus")} onChange={(event) => update("verificationStatus", event.target.value)}><option value="pending">Pending</option><option value="verified">Verified</option><option value="suspended">Suspended</option></select></label>

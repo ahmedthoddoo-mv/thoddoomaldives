@@ -5,6 +5,18 @@ export type RestaurantCuisine =
   | "international"
   | "healthy";
 
+export type RestaurantPromotion = {
+  title: string | null;
+  description: string | null;
+  mediaUrl: string | null;
+  ctaLabel: string | null;
+  ctaDestination: string | null;
+  active: boolean;
+  startsAt: string | null;
+  endsAt: string | null;
+  sortOrder: number;
+};
+
 export type Restaurant = {
   id: string;
   slug: string;
@@ -33,4 +45,6 @@ export type Restaurant = {
   verificationStatus?: string;
   membershipTier?: string | null;
   membershipLabel?: string | null;
+  showOriginalMenu?: boolean;
+  promotion?: RestaurantPromotion | null;
 };

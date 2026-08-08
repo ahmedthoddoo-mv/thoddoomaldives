@@ -85,7 +85,7 @@ export type AdminBusinessKind = "transfer" | "experience" | "restaurant";
 export async function saveAdminBusinessListing(input: {
   kind: AdminBusinessKind;
   id?: string;
-  values: Record<string, string | boolean | string[]>;
+  values: Record<string, string | boolean | string[] | number>;
 }) {
   const admin = await requireAdminSession();
   const db = createSupabaseServiceRoleClient();

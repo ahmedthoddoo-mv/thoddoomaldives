@@ -294,6 +294,7 @@ test("restaurants page renders clickable public cards with slug links", () => {
   assert.match(restaurantCardSource, /href=\{`\/restaurants\/\$\{restaurant\.slug\}`\}/);
   assert.match(restaurantCardSource, /aria-label=\{`View \$\{restaurant\.name\}`\}/);
   assert.match(restaurantCardSource, /platformCard block/);
+  assert.match(restaurantsPageSource, /Food &amp; Beverage in Thoddoo/);
 });
 test("restaurant detail route is public-safe and media-backed", () => {
   assert.match(restaurantDetailPageSource, /getLivePublishedRestaurantBySlug/);
@@ -302,6 +303,8 @@ test("restaurant detail route is public-safe and media-backed", () => {
   assert.match(restaurantDetailPageSource, /<MediaGallery/);
   assert.match(restaurantDetailPageSource, /businessName=\{restaurant\.name\}/);
   assert.match(restaurantDetailPageSource, /Back to Restaurants/);
+  assert.match(restaurantDetailPageSource, /restaurant\.showOriginalMenu/);
+  assert.match(restaurantDetailPageSource, /RestaurantPromotionCard/);
 });
 test("restaurant repository can fetch one published verified slug safely", () => {
   assert.match(restaurantRepositorySource, /async findPublishedBySlug\(slug: string\)/);
@@ -665,7 +668,7 @@ test("restaurant detail page does not show broken WhatsApp link without confirme
 });
 test("restaurant detail page hides empty sections automatically", () => {
   assert.match(restaurantDetailPageSource, /hasContactSection/);
-  assert.match(restaurantDetailPageSource, /menuItems\.length > 0 \?/);
+  assert.match(restaurantDetailPageSource, /menuItems\.length > 0 && restaurant\.showOriginalMenu \?/);
   assert.match(restaurantDetailPageSource, /publicGalleryItems\.length > 0 \?/);
 });
 test("interactive menu selected-items panel always has tier-aware CTA and no empty-cart send action", () => {

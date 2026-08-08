@@ -223,6 +223,21 @@ export function mapRestaurantRowToDomain(restaurant: Partial<Tables<"restaurants
     : typeof restaurant.membership_plan_id === "string"
       ? "verified"
       : null;
+  const showOriginalMenu = Boolean(restaurant.show_original_menu);
+  const promotion = restaurant.promotion_title || restaurant.promotion_description || restaurant.promotion_media_url || restaurant.promotion_cta_label
+    ? {
+        title: typeof restaurant.promotion_title === "string" ? restaurant.promotion_title : null,
+        description: typeof restaurant.promotion_description === "string" ? restaurant.promotion_description : null,
+        mediaUrl: typeof restaurant.promotion_media_url === "string" ? restaurant.promotion_media_url : null,
+        ctaLabel: typeof restaurant.promotion_cta_label === "string" ? restaurant.promotion_cta_label : null,
+        ctaDestination: typeof restaurant.promotion_cta_destination === "string" ? restaurant.promotion_cta_destination : null,
+        active: Boolean(restaurant.promotion_active),
+        startsAt: typeof restaurant.promotion_start_date === "string" ? restaurant.promotion_start_date : null,
+        endsAt: typeof restaurant.promotion_end_date === "string" ? restaurant.promotion_end_date : null,
+        sortOrder: typeof restaurant.promotion_sort_order === "number" ? restaurant.promotion_sort_order : 0
+      }
+    : null;
+
   return {
     id: String(restaurant.id ?? ""),
     slug: String(restaurant.slug ?? ""),
@@ -250,7 +265,9 @@ export function mapRestaurantRowToDomain(restaurant: Partial<Tables<"restaurants
     publicationStatus: typeof restaurant.publication_status === "string" ? restaurant.publication_status : undefined,
     verificationStatus: typeof restaurant.verification_status === "string" ? restaurant.verification_status : undefined,
     membershipTier: membershipTier ?? null,
-    membershipLabel: typeof restaurant.membership_plan_name === "string" ? String(restaurant.membership_plan_name) : null
+    membershipLabel: typeof restaurant.membership_plan_name === "string" ? String(restaurant.membership_plan_name) : null,
+    showOriginalMenu,
+    promotion
   };
 }
 
