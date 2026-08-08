@@ -16,7 +16,10 @@ alter table public.business_onboarding_drafts enable row level security;
 create index if not exists business_onboarding_drafts_owner_idx on public.business_onboarding_drafts(owner_type, owner_id);
 create index if not exists business_onboarding_drafts_business_type_idx on public.business_onboarding_drafts(business_type);
 
-create policy if not exists business_onboarding_drafts_service_role_all
+drop policy if exists business_onboarding_drafts_service_role_all
+on public.business_onboarding_drafts;
+
+create policy business_onboarding_drafts_service_role_all
   on public.business_onboarding_drafts
   for all
   using (auth.role() = 'service_role')
