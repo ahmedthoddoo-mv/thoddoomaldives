@@ -239,6 +239,9 @@ function getAccountSetupPortalData(email: string | null, source: PartnerPortalDa
 }
 
 function mapServiceFromRoom(room: Tables<"rooms">, sortOrder: number): PartnerPortalServiceItem {
+  const metadata = room.metadata && typeof room.metadata === "object" && !Array.isArray(room.metadata)
+    ? room.metadata as Record<string, unknown>
+    : {};
   return {
     id: room.id,
     title: room.name,
@@ -256,7 +259,12 @@ function mapServiceFromRoom(room: Tables<"rooms">, sortOrder: number): PartnerPo
       children: String(room.children),
       bedType: room.bed_type ?? "",
       breakfast: room.breakfast_included ? "Included" : "Not included",
-      availability: room.active ? "Available" : "Blocked"
+      availability: room.active ? "Available" : "Blocked",
+      featured: metadata.featured ? "true" : "false",
+      quantity: typeof metadata.quantity === "number" ? String(metadata.quantity) : "1",
+      maxGuests: typeof metadata.maxGuests === "number" ? String(metadata.maxGuests) : String(room.adults || 1),
+      amenities: Array.isArray(room.amenities) ? room.amenities.join("\n") : "",
+      gallery: Array.isArray(room.image_paths) ? room.image_paths.join("\n") : ""
     }
   };
 }

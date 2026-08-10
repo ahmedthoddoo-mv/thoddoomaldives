@@ -5,6 +5,7 @@ import type { AdminManagedProperty } from "@/data/adminContent";
 import { revalidatePublicListingPaths } from "@/lib/cache/publicRoutes";
 import { requireAdminSession } from "@/lib/admin/adminAuth";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
+import { buildAdminRoomPayload } from "@/lib/properties/roomPayload";
 
 type SaveAdminPropertyInput = {
   property: AdminManagedProperty;
@@ -26,17 +27,6 @@ function parseGpsLocation(value: string) {
     latitude: Number.isFinite(latitude) ? latitude : null,
     longitude: Number.isFinite(longitude) ? longitude : null
   };
-}
-
-function parseRoomPrice(price: string) {
-  const match = price.match(/[\d.]+/);
-  const value = match ? Number.parseFloat(match[0]) : null;
-  return value && value > 0 ? value : null;
-}
-
-function parseRoomAdults(capacity: string) {
-  const match = capacity.match(/\d+/);
-  return match ? Math.max(1, Number.parseInt(match[0], 10)) : 1;
 }
 
 function getFilename(path: string) {
@@ -71,17 +61,7 @@ export async function saveAdminPropertyToSupabase({
       ? "published"
       : "draft";
 
-  const rooms = property.roomTypes.map((room) => ({
-    name: room.name.trim(),
-    bed_type: null,
-    capacity: room.capacity.trim() || "Capacity on request",
-    adults: parseRoomAdults(room.capacity),
-    children: 0,
-    price_per_night: parseRoomPrice(room.price),
-    currency: room.price.toUpperCase().includes("MVR") ? "MVR" : "USD",
-    breakfast_included: property.amenities.some((amenity) => amenity.toLowerCase().includes("breakfast")),
-    description: room.price
-  }));
+  const rooms = buildAdminRoomPayload(property.roomTypes, property.amenities);
   const uniqueImages = Array.from(new Set([property.coverImage, ...property.gallery].filter(Boolean)));
   const media = uniqueImages.map((path, index) => ({
     filename: getFilename(path),

@@ -52,6 +52,18 @@ export default function PropertyRoomCard({
             <dt className="font-semibold text-slate-900">Price</dt>
             <dd>{room.price}</dd>
           </div>
+          {room.quantity ? (
+            <div>
+              <dt className="font-semibold text-slate-900">Room quantity</dt>
+              <dd>{room.quantity}</dd>
+            </div>
+          ) : null}
+          {room.featured ? (
+            <div>
+              <dt className="font-semibold text-slate-900">Featured room</dt>
+              <dd>Yes</dd>
+            </div>
+          ) : null}
         </dl>
 
         <div className="mt-5 flex flex-wrap gap-2">
@@ -64,6 +76,14 @@ export default function PropertyRoomCard({
             </span>
           ))}
         </div>
+
+        {room.gallery?.length ? (
+          <div className="mt-5 grid grid-cols-3 gap-2">
+            {room.gallery.slice(0, 3).map((image) => (
+              <div key={image} className="h-20 rounded-xl bg-cover bg-center" style={{ backgroundImage: `url('${image}')` }} />
+            ))}
+          </div>
+        ) : null}
 
         <div className="mt-6">
           <BookButton

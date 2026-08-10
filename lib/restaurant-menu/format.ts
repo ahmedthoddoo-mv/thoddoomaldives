@@ -23,6 +23,36 @@ export function normalizeWhatsAppForLink(value: string | null | undefined) {
   return value ? value.replace(/\D/g, "") : "";
 }
 
+export function formatRestaurantCuisine(value: string | Array<string | null | undefined> | null | undefined) {
+  const entries = typeof value === "string"
+    ? (() => {
+        const trimmed = value.trim();
+        if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+          try {
+            const parsed = JSON.parse(trimmed);
+            if (Array.isArray(parsed)) {
+              return parsed.filter((entry): entry is string => typeof entry === "string");
+            }
+          } catch {
+            // fall through to manual parsing
+          }
+        }
+
+        return trimmed.split(",");
+      })()
+    : Array.isArray(value)
+      ? value
+      : [];
+
+  const normalized = entries
+    .map((entry) => typeof entry === "string" ? entry.trim() : "")
+    .filter(Boolean)
+    .map((entry) => entry.replace(/^\[|\]$/g, "").replace(/^['"]|['"]$/g, ""))
+    .map((entry) => entry.replace(/^['"]|['"]$/g, ""));
+
+  return normalized.join(" · ");
+}
+
 type RestaurantMenuMessageItem = {
   name: string;
   quantity: number;

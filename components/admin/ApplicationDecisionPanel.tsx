@@ -9,6 +9,7 @@ import {
   type AdminApplicationDecisionAction
 } from "@/app/admin/applications/actions";
 import { requestedChangeOptions } from "@/data/partnerApplications";
+import { getApplicationOwnerState } from "@/lib/applications/ownerState";
 import { PartnerApplicationRepository } from "@/lib/applications/partnerApplicationRepository";
 import type {
   PartnerApplicationRecord,
@@ -60,6 +61,7 @@ export function ApplicationDecisionPanel({
   const [selectedListingId, setSelectedListingId] = useState(application.linkedListingId ?? "");
   const [message, setMessage] = useState("");
   const [isPending, startTransition] = useTransition();
+  const ownerState = getApplicationOwnerState(application);
 
   function applyResult(result: ReturnType<typeof PartnerApplicationRepository.approve>) {
     if (!result) {
@@ -235,120 +237,122 @@ export function ApplicationDecisionPanel({
         </button>
       </div>
 
-      {application.source === "admin_created" ? (
-        <>
-          <label>
-            Assign existing partner
-            <select value={selectedPartnerId} onChange={(event) => setSelectedPartnerId(event.target.value)}>
-              <option value="">Select a partner</option>
-              {availableOwners.map((owner) => (
-                <option key={owner.id} value={owner.id}>
-                  {owner.businessName} · {owner.status} · {owner.verificationStatus}
-                </option>
-              ))}
-            </select>
-          </label>
-          <div className="applicationDecisionActions">
-            <button
-              type="button"
-              disabled={isPending || !selectedPartnerId}
-              onClick={() => {
-                startTransition(async () => {
-                  const result = await assignExistingPartnerToApplication({
-                    applicationId: application.id,
-                    partnerId: selectedPartnerId,
-                    reviewer
-                  });
-                  if (!result.ok) {
-                    setMessage(result.message);
-                    return;
-                  }
-                  applyLinkedPartner(selectedPartnerId, undefined, result.message);
-                });
-              }}
-            >
-              Assign owner
-            </button>
-          </div>
+      <section className="applicationOwnerStatusPanel" aria-label="Owner and partner status">
+        <div className="adminSectionHeader">
+          <p className="eyebrow">Owner / partner state</p>
+          <h3>{ownerState.title}</h3>
+        </div>
+        <p>{ownerState.detail}</p>
+        {application.linkedPartnerName ? <p><strong>Linked partner:</strong> {application.linkedPartnerName}</p> : null}
+        {application.ownerInvitationStatus === "pending" && application.email ? <p><strong>Invited owner:</strong> {application.email}</p> : null}
+      </section>
 
-          <label>
-            Owner name
-            <input value={ownerName} onChange={(event) => setOwnerName(event.target.value)} />
-          </label>
-          <label>
-            Owner email
-            <input value={ownerEmail} onChange={(event) => setOwnerEmail(event.target.value)} />
-          </label>
-          <div className="applicationDecisionActions">
-            <button
-              type="button"
-              disabled={isPending || !ownerEmail.trim()}
-              onClick={() => {
-                startTransition(async () => {
-                  const result = await inviteApplicationOwner({
-                    applicationId: application.id,
-                    reviewer,
-                    ownerName,
-                    ownerEmail
-                  });
-                  if (!result.ok) {
-                    setMessage(result.message);
-                    return;
-                  }
-                  const linkedPartnerId = typeof result.data === "object" && result.data && !Array.isArray(result.data) && typeof result.data.partnerId === "string"
-                    ? result.data.partnerId
-                    : "";
-                  if (linkedPartnerId) {
-                    setSelectedPartnerId(linkedPartnerId);
-                    applyLinkedPartner(linkedPartnerId, ownerName || undefined, result.message);
-                  } else {
-                    setMessage(result.message);
-                  }
-                });
-              }}
-            >
-              Invite owner
-            </button>
-          </div>
-        </>
-      ) : null}
+      <label>
+        Assign existing partner
+        <select value={selectedPartnerId} onChange={(event) => setSelectedPartnerId(event.target.value)}>
+          <option value="">Select a partner</option>
+          {availableOwners.map((owner) => (
+            <option key={owner.id} value={owner.id}>
+              {owner.businessName} · {owner.status} · {owner.verificationStatus}
+            </option>
+          ))}
+        </select>
+      </label>
+      <div className="applicationDecisionActions">
+        <button
+          type="button"
+          disabled={isPending || !selectedPartnerId}
+          onClick={() => {
+            startTransition(async () => {
+              const result = await assignExistingPartnerToApplication({
+                applicationId: application.id,
+                partnerId: selectedPartnerId,
+                reviewer
+              });
+              if (!result.ok) {
+                setMessage(result.message);
+                return;
+              }
+              applyLinkedPartner(selectedPartnerId, undefined, result.message);
+            });
+          }}
+        >
+          Assign owner
+        </button>
+      </div>
 
-      {application.source === "partner_submitted" ? (
-        <>
-          <label>
-            Link to existing business
-            <select value={selectedListingId} onChange={(event) => setSelectedListingId(event.target.value)}>
-              <option value="">Select an existing {application.listingWorkflow}</option>
-              {availableListings.map((listing) => (
-                <option key={listing.id} value={listing.id}>
-                  {listing.name} ({listing.slug}) · {listing.verificationStatus} · {listing.publicationStatus}
-                </option>
-              ))}
-            </select>
-          </label>
-          <div className="applicationDecisionActions">
-            <button
-              type="button"
-              disabled={isPending || !selectedListingId}
-              onClick={() => {
-                startTransition(async () => {
-                  const result = await linkExistingBusinessToApplication({
-                    applicationId: application.id,
-                    listingId: selectedListingId
-                  });
-                  if (!result.ok) {
-                    setMessage(result.message);
-                    return;
-                  }
-                  applyLinkedListing(selectedListingId, result.message);
-                });
-              }}
-            >
-              Link existing business
-            </button>
-          </div>
-        </>
-      ) : null}
+      <label>
+        Owner name
+        <input value={ownerName} onChange={(event) => setOwnerName(event.target.value)} />
+      </label>
+      <label>
+        Owner email
+        <input value={ownerEmail} onChange={(event) => setOwnerEmail(event.target.value)} />
+      </label>
+      <div className="applicationDecisionActions">
+        <button
+          type="button"
+          disabled={isPending || !ownerEmail.trim()}
+          onClick={() => {
+            startTransition(async () => {
+              const result = await inviteApplicationOwner({
+                applicationId: application.id,
+                reviewer,
+                ownerName,
+                ownerEmail
+              });
+              if (!result.ok) {
+                setMessage(result.message);
+                return;
+              }
+              const linkedPartnerId = typeof result.data === "object" && result.data && !Array.isArray(result.data) && typeof result.data.partnerId === "string"
+                ? result.data.partnerId
+                : "";
+              if (linkedPartnerId) {
+                setSelectedPartnerId(linkedPartnerId);
+                applyLinkedPartner(linkedPartnerId, ownerName || undefined, result.message);
+              } else {
+                setMessage(result.message);
+              }
+            });
+          }}
+        >
+          Invite owner
+        </button>
+      </div>
+
+      <label>
+        Link to existing business
+        <select value={selectedListingId} onChange={(event) => setSelectedListingId(event.target.value)}>
+          <option value="">Select an existing {application.listingWorkflow}</option>
+          {availableListings.map((listing) => (
+            <option key={listing.id} value={listing.id}>
+              {listing.name} ({listing.slug}) · {listing.verificationStatus} · {listing.publicationStatus}
+            </option>
+          ))}
+        </select>
+      </label>
+      <div className="applicationDecisionActions">
+        <button
+          type="button"
+          disabled={isPending || !selectedListingId}
+          onClick={() => {
+            startTransition(async () => {
+              const result = await linkExistingBusinessToApplication({
+                applicationId: application.id,
+                listingId: selectedListingId
+              });
+              if (!result.ok) {
+                setMessage(result.message);
+                return;
+              }
+              applyLinkedListing(selectedListingId, result.message);
+            });
+          }}
+        >
+          Link existing business
+        </button>
+      </div>
 
       <div className="applicationChangeOptions" aria-label="Requested changes">
         {requestedChangeOptions.map((change) => (

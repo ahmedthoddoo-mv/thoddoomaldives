@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import Badge from "@/components/ui/Badge";
+import { deriveOwnerAssignmentState } from "@/lib/properties/guesthouse";
 import type { AdminManagedProperty, AdminPropertyAction } from "@/data/adminContent";
 
 type AdminPropertyManagerProps = {
@@ -120,7 +121,7 @@ export function AdminPropertyManager({ actions, properties }: AdminPropertyManag
             This dashboard shows live database records only.
           </p>
         </div>
-        <Link className="adminContentAddButton" href="/admin/properties/new">
+        <Link className="adminContentAddButton" href="/admin/businesses/new">
           <span aria-hidden="true">+</span>
           Add Real Business
         </Link>
@@ -156,7 +157,7 @@ export function AdminPropertyManager({ actions, properties }: AdminPropertyManag
           {actions.map((action) => {
             if (action === "Add Property") {
               return (
-                <Link className="adminPropertyActionPrimary" href="/admin/properties/new" key={action}>
+                <Link className="adminPropertyActionPrimary" href="/admin/businesses/new?type=guesthouse" key={action}>
                   {action}
                 </Link>
               );
@@ -274,6 +275,19 @@ export function AdminPropertyManager({ actions, properties }: AdminPropertyManag
                 <span>Google Maps: {property.googleMapsLink}</span>
               </div>
 
+              <div className="adminPropertyContactGrid">
+                {(() => {
+                  const assignment = deriveOwnerAssignmentState({
+                    ownerLinked: Boolean(property.whatsapp && property.email),
+                    partnerActive: property.isPublished,
+                    invitationPending: property.verificationStatus === "Pending"
+                  });
+                  return <span>Owner: {assignment.label}</span>;
+                })()}
+                <span>Partner: {property.membershipPlan}</span>
+                <span>Verification: {property.verificationStatus}</span>
+              </div>
+
               <div className="adminPropertySeo">
                 <h3>SEO fields</h3>
                 <p>
@@ -301,7 +315,7 @@ export function AdminPropertyManager({ actions, properties }: AdminPropertyManag
         <section className="adminEmptyState">
           <strong>No real businesses added yet</strong>
           <p>Use “Add Real Business” to create the first verified listing. Nothing will appear publicly until you approve and publish it.</p>
-          <Link className="adminContentAddButton" href="/admin/properties/new">Add Real Business</Link>
+          <Link className="adminContentAddButton" href="/admin/businesses/new">Add Real Business</Link>
         </section>
       ) : null}
     </div>

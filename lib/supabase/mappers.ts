@@ -7,6 +7,11 @@ import type { Restaurant, RestaurantCuisine } from "@/types/restaurant";
 import type { Transfer, TransferType } from "@/types/transfer";
 import type { Tables } from "@/lib/supabase/types";
 import type { BusinessMediaItem } from "@/types/business-media";
+import {
+  getCanonicalPublicMediaCover,
+  getCanonicalPublicMediaGallery,
+  orderPublicBusinessMedia
+} from "@/lib/business-media/public";
 
 function formatRoomPrice(value: number | null, currency: string | null) {
   return value && value > 0 ? `${currency ?? "USD"} ${Number(value).toFixed(0)}/night` : "Price on request";
@@ -20,6 +25,9 @@ function normalizeVerificationStatus(status: string): AdminManagedProperty["veri
 }
 
 export function mapRoomRowToDomain(room: Tables<"rooms">): AdminManagedProperty["roomTypes"][number] {
+  const metadata = room.metadata && typeof room.metadata === "object" && !Array.isArray(room.metadata)
+    ? room.metadata as { featured?: unknown; quantity?: unknown; gallery?: unknown; maxGuests?: unknown }
+    : {};
   return {
     id: room.id,
     name: room.name,
@@ -31,7 +39,10 @@ export function mapRoomRowToDomain(room: Tables<"rooms">): AdminManagedProperty[
     amenities: room.amenities,
     breakfastIncluded: room.breakfast_included,
     adults: room.adults,
-    children: room.children
+    children: room.children,
+    featured: Boolean(metadata.featured),
+    quantity: typeof metadata.quantity === "number" ? metadata.quantity : undefined,
+    gallery: Array.isArray(room.image_paths) ? room.image_paths : []
   };
 }
 
@@ -57,10 +68,7 @@ function getGalleryFromMedia(property: Tables<"properties">, propertyMedia: Prop
 }
 
 function galleryUrlsFromBusinessMedia(media: BusinessMediaItem[] = []) {
-  const urls = media
-    .filter((item) => item.isPublic)
-    .sort((left, right) => left.sortOrder - right.sortOrder)
-    .map((item) => item.url);
+  const urls = orderPublicBusinessMedia(media).map((item) => item.url);
   return Array.from(new Set(urls));
 }
 
@@ -114,6 +122,7 @@ export function mapPropertyRowToDomain(
       description: property.seo_description ?? property.short_description,
       slug: property.slug
     },
+    metadata: property.metadata && typeof property.metadata === "object" && !Array.isArray(property.metadata) ? property.metadata as Record<string, unknown> : {},
     updated: property.updated_at
   };
 }
@@ -191,7 +200,10 @@ export function mapPartnerRowToDomain(partner: Tables<"partners">): CrmPartner {
   };
 }
 
-export function mapMediaRowToDomain(asset: Tables<"media_assets">): MediaAsset {
+export function mapMediaRowToDomain(
+  asset: Tables<"media_assets">,
+  meta?: { isPublic?: boolean; businessType?: string; businessId?: string }
+): MediaAsset {
   return {
     id: asset.id,
     filename: asset.filename,
@@ -210,14 +222,21 @@ export function mapMediaRowToDomain(asset: Tables<"media_assets">): MediaAsset {
     usedBy: [],
     isHero: asset.category === "Hero",
     archived: asset.archived,
+    isPublic: meta?.isPublic ?? asset.visibility === "public",
     source: "Supabase",
     rightsStatus: asset.rights_status === "permission_confirmed" ? "Permission confirmed" : "Needs confirmation"
   };
 }
 
 export function mapRestaurantRowToDomain(restaurant: Partial<Tables<"restaurants">> & Record<string, unknown>, media: BusinessMediaItem[] = []): Restaurant {
-  const gallery = media.length > 0 ? galleryUrlsFromBusinessMedia(media) : restaurant.image_path ? [restaurant.image_path as string] : [];
-  const image = media.find((item) => item.isCover)?.url ?? gallery[0] ?? (restaurant.image_path as string | undefined);
+  const coverItem = getCanonicalPublicMediaCover(media);
+  const galleryMedia = getCanonicalPublicMediaGallery(media);
+  const gallery = galleryMedia.length > 0
+    ? Array.from(new Set(galleryMedia.map((item) => item.url)))
+    : restaurant.image_path
+      ? [restaurant.image_path as string]
+      : [];
+  const image = coverItem?.url ?? (restaurant.image_path as string | undefined) ?? gallery[0] ?? "";
   const membershipTier = typeof restaurant.membership_plan_name === "string"
     ? String(restaurant.membership_plan_name).toLowerCase()
     : typeof restaurant.membership_plan_id === "string"
@@ -258,7 +277,7 @@ export function mapRestaurantRowToDomain(restaurant: Partial<Tables<"restaurants
     website: typeof restaurant.website === "string" ? restaurant.website : null,
     instagram: typeof restaurant.instagram === "string" ? restaurant.instagram : null,
     facebook: typeof restaurant.facebook === "string" ? restaurant.facebook : null,
-    image: image ?? "",
+    image,
     gallery,
     media,
     featured: Boolean(restaurant.featured),

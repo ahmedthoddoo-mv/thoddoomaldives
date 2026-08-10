@@ -22,6 +22,15 @@ function normalizeProviderMode(mode: string): "mock" | "supabase" {
   return mode === "mock" ? "mock" : "supabase";
 }
 
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error && error.message) return error.message;
+  if (error && typeof error === "object" && "message" in error) {
+    const candidate = (error as { message?: unknown }).message;
+    if (typeof candidate === "string" && candidate.trim()) return candidate;
+  }
+  return "Supabase read failed.";
+}
+
 async function safeRead<T>({
   read,
   fallback,
@@ -50,7 +59,7 @@ async function safeRead<T>({
     return {
       data: fallback(),
       source: "supabase_error",
-      error: error instanceof Error ? error.message : "Supabase read failed."
+      error: getErrorMessage(error)
     };
   }
 }

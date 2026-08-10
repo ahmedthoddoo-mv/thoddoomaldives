@@ -44,6 +44,43 @@ type UploadProgress = {
   message?: string;
 };
 
+function areItemsEqual(left: BusinessMediaItem[], right: BusinessMediaItem[]) {
+  if (left.length !== right.length) {
+    return false;
+  }
+
+  return left.every((item, index) => {
+    const other = right[index];
+    if (!other) {
+      return false;
+    }
+
+    return item.id === other.id
+      && item.url === other.url
+      && item.caption === other.caption
+      && item.altText === other.altText
+      && item.sortOrder === other.sortOrder
+      && item.isCover === other.isCover
+      && item.isFeatured === other.isFeatured
+      && item.isPublic === other.isPublic
+      && item.mediaPurpose === other.mediaPurpose;
+  });
+}
+
+function getItemsSignature(items: BusinessMediaItem[]) {
+  return JSON.stringify(items.map((item) => ({
+    id: item.id,
+    url: item.url,
+    caption: item.caption,
+    altText: item.altText,
+    sortOrder: item.sortOrder,
+    isCover: item.isCover,
+    isFeatured: item.isFeatured,
+    isPublic: item.isPublic,
+    mediaPurpose: item.mediaPurpose
+  })));
+}
+
 function sanitizeText(value: string, maxLength = 240) {
   return value.replace(/[<>]/g, "").slice(0, maxLength);
 }
@@ -108,12 +145,25 @@ export default function MediaGallery(props: MediaGalleryProps) {
   const [dirty, setDirty] = useState(false);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const gallerySignature = useMemo(() => getItemsSignature(galleryItems), [galleryItems]);
+  const propSignature = useMemo(() => getItemsSignature(props.items), [props.items]);
+  const galleryItemsRef = useRef(galleryItems);
+  const gallerySignatureRef = useRef(gallerySignature);
+
+  galleryItemsRef.current = galleryItems;
+  gallerySignatureRef.current = gallerySignature;
 
   useEffect(() => {
+    if (
+      gallerySignatureRef.current === propSignature
+      || areItemsEqual(galleryItemsRef.current, props.items)
+    ) {
+      return;
+    }
     setGalleryItems(props.items);
     setActiveId(props.items[0]?.id ?? "");
     setDirty(false);
-  }, [props.items]);
+  }, [propSignature, props.items]);
 
   useEffect(() => {
     manageCallback?.(galleryItems);

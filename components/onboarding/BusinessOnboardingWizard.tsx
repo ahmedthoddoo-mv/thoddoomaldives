@@ -1,14 +1,18 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import Link from "next/link";
 import { publishBusinessOnboardingDraft, saveBusinessOnboardingDraft } from "@/lib/onboarding/server";
 import {
   getBusinessOnboardingDefinition,
   getBusinessOnboardingSteps,
   getDefaultBusinessOnboardingValues,
   mergeBusinessOnboardingValues,
+  parseGuesthouseRooms,
+  serializeGuesthouseRooms,
   validateBusinessOnboardingStep,
+  type BusinessOnboardingValue,
+  type GuesthouseRoomDraft,
   type BusinessOnboardingValues
 } from "@/lib/onboarding/businessOnboardingDefinitions";
 
@@ -18,6 +22,9 @@ type BusinessOnboardingWizardProps = {
   draftId?: string;
   initialValues?: BusinessOnboardingValues;
   listingId?: string;
+  initialStepId?: string;
+  allowedBusinessTypes?: string[];
+  onBusinessTypeChange?: (businessType: string) => void;
 };
 
 function StepShell({ title, description, children }: { title: string; description: string; children: ReactNode }) {
@@ -66,21 +73,55 @@ function TextArea({ value, onChange, placeholder, rows = 4 }: { value: string; o
   );
 }
 
-export function BusinessOnboardingWizard({ ownerType, businessType, draftId, initialValues, listingId }: BusinessOnboardingWizardProps) {
-  const router = useRouter();
-  const definition = useMemo(() => getBusinessOnboardingDefinition(businessType), [businessType]);
-  const steps = useMemo(() => getBusinessOnboardingSteps(businessType), [businessType]);
-  const [values, setValues] = useState<BusinessOnboardingValues>(mergeBusinessOnboardingValues(getDefaultBusinessOnboardingValues(businessType), initialValues ?? {}));
-  const [stepIndex, setStepIndex] = useState(0);
+export function BusinessOnboardingWizard({
+  ownerType,
+  businessType,
+  draftId,
+  initialValues,
+  listingId,
+  initialStepId,
+  allowedBusinessTypes = ["restaurant", "guesthouse", "experience", "transfer"],
+  onBusinessTypeChange
+}: BusinessOnboardingWizardProps) {
+  const initialBusinessType = String((initialValues?.businessType ?? businessType) || "restaurant");
+  const [values, setValues] = useState<BusinessOnboardingValues>(
+    mergeBusinessOnboardingValues(getDefaultBusinessOnboardingValues(initialBusinessType), initialValues ?? {})
+  );
+  const activeBusinessType = String((values.businessType ?? initialBusinessType) || "restaurant");
+  const definition = useMemo(() => getBusinessOnboardingDefinition(activeBusinessType), [activeBusinessType]);
+  const steps = useMemo(() => getBusinessOnboardingSteps(activeBusinessType), [activeBusinessType]);
+  const [stepIndex, setStepIndex] = useState(() => {
+    const initialSteps = getBusinessOnboardingSteps(initialBusinessType);
+    const lookup = initialStepId ? initialSteps.findIndex((step) => step.id === initialStepId) : -1;
+    return lookup >= 0 ? lookup : 0;
+  });
   const [errors, setErrors] = useState<string[]>([]);
   const [draftState, setDraftState] = useState<string | null>(draftId ?? null);
+  const [draftResumePath, setDraftResumePath] = useState<string | null>(
+    draftId ? `/admin/businesses/${draftId}/onboarding` : null
+  );
   const [statusMessage, setStatusMessage] = useState<string>("");
   const [isPublishing, setIsPublishing] = useState(false);
 
-  const currentStep = steps[stepIndex];
+  useEffect(() => {
+    onBusinessTypeChange?.(activeBusinessType);
+  }, [activeBusinessType, onBusinessTypeChange]);
 
-  function updateValue(key: string, value: string | boolean) {
+  const boundedStepIndex = Math.min(stepIndex, Math.max(0, steps.length - 1));
+  const currentStep = steps[boundedStepIndex];
+
+  function updateValue(key: string, value: BusinessOnboardingValue) {
     setValues((previous) => ({ ...previous, [key]: value }));
+  }
+
+  function changeBusinessType(nextBusinessType: string) {
+    setValues((previous) => {
+      const nextDefaults = getDefaultBusinessOnboardingValues(nextBusinessType);
+      return mergeBusinessOnboardingValues(nextDefaults, { ...previous, businessType: nextBusinessType });
+    });
+    setStepIndex(0);
+    setErrors([]);
+    setStatusMessage("");
   }
 
   function handleNext() {
@@ -90,14 +131,16 @@ export function BusinessOnboardingWizard({ ownerType, businessType, draftId, ini
       return;
     }
     setErrors([]);
-    if (stepIndex < steps.length - 1) {
+    if (boundedStepIndex < steps.length - 1) {
       setStepIndex((previous) => previous + 1);
+      return;
     }
+    setStatusMessage("All steps are complete. Save draft to preserve changes.");
   }
 
   function handlePrevious() {
     setErrors([]);
-    if (stepIndex > 0) {
+    if (boundedStepIndex > 0) {
       setStepIndex((previous) => previous - 1);
     }
   }
@@ -107,16 +150,24 @@ export function BusinessOnboardingWizard({ ownerType, businessType, draftId, ini
     const result = await saveBusinessOnboardingDraft({
       draftId: draftState ?? undefined,
       ownerType,
-      businessType,
+      businessType: activeBusinessType,
       currentStep: currentStep.id,
       listingId,
       values: values as Record<string, unknown>
     });
     if (result.ok) {
-      setDraftState(result.draftId ?? null);
-      setStatusMessage("Draft saved. You can resume later from this link.");
-      const nextQuery = result.draftId ? `?draftId=${result.draftId}` : "";
-      router.replace(nextQuery || window.location.pathname);
+      const savedDraftId = result.draftId;
+      setDraftState(savedDraftId ?? null);
+      const resumePath = result.resumePath ?? (savedDraftId ? `/admin/businesses/${savedDraftId}/onboarding` : null);
+      setDraftResumePath(resumePath);
+      setStatusMessage("Draft saved successfully. You can safely leave and continue later.");
+      if (resumePath && typeof window !== "undefined") {
+        // Soft URL update — preserves wizard state without a full navigation
+        const alreadyOnDraftRoute = window.location.pathname.includes(savedDraftId ?? "");
+        if (!alreadyOnDraftRoute) {
+          window.history.replaceState({}, "", resumePath);
+        }
+      }
     } else {
       setStatusMessage(result.message ?? "The draft could not be saved.");
     }
@@ -130,7 +181,7 @@ export function BusinessOnboardingWizard({ ownerType, businessType, draftId, ini
     setIsPublishing(true);
     const result = await publishBusinessOnboardingDraft({
       draftId: draftState,
-      businessType,
+      businessType: activeBusinessType,
       values: values as Record<string, unknown>,
       listingId
     });
@@ -143,33 +194,85 @@ export function BusinessOnboardingWizard({ ownerType, businessType, draftId, ini
     }
   }
 
+  const guesthouseRooms = useMemo(() => parseGuesthouseRooms(values.guesthouseRooms), [values.guesthouseRooms]);
+  const guesthouseAmenities = useMemo(
+    () => String(values.amenities ?? "").split("\n").map((item) => item.trim()).filter(Boolean),
+    [values.amenities]
+  );
+
+  function saveGuesthouseRooms(nextRooms: GuesthouseRoomDraft[]) {
+    updateValue("guesthouseRooms", serializeGuesthouseRooms(nextRooms));
+    if (!String(values.numberOfRooms ?? "").trim()) {
+      updateValue("numberOfRooms", String(nextRooms.reduce((total, room) => total + Math.max(1, room.quantity), 0)));
+    }
+  }
+
+  function addGuesthouseRoom() {
+    saveGuesthouseRooms([
+      ...guesthouseRooms,
+      {
+        id: `room-${Date.now().toString(36)}`,
+        name: "",
+        description: "",
+        maxGuests: 2,
+        bedType: "",
+        quantity: 1,
+        basePrice: "",
+        gallery: [],
+        amenities: [],
+        featured: guesthouseRooms.length === 0
+      }
+    ]);
+  }
+
+  function updateGuesthouseRoom(roomId: string, updater: (room: GuesthouseRoomDraft) => GuesthouseRoomDraft) {
+    saveGuesthouseRooms(guesthouseRooms.map((room) => (room.id === roomId ? updater(room) : room)));
+  }
+
+  function moveGuesthouseRoom(roomId: string, direction: "up" | "down") {
+    const index = guesthouseRooms.findIndex((room) => room.id === roomId);
+    if (index < 0) return;
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= guesthouseRooms.length) return;
+    const next = [...guesthouseRooms];
+    [next[index], next[targetIndex]] = [next[targetIndex]!, next[index]!];
+    saveGuesthouseRooms(next);
+  }
+
   function renderStepContent() {
     switch (currentStep.id) {
       case "business":
         return (
           <StepShell title="Business" description="Set the core business identity and short summary for the listing.">
             <div className="grid gap-4 md:grid-cols-2">
-              <Field label="Business name" hint="This becomes the public listing title.">
-                <TextInput value={String(values.title ?? "")} onChange={(value) => updateValue("title", value)} placeholder="e.g. Food Land" />
+              <Field label={activeBusinessType === "guesthouse" ? "Property name" : "Business name"} hint="This becomes the public listing title.">
+                <TextInput value={String(values.title ?? "")} onChange={(value) => updateValue("title", value)} placeholder={activeBusinessType === "guesthouse" ? "e.g. Thoddoo Sun Sky Inn" : "e.g. Food Land"} />
               </Field>
               <Field label="Slug" hint="Used for the public URL and should be unique.">
                 <TextInput value={String(values.slug ?? "")} onChange={(value) => updateValue("slug", value)} placeholder="food-land" />
               </Field>
               <Field label="Short description" hint="Short, public-facing description.">
-                <TextInput value={String(values.shortDescription ?? "")} onChange={(value) => updateValue("shortDescription", value)} placeholder="Fresh seafood and local dining" />
+                <TextInput value={String(values.shortDescription ?? "")} onChange={(value) => updateValue("shortDescription", value)} placeholder={activeBusinessType === "guesthouse" ? "Beachside guesthouse with island-hosted stays." : "Fresh seafood and local dining"} />
               </Field>
-              <Field label="Category" hint="The engine is currently wired for restaurant onboarding.">
+              <Field label="Category" hint="Select the module that plugs into the shared onboarding workflow.">
                 <select
                   className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
-                  value={String(values.businessType ?? businessType)}
-                  onChange={(event) => updateValue("businessType", event.target.value)}
+                  value={activeBusinessType}
+                  onChange={(event) => changeBusinessType(event.target.value)}
+                  disabled={ownerType !== "admin"}
                 >
-                  <option value="restaurant">Restaurant</option>
-                  <option value="guesthouse">Guesthouse</option>
-                  <option value="experience">Experience</option>
-                  <option value="transfer">Transfer</option>
+                  {allowedBusinessTypes.map((typeOption) => (
+                    <option key={typeOption} value={typeOption}>
+                      {getBusinessOnboardingDefinition(typeOption).label}
+                    </option>
+                  ))}
                 </select>
               </Field>
+              {activeBusinessType === "guesthouse" ? (
+                <Field label="Property type" hint="Guesthouse, hotel, boutique hotel, villa, apartment, or homestay.">
+                  <TextInput value={String(values.propertyType ?? "")} onChange={(value) => updateValue("propertyType", value)} placeholder="Guesthouse" />
+                </Field>
+              ) : null}
               <div className="md:col-span-2">
                 <Field label="Full description" hint="Supports the full profile, not just the title.">
                   <TextArea value={String(values.description ?? "")} onChange={(value) => updateValue("description", value)} placeholder="Describe the business, atmosphere, and experience." rows={5} />
@@ -275,6 +378,7 @@ export function BusinessOnboardingWizard({ ownerType, businessType, draftId, ini
                   className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
                   value={String(values.membershipTier ?? "starter")}
                   onChange={(event) => updateValue("membershipTier", event.target.value)}
+                  disabled={ownerType !== "admin"}
                 >
                   <option value="starter">Starter</option>
                   <option value="premium">Premium</option>
@@ -360,10 +464,35 @@ export function BusinessOnboardingWizard({ ownerType, businessType, draftId, ini
                   </div>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-slate-800">Restaurant module</p>
-                  <p className="text-sm text-slate-600">Cuisine: {String(values.cuisine ?? "—")}</p>
-                  <p className="text-sm text-slate-600">Price range: {String(values.priceRange ?? "—")}</p>
+                  <p className="text-sm font-semibold text-slate-800">{activeBusinessType === "guesthouse" ? "Guesthouse summary" : "Restaurant summary"}</p>
+                  {activeBusinessType === "guesthouse" ? (
+                    <>
+                      <p className="text-sm text-slate-600">Property type: {String(values.propertyType ?? "—")}</p>
+                      <p className="text-sm text-slate-600">Rooms: {String((values.numberOfRooms ?? guesthouseRooms.length) || "—")}</p>
+                      <p className="text-sm text-slate-600">Amenities: {String(values.amenities ?? "").split("\n").filter(Boolean).length || 0}</p>
+                      <p className="text-sm text-slate-600">Facilities: {String(values.facilities ?? "").split("\n").filter(Boolean).length || 0}</p>
+                      <p className="text-sm text-slate-600">Policies: {String(values.guesthousePolicies ?? "").split("\n").filter(Boolean).length || 0}</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-sm text-slate-600">Cuisine: {String(values.cuisine ?? "—")}</p>
+                      <p className="text-sm text-slate-600">Price range: {String(values.priceRange ?? "—")}</p>
+                    </>
+                  )}
                 </div>
+                {activeBusinessType === "guesthouse" ? (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700">
+                    Missing checks: {[
+                      !String(values.coverUrl ?? "").trim() ? "hero image" : "",
+                      guesthouseRooms.length === 0 ? "room inventory" : "",
+                      guesthouseRooms.some((room) => !room.basePrice.trim()) ? "room prices" : "",
+                      !String(values.whatsapp ?? "").trim() ? "WhatsApp" : "",
+                      !String(values.galleryUrl ?? "").trim() ? "gallery reference" : "",
+                      !String(values.island ?? "").trim() ? "location" : "",
+                      !String(values.checkIn ?? "").trim() || !String(values.checkOut ?? "").trim() ? "check-in/check-out" : ""
+                    ].filter(Boolean).join(", ") || "none"}
+                  </div>
+                ) : null}
               </div>
             </div>
           </StepShell>
@@ -377,6 +506,7 @@ export function BusinessOnboardingWizard({ ownerType, businessType, draftId, ini
                   className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
                   value={String(values.publicationStatus ?? "draft")}
                   onChange={(event) => updateValue("publicationStatus", event.target.value)}
+                  disabled={ownerType !== "admin"}
                 >
                   <option value="draft">Draft</option>
                   <option value="published">Published</option>
@@ -387,6 +517,7 @@ export function BusinessOnboardingWizard({ ownerType, businessType, draftId, ini
                   className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
                   value={String(values.verificationStatus ?? "pending")}
                   onChange={(event) => updateValue("verificationStatus", event.target.value)}
+                  disabled={ownerType !== "admin"}
                 >
                   <option value="pending">Pending</option>
                   <option value="verified">Verified</option>
@@ -394,21 +525,144 @@ export function BusinessOnboardingWizard({ ownerType, businessType, draftId, ini
                 </select>
               </Field>
               <label className="flex items-center gap-2 text-sm text-slate-700">
-                <input type="checkbox" checked={Boolean(values.featured)} onChange={(event) => updateValue("featured", event.target.checked)} />
+                <input type="checkbox" checked={Boolean(values.featured)} onChange={(event) => updateValue("featured", event.target.checked)} disabled={ownerType !== "admin"} />
                 <span>Featured listing</span>
               </label>
-              <label className="flex items-center gap-2 text-sm text-slate-700">
-                <input type="checkbox" checked={Boolean(values.showOriginalMenu)} onChange={(event) => updateValue("showOriginalMenu", event.target.checked)} />
-                <span>Show original source menu publicly</span>
-              </label>
+              {activeBusinessType === "restaurant" ? (
+                <label className="flex items-center gap-2 text-sm text-slate-700">
+                  <input type="checkbox" checked={Boolean(values.showOriginalMenu)} onChange={(event) => updateValue("showOriginalMenu", event.target.checked)} disabled={ownerType !== "admin"} />
+                  <span>Show original source menu publicly</span>
+                </label>
+              ) : null}
+              {ownerType !== "admin" ? (
+                <p className="md:col-span-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
+                  Verification, publication, membership, featured, and ownership fields are admin controlled.
+                </p>
+              ) : null}
             </div>
           </StepShell>
         );
-      case "guesthouse-module":
+      case "property-details":
         return (
-          <StepShell title="Guesthouse module" description="A placeholder module for future guesthouse onboarding expansion.">
-            <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600">
-              Room types, occupancy, facilities, and checkout policies will plug into this step next.
+          <StepShell title="Property details" description="Capture core property information used by the canonical guesthouse profile.">
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field label="Property type" hint="Guesthouse, Hotel, Boutique Hotel, Villa, Apartment, or Homestay.">
+                <TextInput value={String(values.propertyType ?? "")} onChange={(value) => updateValue("propertyType", value)} placeholder="Guesthouse" />
+              </Field>
+              <Field label="Number of rooms" hint="Used in admin, partner, and public summaries.">
+                <TextInput value={String(values.numberOfRooms ?? "")} onChange={(value) => updateValue("numberOfRooms", value)} placeholder="12" />
+              </Field>
+              <Field label="Check-in" hint="Use HH:MM where possible.">
+                <TextInput value={String(values.checkIn ?? "")} onChange={(value) => updateValue("checkIn", value)} placeholder="14:00" />
+              </Field>
+              <Field label="Check-out" hint="Use HH:MM where possible.">
+                <TextInput value={String(values.checkOut ?? "")} onChange={(value) => updateValue("checkOut", value)} placeholder="12:00" />
+              </Field>
+              <div className="md:col-span-2">
+                <Field label="Languages spoken" hint="One language per line.">
+                  <TextArea value={String(values.languagesSpoken ?? "")} onChange={(value) => updateValue("languagesSpoken", value)} placeholder={"English\nDhivehi"} rows={3} />
+                </Field>
+              </div>
+            </div>
+          </StepShell>
+        );
+      case "rooms":
+        return (
+          <StepShell title="Rooms" description="Add room types, pricing, occupancy, amenities, and room galleries.">
+            <div className="rounded-2xl border border-slate-200 p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <p className="text-sm font-semibold text-slate-800">Room management</p>
+                <button type="button" className="rounded-full border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-700" onClick={addGuesthouseRoom}>
+                  Add Room
+                </button>
+              </div>
+              <div className="space-y-4">
+                {guesthouseRooms.length === 0 ? (
+                  <p className="rounded-xl bg-slate-50 p-3 text-sm text-slate-600">No rooms added yet. Add at least one room to continue.</p>
+                ) : guesthouseRooms.map((room, index) => (
+                  <article key={room.id} className="rounded-xl border border-slate-200 p-3">
+                    <div className="mb-2 flex items-center justify-between">
+                      <p className="text-sm font-semibold text-slate-900">Room {index + 1}</p>
+                      <div className="flex items-center gap-3">
+                        <button type="button" className="text-xs font-semibold text-slate-700" disabled={index === 0} onClick={() => moveGuesthouseRoom(room.id, "up")}>Up</button>
+                        <button type="button" className="text-xs font-semibold text-slate-700" disabled={index === guesthouseRooms.length - 1} onClick={() => moveGuesthouseRoom(room.id, "down")}>Down</button>
+                        <button
+                          type="button"
+                          className="text-xs font-semibold text-red-600"
+                          onClick={() => saveGuesthouseRooms(guesthouseRooms.filter((entry) => entry.id !== room.id))}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <Field label="Name"><TextInput value={room.name} onChange={(value) => updateGuesthouseRoom(room.id, (current) => ({ ...current, name: value }))} placeholder="Deluxe Double Room" /></Field>
+                      <Field label="Base price"><TextInput value={room.basePrice} onChange={(value) => updateGuesthouseRoom(room.id, (current) => ({ ...current, basePrice: value }))} placeholder="USD 120/night" /></Field>
+                      <Field label="Maximum guests"><TextInput value={String(room.maxGuests || "")} onChange={(value) => updateGuesthouseRoom(room.id, (current) => ({ ...current, maxGuests: Number(value) || 0 }))} placeholder="2" /></Field>
+                      <Field label="Quantity"><TextInput value={String(room.quantity || "")} onChange={(value) => updateGuesthouseRoom(room.id, (current) => ({ ...current, quantity: Number(value) || 1 }))} placeholder="4" /></Field>
+                      <Field label="Bed type"><TextInput value={room.bedType} onChange={(value) => updateGuesthouseRoom(room.id, (current) => ({ ...current, bedType: value }))} placeholder="King bed" /></Field>
+                      <label className="flex items-center gap-2 self-end text-sm text-slate-700">
+                        <input type="checkbox" checked={room.featured} onChange={(event) => saveGuesthouseRooms(guesthouseRooms.map((entry) => ({ ...entry, featured: entry.id === room.id ? event.target.checked : false })))} />
+                        <span>Featured room</span>
+                      </label>
+                      <div className="md:col-span-2">
+                        <Field label="Description"><TextArea value={room.description} onChange={(value) => updateGuesthouseRoom(room.id, (current) => ({ ...current, description: value }))} rows={3} /></Field>
+                      </div>
+                      <div className="md:col-span-2">
+                        <Field label="Room gallery URLs" hint="One URL per line.">
+                          <TextArea value={room.gallery.join("\n")} onChange={(value) => updateGuesthouseRoom(room.id, (current) => ({ ...current, gallery: value.split("\n").map((entry) => entry.trim()).filter(Boolean) }))} rows={3} />
+                        </Field>
+                      </div>
+                      <div className="md:col-span-2">
+                        <Field label="Room amenities" hint="One amenity per line.">
+                          <TextArea value={room.amenities.join("\n")} onChange={(value) => updateGuesthouseRoom(room.id, (current) => ({ ...current, amenities: value.split("\n").map((entry) => entry.trim()).filter(Boolean) }))} rows={3} />
+                        </Field>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </StepShell>
+        );
+      case "amenities-facilities":
+        return (
+          <StepShell title="Amenities & facilities" description="Capture property amenities, facilities, and nearby attractions.">
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field label="Amenities" hint="One amenity per line.">
+                <TextArea value={String(values.amenities ?? "")} onChange={(value) => updateValue("amenities", value)} rows={4} />
+              </Field>
+              <Field label="Facilities" hint="One facility per line (restaurant, spa, gym, pool, diving, etc.).">
+                <TextArea value={String(values.facilities ?? "")} onChange={(value) => updateValue("facilities", value)} rows={4} />
+              </Field>
+              <Field label="Nearby attractions" hint="One attraction per line (name|distance|description).">
+                <TextArea value={String(values.nearbyAttractions ?? "")} onChange={(value) => updateValue("nearbyAttractions", value)} rows={4} />
+              </Field>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
+                Suggested amenities: {guesthouseAmenities.join(", ") || "Air conditioning, Private bathroom, Free Wi-Fi, Daily housekeeping, Breakfast, Tea/coffee facilities, Mini refrigerator, Flat-screen TV, Hot-water shower, Toiletries, Hairdryer, Beach towels, Transfer assistance, Excursion bookings, Bicycle rental assistance"}
+              </div>
+            </div>
+          </StepShell>
+        );
+      case "policies-booking":
+        return (
+          <StepShell title="Policies & booking" description="Set stay policies and public booking/contact channels.">
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field label="Guesthouse policies" hint="One policy per line (children, pets, cancellation, taxes, payment, etc.).">
+                <TextArea value={String(values.guesthousePolicies ?? values.policies ?? "")} onChange={(value) => { updateValue("guesthousePolicies", value); updateValue("policies", value); }} rows={4} />
+              </Field>
+              <Field label="Booking information notes" hint="One channel per line for quick notes.">
+                <TextArea value={String(values.bookingChannels ?? "")} onChange={(value) => updateValue("bookingChannels", value)} rows={4} />
+              </Field>
+              <Field label="Booking.com URL"><TextInput value={String(values.bookingComUrl ?? "")} onChange={(value) => updateValue("bookingComUrl", value)} placeholder="https://www.booking.com/..." /></Field>
+              <Field label="Airbnb URL"><TextInput value={String(values.airbnbUrl ?? "")} onChange={(value) => updateValue("airbnbUrl", value)} placeholder="https://www.airbnb.com/..." /></Field>
+              <Field label="Expedia URL"><TextInput value={String(values.expediaUrl ?? "")} onChange={(value) => updateValue("expediaUrl", value)} placeholder="https://www.expedia.com/..." /></Field>
+              <Field label="Direct booking URL"><TextInput value={String(values.directBookingUrl ?? "")} onChange={(value) => updateValue("directBookingUrl", value)} placeholder="https://..." /></Field>
+              <div className="md:col-span-2">
+                <Field label="Map or directions URL" hint="Preferred for public map and directions buttons.">
+                  <TextInput value={String(values.mapUrl ?? "")} onChange={(value) => updateValue("mapUrl", value)} placeholder="https://maps.google.com/..." />
+                </Field>
+              </div>
             </div>
           </StepShell>
         );
@@ -435,6 +689,18 @@ export function BusinessOnboardingWizard({ ownerType, businessType, draftId, ini
 
   return (
     <div className="space-y-6">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">{definition.label} workflow</p>
+        <h2 className="mt-2 text-xl font-semibold text-slate-900">
+          {activeBusinessType === "guesthouse" ? "Create a new guesthouse listing" : `Create a new ${definition.label.toLowerCase()} listing`}
+        </h2>
+        <p className="mt-1 text-sm text-slate-600">
+          {activeBusinessType === "guesthouse"
+            ? "Add property details, rooms, amenities, photos, booking contacts, and policies through one guided flow."
+            : definition.description}
+        </p>
+      </section>
+
       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
         <div className="flex flex-wrap items-center gap-2">
           {steps.map((step, index) => {
@@ -450,29 +716,53 @@ export function BusinessOnboardingWizard({ ownerType, businessType, draftId, ini
       </div>
 
       {errors.length > 0 ? <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700">{errors.join(" ")}</div> : null}
-      {statusMessage ? <div className="rounded-2xl border border-slate-200 bg-white p-3 text-sm text-slate-700">{statusMessage}</div> : null}
+      {statusMessage ? (
+        <div className="rounded-2xl border border-slate-200 bg-white p-3 text-sm text-slate-700">
+          <p className="font-medium">{statusMessage}</p>
+          {draftResumePath && statusMessage.startsWith("Draft saved") ? (
+            <div className="mt-2 flex flex-wrap items-center gap-3">
+              <Link
+                href={draftResumePath}
+                className="rounded-full border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                Open saved draft
+              </Link>
+              <button
+                type="button"
+                className="rounded-full border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                onClick={() => {
+                  const url = `${window.location.origin}${draftResumePath}`;
+                  navigator.clipboard?.writeText(url).catch(() => undefined);
+                }}
+              >
+                Copy resume link
+              </button>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
 
       {renderStepContent()}
 
       <div className="sticky bottom-4 z-10 rounded-2xl border border-slate-200 bg-white/90 p-3 shadow-sm backdrop-blur">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="text-sm text-slate-600">
-            Step {stepIndex + 1} of {steps.length}: {currentStep.label}
+            Step {boundedStepIndex + 1} of {steps.length}: {currentStep.label}
           </div>
           <div className="flex flex-wrap gap-2">
-            <button type="button" className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700" onClick={handlePrevious} disabled={stepIndex === 0}>
+            <button type="button" className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700" onClick={handlePrevious} disabled={boundedStepIndex === 0}>
               Back
             </button>
             <button type="button" className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700" onClick={() => handleSave()}>
               Save draft
             </button>
-            {currentStep.id === "publish" ? (
+            {currentStep.id === "publish" && ownerType === "admin" ? (
               <button type="button" className="rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white" onClick={handlePublish} disabled={isPublishing}>
                 {isPublishing ? "Publishing..." : "Publish"}
               </button>
             ) : (
               <button type="button" className="rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white" onClick={handleNext}>
-                Continue
+                {boundedStepIndex === steps.length - 1 ? "Finish" : "Continue"}
               </button>
             )}
           </div>

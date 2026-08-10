@@ -25,7 +25,12 @@ function createService(index: number): PartnerPortalServiceItem {
       capacity: "2 guests",
       bedType: "",
       breakfast: "Confirm",
-      availability: "Available"
+      availability: "Available",
+      maxGuests: "2",
+      quantity: "1",
+      featured: "false",
+      amenities: "",
+      gallery: ""
     }
   };
 }
@@ -101,6 +106,14 @@ export function PartnerRoomsView({ initialServices, businessType = "guesthouse" 
                   <input value={service.childPrice} onChange={(event) => updateService(service.id, { childPrice: event.target.value })} />
                 </label>
                 <label>
+                  <span>Max Guests</span>
+                  <input value={service.metadata.maxGuests ?? ""} onChange={(event) => updateMetadata(service.id, "maxGuests", event.target.value)} />
+                </label>
+                <label>
+                  <span>Room Quantity</span>
+                  <input value={service.metadata.quantity ?? ""} onChange={(event) => updateMetadata(service.id, "quantity", event.target.value)} />
+                </label>
+                <label>
                   <span>Capacity</span>
                   <input value={service.metadata.capacity ?? ""} onChange={(event) => updateMetadata(service.id, "capacity", event.target.value)} />
                 </label>
@@ -113,12 +126,27 @@ export function PartnerRoomsView({ initialServices, businessType = "guesthouse" 
                   <input value={service.metadata.availability ?? ""} onChange={(event) => updateMetadata(service.id, "availability", event.target.value)} />
                 </label>
                 <label className="partnerPortalWide">
+                  <span>Room Amenities (one per line)</span>
+                  <textarea value={service.metadata.amenities ?? ""} onChange={(event) => updateMetadata(service.id, "amenities", event.target.value)} />
+                </label>
+                <label className="partnerPortalWide">
+                  <span>Room Gallery URLs (one per line)</span>
+                  <textarea value={service.metadata.gallery ?? ""} onChange={(event) => updateMetadata(service.id, "gallery", event.target.value)} />
+                </label>
+                <label className="partnerPortalWide">
                   <span>Description</span>
                   <textarea value={service.description} onChange={(event) => updateService(service.id, { description: event.target.value })} />
                 </label>
                 <label className="partnerPortalWide">
                   <span>Included Items / Amenities / Equipment / Safety Info</span>
                   <textarea value={service.notes} onChange={(event) => updateService(service.id, { notes: event.target.value })} />
+                </label>
+                <label>
+                  <span>Featured Room</span>
+                  <select value={service.metadata.featured ?? "false"} onChange={(event) => updateMetadata(service.id, "featured", event.target.value)}>
+                    <option value="false">No</option>
+                    <option value="true">Yes</option>
+                  </select>
                 </label>
               </div>
               <div className="partnerPortalActions">

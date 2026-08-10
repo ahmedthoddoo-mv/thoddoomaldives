@@ -1,5 +1,39 @@
 import type { BusinessMediaItem, BusinessMediaType } from "@/types/business-media";
 
+function comparePublicMediaPriority(left: BusinessMediaItem, right: BusinessMediaItem) {
+  if (left.isCover !== right.isCover) {
+    return left.isCover ? -1 : 1;
+  }
+  if (left.isFeatured !== right.isFeatured) {
+    return left.isFeatured ? -1 : 1;
+  }
+  if (left.sortOrder !== right.sortOrder) {
+    return left.sortOrder - right.sortOrder;
+  }
+  return left.fileName.localeCompare(right.fileName);
+}
+
+export function orderPublicBusinessMedia(items: BusinessMediaItem[]) {
+  return items
+    .filter((item) => item.isPublic)
+    .slice()
+    .sort(comparePublicMediaPriority);
+}
+
+export function getCanonicalPublicMediaCover(items: BusinessMediaItem[]) {
+  const ordered = orderPublicBusinessMedia(items);
+  return ordered.find((item) => item.isCover)
+    ?? ordered.find((item) => item.isFeatured)
+    ?? ordered[0]
+    ?? null;
+}
+
+export function getCanonicalPublicMediaGallery(items: BusinessMediaItem[]) {
+  const ordered = orderPublicBusinessMedia(items);
+  const cover = getCanonicalPublicMediaCover(ordered);
+  return cover ? ordered.filter((item) => item.id !== cover.id) : ordered;
+}
+
 export function mediaItemsFromUrls(
   urls: string[],
   businessName: string,

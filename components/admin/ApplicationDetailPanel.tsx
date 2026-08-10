@@ -10,6 +10,7 @@ import { ApplicationTimeline } from "@/components/admin/ApplicationTimeline";
 import { ApplicationVerificationChecklist } from "@/components/admin/ApplicationVerificationChecklist";
 import { RequestedChangesList } from "@/components/admin/RequestedChangesList";
 import { ApplicationReviewEditor } from "@/components/admin/ApplicationReviewEditor";
+import { getApplicationOwnerState } from "@/lib/applications/ownerState";
 import type { PartnerApplicationRecord } from "@/types/partner-application";
 
 type OwnerOption = {
@@ -51,6 +52,7 @@ export function ApplicationDetailPanel({
 }) {
   const [applicationOverride, setApplicationOverride] = useState<PartnerApplicationRecord>();
   const application = applicationOverride ?? initialApplication;
+  const ownerState = application ? getApplicationOwnerState(application) : null;
 
   if (!application) {
     return (
@@ -88,6 +90,17 @@ export function ApplicationDetailPanel({
 
       <div className="adminTwoColumn">
         <section className="adminPanel applicationDetailPanel">
+          {ownerState ? (
+            <div className="adminPanel applicationOwnerSummary">
+              <div className="adminSectionHeader">
+                <p className="eyebrow">Owner status</p>
+                <h2>{ownerState.title}</h2>
+              </div>
+              <p>{ownerState.detail}</p>
+              {application.linkedPartnerName ? <p><strong>Linked partner:</strong> {application.linkedPartnerName}</p> : null}
+              {application.ownerInvitationStatus === "pending" && application.email ? <p><strong>Invited owner:</strong> {application.email}</p> : null}
+            </div>
+          ) : null}
           <div className="adminSectionHeader">
             <p className="eyebrow">Application profile</p>
             <h2>Submitted details</h2>

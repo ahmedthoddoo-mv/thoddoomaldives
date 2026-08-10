@@ -16,7 +16,7 @@ export const SupabaseCRMRepository = {
   async findAll() {
     const supabase = createSupabaseServiceRoleClient();
     if (!supabase) throw new Error("Supabase service role is not configured.");
-    const [partnerResult, applicationResult, propertyResult, restaurantResult, experienceResult, transferResult, bookingResult, mediaResult, taskResult, noteResult] = await Promise.all([
+    const [partnerResult, applicationResult, propertyResult, restaurantResult, experienceResult, transferResult, bookingResult, businessMediaResult, taskResult, noteResult] = await Promise.all([
       supabase.from("partners").select("*").order("created_at", { ascending: false }),
       supabase.from("partner_applications").select("id, partner_id, property_id, status, business_type, submitted_at").order("submitted_at", { ascending: false }),
       supabase.from("properties").select("id, partner_id, publication_status"),
@@ -24,22 +24,36 @@ export const SupabaseCRMRepository = {
       supabase.from("experiences").select("*"),
       supabase.from("transfers").select("*"),
       supabase.from("bookings").select("id, partner_id"),
-      supabase.from("media_assets").select("id, partner_id"),
+      supabase.from("business_media").select("id, partner_id, business_type, business_id"),
       supabase.from("crm_tasks").select("id, partner_id, status"),
       supabase.from("crm_notes").select("partner_id, body, created_at").order("created_at", { ascending: false })
     ]);
     if (partnerResult.error) throw partnerResult.error;
     if (applicationResult.error) throw applicationResult.error;
-    const relatedResults = [propertyResult, restaurantResult, experienceResult, transferResult, bookingResult, mediaResult, taskResult, noteResult];
+    const relatedResults = [propertyResult, restaurantResult, experienceResult, transferResult, bookingResult, businessMediaResult, taskResult, noteResult];
     const relatedError = relatedResults.find((result) => result.error)?.error;
     if (relatedError) throw relatedError;
     const applications = (applicationResult.data ?? []) as Array<{ id: string; partner_id: string | null; property_id: string | null; status: string; submitted_at: string }>;
     const listings = [propertyResult, restaurantResult, experienceResult, transferResult]
       .flatMap((result) => result.data ?? []) as Array<{ id: string; partner_id?: string | null; publication_status?: string }>;
     const bookings = bookingResult.data ?? [];
-    const media = mediaResult.data ?? [];
+    const businessMedia = businessMediaResult.data ?? [];
     const tasks = taskResult.data ?? [];
     const notes = noteResult.data ?? [];
+
+    const listingPartnerByType = new Map<string, string | null>();
+    for (const row of propertyResult.data ?? []) listingPartnerByType.set(`property:${row.id}`, row.partner_id);
+    for (const row of restaurantResult.data ?? []) listingPartnerByType.set(`restaurant:${row.id}`, row.partner_id ?? null);
+    for (const row of experienceResult.data ?? []) listingPartnerByType.set(`experience:${row.id}`, row.partner_id ?? null);
+    for (const row of transferResult.data ?? []) listingPartnerByType.set(`transfer:${row.id}`, row.partner_id ?? null);
+
+    const mediaCounts = new Map<string, number>();
+    for (const mediaRow of businessMedia) {
+      const row = mediaRow as { partner_id: string | null; business_type: string; business_id: string };
+      const partnerId = row.partner_id ?? listingPartnerByType.get(`${row.business_type}:${row.business_id}`) ?? null;
+      if (!partnerId) continue;
+      mediaCounts.set(partnerId, (mediaCounts.get(partnerId) ?? 0) + 1);
+    }
 
     return (partnerResult.data ?? []).map((row) => {
       const partner = mapPartnerRowToDomain(row);
@@ -54,7 +68,7 @@ export const SupabaseCRMRepository = {
         linkedApplicationId: application?.id,
         linkedListingId: listing?.id,
         bookingCount: bookings.filter((item) => item.partner_id === row.id).length,
-        mediaCount: media.filter((item) => item.partner_id === row.id).length,
+        mediaCount: mediaCounts.get(row.id) ?? 0,
         latestNote: latestNote?.body,
         openTaskCount: tasks.filter((item) => item.partner_id === row.id && item.status !== "completed").length,
         notes: latestNote ? [latestNote.body] : []

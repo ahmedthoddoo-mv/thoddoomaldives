@@ -1,17 +1,18 @@
 import Link from "next/link";
+import { formatRestaurantCuisine } from "@/lib/restaurant-menu/format";
 import type { Restaurant } from "@/types/restaurant";
 
 export default function RestaurantCard({
-  restaurant,
+ restaurant,
 }: {
-  restaurant: Restaurant;
+ restaurant: Restaurant;
 }) {
-  const cuisineLabel = restaurant.cuisine.filter(Boolean).join(" • ");
-  const summary = restaurant.tagline || restaurant.description;
-  const verified = restaurant.verificationStatus === "verified";
-  const premium = restaurant.membershipTier?.toLowerCase() === "premium";
+ const cuisineLabel = formatRestaurantCuisine(restaurant.cuisine);
+ const summary = restaurant.tagline || restaurant.description;
+ const verified = restaurant.verificationStatus === "verified";
+ const premium = restaurant.membershipTier?.toLowerCase() === "premium";
 
-  return (
+ return (
     <Link
       href={`/restaurants/${restaurant.slug}`}
       className="platformCard block overflow-hidden transition hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 focus-visible:ring-offset-4"

@@ -14,7 +14,7 @@ export default function BookButton({
       rel="noopener noreferrer"
       className="inline-flex w-full items-center justify-center rounded-full bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-700 sm:w-auto"
     >
-      Book via WhatsApp
+      Reserve room
     </a>
   );
 }

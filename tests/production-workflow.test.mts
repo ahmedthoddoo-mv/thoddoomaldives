@@ -78,6 +78,7 @@ const restaurantInteractiveMenuSource = readFileSync(new URL("../components/rest
 const restaurantMenuFormatSource = readFileSync(new URL("../lib/restaurant-menu/format.ts", import.meta.url), "utf8");
 const restaurantRepositorySource = readFileSync(new URL("../lib/repositories/supabase/SupabaseRestaurantRepository.ts", import.meta.url), "utf8");
 const menuViewerSource = readFileSync(new URL("../components/restaurant/RestaurantMenuViewer.tsx", import.meta.url), "utf8");
+const adminDashboardSource = readFileSync(new URL("../app/admin/page.tsx", import.meta.url), "utf8");
 
 test("1 new guesthouse approval has no existing identity match", () => {
   assert.equal(matchIdentity(application, []), null);
@@ -226,6 +227,10 @@ test("partner replacement paths are transactional RPC calls without deletes", ()
   assert.doesNotMatch(partnerActionsSource, /\.from\("rooms"\)\.delete/);
   assert.doesNotMatch(partnerActionsSource, /\.from\("property_media"\)\.delete/);
 });
+test("partner room payload includes structured room amenities and gallery paths", () => {
+  assert.match(partnerActionsSource, /amenities:\s*\(service\.metadata\.amenities/);
+  assert.match(partnerActionsSource, /image_paths:\s*\(service\.metadata\.gallery/);
+});
 test("public editor media is owned by one property and explicitly public", () => {
   assert.match(migrationSql, /property_id = saved\.id[\s\S]*visibility = 'public'/);
   assert.match(migrationSql, /raise exception 'Media belongs to another property'/);
@@ -344,6 +349,15 @@ test("production data mode cannot default to mock", () => {
   assert.match(dataModeSource, /NEXT_PUBLIC_DATA_MODE === "mock"/);
   assert.doesNotMatch(dataModeSource, /return isSupabaseConfigured\(\) \? "supabase" : "mock"/);
 });
+test("Supabase read failures expose underlying query errors", () => {
+  assert.match(liveReadsSource, /function getErrorMessage\(error: unknown\)/);
+  assert.match(liveReadsSource, /"message" in error/);
+});
+test("dashboard migration status is no longer a hardcoded display string", () => {
+  assert.match(dataModeSource, /readLatestMigrationVersion/);
+  assert.match(dataModeSource, /readdirSync/);
+  assert.doesNotMatch(adminDashboardSource, /Migration version/);
+});
 test("Supabase read failures return empty data rather than fixture fallbacks", () => {
   assert.match(liveReadsSource, /source: "supabase_error"/);
   assert.match(liveReadsSource, /data: fallback\(\)/);
@@ -355,11 +369,12 @@ test("Nasru Speed-style categories normalize to the transfer CRM category", () =
   assert.match(crmMapperSource, /\? "Transfer"/);
 });
 test("CRM aggregates real application listing booking media and task relationships", () => {
-  for (const table of ["partner_applications", "bookings", "media_assets", "crm_tasks", "crm_notes"]) {
+  for (const table of ["partner_applications", "bookings", "business_media", "crm_tasks", "crm_notes"]) {
     assert.match(crmRepositorySource, new RegExp(`from\\(\\"${table}\\"\\)`));
   }
   assert.match(crmRepositorySource, /linkedApplicationId/);
   assert.match(crmRepositorySource, /linkedListingId/);
+  assert.match(crmRepositorySource, /mediaCounts/);
 });
 test("application corrections preserve original values in versioned audit rows", () => {
   assert.match(reviewMigrationSql, /partner_application_review_versions/);
@@ -639,7 +654,7 @@ test("restaurant detail page renders address when present", () => {
 
 test("restaurant detail page adds dedicated call and directions actions", () => {
   assert.match(restaurantDetailPageSource, /<RestaurantContactCard/);
-  assert.match(restaurantContactCardSource, /Call \{restaurant\.name\}/);
+  assert.match(restaurantContactCardSource, /Phone/);
   assert.match(restaurantContactCardSource, /Get Directions/);
   assert.match(restaurantContactCardSource, /buildDirectionsUrl/);
 });

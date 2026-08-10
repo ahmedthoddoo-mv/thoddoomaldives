@@ -184,6 +184,7 @@ export type MediaAsset = {
   usedByEntities?: PlatformEntityReference[];
   isHero: boolean;
   archived: boolean;
+  isPublic?: boolean;
   source: string;
   rightsStatus: "Permission confirmed" | "Needs confirmation" | "Internal demo asset";
 };

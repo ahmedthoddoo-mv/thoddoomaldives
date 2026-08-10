@@ -67,6 +67,7 @@ export type PartnerApplicationRecord = {
   linkedPartnerId?: string;
   linkedPartnerName?: string;
   linkedListingId?: string;
+  ownerInvitationStatus?: "pending" | "accepted";
   listingWorkflow: PartnerApplicationListingWorkflow;
   listingPublicationStatus: "draft" | "pending" | "published" | "archived";
   verificationStatus: "unverified" | "pending" | "verified" | "rejected";

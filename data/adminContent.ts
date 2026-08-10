@@ -20,6 +20,9 @@ export type AdminPropertyRoomType = {
   breakfastIncluded?: boolean;
   adults?: number;
   children?: number;
+  featured?: boolean;
+  quantity?: number;
+  gallery?: string[];
 };
 
 export type AdminPropertySeoFields = {
@@ -59,6 +62,7 @@ export type AdminManagedProperty = {
   isFeatured: boolean;
   isArchived: boolean;
   seo: AdminPropertySeoFields;
+  metadata?: Record<string, unknown>;
   updated: string;
 };
 
@@ -96,7 +100,7 @@ export const adminSidebarItems = [
 ];
 
 export const adminQuickActions = [
-  { label: "Add Real Business", href: "/admin/properties/new", variant: "primary" as const },
+  { label: "Add Real Business", href: "/admin/businesses/new", variant: "primary" as const },
   { label: "Review Applications", href: "/admin/applications", variant: "primary" as const },
   { label: "New Booking", href: "/admin/bookings", variant: "primary" as const },
   { label: "Open CRM", href: "/admin/crm", variant: "primary" as const },

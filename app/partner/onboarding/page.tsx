@@ -31,10 +31,18 @@ export default async function PartnerOnboardingPage({ searchParams }: { searchPa
     <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
       <div className="space-y-2">
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Partner onboarding engine</p>
-        <h1 className="text-3xl font-semibold text-slate-900">Continue your restaurant onboarding from the same guided steps</h1>
+        <h1 className="text-3xl font-semibold text-slate-900">Continue onboarding from the same guided steps</h1>
         <p className="max-w-3xl text-sm text-slate-600">Partners can edit their allowed listing details, while admin-controlled publication and verification remain protected.</p>
       </div>
-      <BusinessOnboardingWizard ownerType="partner" businessType={typedDraft?.businessType ?? "restaurant"} draftId={typedDraft?.id} initialValues={typedDraft?.values as Record<string, string | boolean | number | string[] | undefined> | undefined} listingId={typedDraft?.listingId ?? undefined} />
+      <BusinessOnboardingWizard
+        ownerType="partner"
+        businessType={typedDraft?.businessType ?? "guesthouse"}
+        draftId={typedDraft?.id}
+        initialValues={typedDraft?.values as Record<string, string | boolean | number | string[] | undefined> | undefined}
+        listingId={typedDraft?.listingId ?? undefined}
+        initialStepId={typedDraft?.currentStep}
+        allowedBusinessTypes={["guesthouse", "restaurant"]}
+      />
     </main>
   );
 }

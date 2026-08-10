@@ -30,27 +30,34 @@ export function StayDirectoryClient({ initialGuesthouses, error }: StayDirectory
         </div>
       ) : null}
       <div className="platformGrid platformGridTwo">
-        {guesthouses.map((guesthouse) => (
-          <Link key={guesthouse.id} href={`/stay/${guesthouse.slug}`} className="platformCard">
-            <div
-              className="platformCardImage"
-              style={{ backgroundImage: `url('${guesthouse.heroImage}')` }}
-            />
-            <div className="platformCardBody">
-              <div className="platformPillRow">
-                <span className="platformPill">{guesthouse.distanceToBeach}</span>
-                <span className="platformPill">Rating {guesthouse.rating}</span>
-              </div>
+        {guesthouses.map((guesthouse) => {
+          const cardImage = guesthouse.heroImage || guesthouse.gallery[0] || "/images/hero-thoddoo.jpg";
+          return (
+            <Link key={guesthouse.id} href={`/stay/${guesthouse.slug}`} className="platformCard block overflow-hidden transition hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 focus-visible:ring-offset-4">
+              <div className="platformCardImage" style={{ backgroundImage: `url('${cardImage}')` }} />
+              <div className="platformCardBody">
+                <div className="platformPillRow">
+                  {guesthouse.location ? <span className="platformPill">{guesthouse.location}</span> : null}
+                  <span className="platformPill">From {guesthouse.priceFrom}</span>
+                </div>
 
-              <h3>{guesthouse.name}</h3>
-              {guesthouse.verificationStatus === "Verified" ? (
-                <VerifiedBadge label="Verified by iThoddoo Maldives" />
-              ) : null}
-              <p>{guesthouse.tagline}</p>
-              <p className="font-semibold text-slate-900">View rooms and amenities</p>
-            </div>
-          </Link>
-        ))}
+                <h3>{guesthouse.name}</h3>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {guesthouse.verificationStatus === "Verified" ? (
+                    <VerifiedBadge label="Verified by iThoddoo Maldives" />
+                  ) : null}
+                  {guesthouse.membershipBadge ? (
+                    <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">
+                      {guesthouse.membershipBadge}
+                    </span>
+                  ) : null}
+                </div>
+                <p className="mt-4 text-slate-600">{guesthouse.tagline}</p>
+                <p className="mt-4 font-semibold text-slate-900">View rooms and amenities</p>
+              </div>
+            </Link>
+          );
+        })}
       </div>
     </>
   );

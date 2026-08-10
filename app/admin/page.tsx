@@ -40,7 +40,7 @@ export default async function AdminPage() {
     { label: "Other Businesses", value: String(restaurants.data.length + experiences.data.length + transfers.data.length), detail: `${restaurants.data.length} restaurants · ${experiences.data.length} experiences · ${transfers.data.length} transfers`, tone: "gold" as const },
     { label: "Bookings / Enquiries", value: String(bookings.data.length), detail: `$${bookingAnalytics.confirmedRevenue} confirmed revenue` },
     { label: "Open CRM Tasks", value: String(crm.data.tasks.filter((item) => item.status !== "Completed").length), detail: "Live follow-up tasks", tone: "gold" as const },
-    { label: "Public Media", value: String(media.data.filter((item) => !item.archived && item.rightsStatus === "Permission confirmed").length), detail: `${media.data.length} total media assets` },
+    { label: "Public Media", value: String(media.data.filter((item) => item.isPublic && !item.archived && item.rightsStatus === "Permission confirmed").length), detail: `${media.data.length} total media assets` },
     { label: "Unpriced Enquiries", value: String(bookings.data.filter((item) => item.estimatedValue === null).length), detail: "Quote required" }
   ];
   const recentApplications = applicationRead.applications.slice(0, 5).map((item) => ({ business: item.businessName, type: item.businessType, plan: item.requestedMembershipTier, status: item.status, date: item.submittedDate.slice(0, 10) }));
@@ -84,7 +84,7 @@ export default async function AdminPage() {
     {
       title: "Database",
       value: supabaseHealth.reachable ? "Reachable" : "Unavailable",
-      description: `${supabaseHealth.message} Migration version ${supabaseHealth.migrationVersion}.`
+      description: supabaseHealth.message
     }
   ];
 

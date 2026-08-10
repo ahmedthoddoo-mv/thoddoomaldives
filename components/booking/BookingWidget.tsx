@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { submitRealBookingRequest } from "@/app/booking/actions";
 import { buildBookingWhatsAppMessage } from "@/lib/booking";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { validateEnquiry } from "@/lib/production/workflow.mts";
 import type { ContactPreference } from "@/types/booking-workflow";
 import type { BookingDraft, BookingService, Room } from "@/types/booking";
@@ -157,7 +158,8 @@ export function BookingWidget({
     }
 
     const message = `${action}\n\n${buildBookingWhatsAppMessage(draft)}\n\nGuest: ${guestName}\nEmail: ${guestEmail || "Not provided"}\nWhatsApp: ${guestWhatsapp || "Not provided"}\nContact preference: ${contactPreference}`;
-    window.open(`https://wa.me/${whatsapp}?text=${encodeURIComponent(message)}`, "_blank");
+    const url = buildWhatsAppUrl(whatsapp, message);
+    window.open(url, "_blank");
   }
 
   const transferServices = bookingOptionalServices.filter((service) => transferAndMealTypes.has(service.type));

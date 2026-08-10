@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "node --test tests/*.test.mts",
+    "test": "node --import tsx --test tests/*.test.mts",
     "supabase:login": "supabase login",
     "supabase:link": "supabase link",
     "supabase:migrations": "supabase migration list",
@@ -39,6 +39,7 @@
     "eslint-config-next": "16.2.11",
     "supabase": "^2.110.0",
     "tailwindcss": "^4",
+    "tsx": "^4.23.11",
     "typescript": "^5"
   }
 }

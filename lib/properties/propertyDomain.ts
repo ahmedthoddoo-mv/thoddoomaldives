@@ -1,28 +1,82 @@
-import type { AdminManagedProperty } from "@/data/adminContent";
-import type { Guesthouse, Room } from "@/types/guesthouse";
+import { getCanonicalPublicMediaGallery } from "../business-media/public.ts";
+import { getGuesthouseDisplayPrice, getGuesthouseHeroMedia } from "@/lib/properties/guesthouse";
+import type { AdminManagedProperty } from "../../data/adminContent.ts";
+import type { Guesthouse, Room } from "../../types/guesthouse.ts";
 
 function toPublicRoom(room: AdminManagedProperty["roomTypes"][number], fallbackImage: string): Room {
-  const priceMatch = room.price.match(/(?:USD|MVR|\$)?\s*([\d.]+)/i);
-  const nightlyRate = room.price === "Price on request" ? null : Number(priceMatch?.[1] ?? 0) || null;
-  const currency = room.price.toUpperCase().includes("MVR") ? "MVR" : "USD";
+  const priceValue = typeof room.price === "string" ? room.price : null;
+  const normalizedPrice = getGuesthouseDisplayPrice(priceValue);
+  const priceMatch = normalizedPrice.match(/(?:USD|MVR|\$)?\s*([\d.]+)/i);
+  const nightlyRate = normalizedPrice === "Price on request" ? null : Number(priceMatch?.[1] ?? 0) || null;
+  const currency = normalizedPrice.toUpperCase().includes("MVR") ? "MVR" : "USD";
+  const roomExtensions = room as { featured?: unknown; quantity?: unknown; gallery?: unknown };
+  const gallery = Array.isArray(roomExtensions.gallery) ? roomExtensions.gallery.filter((item): item is string => typeof item === "string" && item.trim().length > 0) : [];
   return {
     id: room.id,
     name: room.name,
-    price: room.price,
+    price: normalizedPrice,
     capacity: room.capacity,
     occupancy: room.adults ? `${room.adults} adult${room.adults === 1 ? "" : "s"}${room.children ? ` + ${room.children} child${room.children === 1 ? "" : "ren"}` : ""}` : room.capacity,
     bedType: room.bedType ?? "",
-    description: room.description || (room.price === "Price on request" ? room.name : `${room.name} — ${room.price}.`),
+    description: room.description || (normalizedPrice === "Price on request" ? room.name : `${room.name} — ${normalizedPrice}.`),
     image: room.image || fallbackImage,
     amenities: room.amenities ?? [],
     breakfast: room.breakfastIncluded ? "Included" : "Not included",
+    featured: Boolean(roomExtensions.featured),
+    quantity: typeof roomExtensions.quantity === "number" ? roomExtensions.quantity : undefined,
+    gallery: gallery.length > 0 ? gallery : room.image ? [room.image] : [],
     nightlyRate,
     currency
   };
 }
 
 export function adminPropertyToGuesthouse(property: AdminManagedProperty): Guesthouse {
-  const heroImage = property.coverImage || property.gallery[0] || "";
+  const metadata = property as AdminManagedProperty & {
+    metadata?: {
+      facilities?: unknown;
+      bookingChannels?: unknown;
+      bookingLinks?: unknown;
+      nearbyAttractions?: unknown;
+      mapUrl?: unknown;
+      propertyType?: unknown;
+    };
+  };
+  const facilities = Array.isArray(metadata.metadata?.facilities)
+    ? metadata.metadata?.facilities.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+    : [];
+  const bookingChannels = Array.isArray(metadata.metadata?.bookingChannels)
+    ? metadata.metadata?.bookingChannels.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+    : [];
+  const bookingLinks = metadata.metadata?.bookingLinks && typeof metadata.metadata.bookingLinks === "object" && !Array.isArray(metadata.metadata.bookingLinks)
+    ? metadata.metadata.bookingLinks as Record<string, unknown>
+    : {};
+  const metadataAttractions = Array.isArray(metadata.metadata?.nearbyAttractions)
+    ? metadata.metadata?.nearbyAttractions.filter((item): item is { name: string; distance?: string; description?: string } => Boolean(item) && typeof item === "object" && "name" in item)
+    : [];
+  const publicMedia = (Array.isArray(property.media)
+    ? (property.media as Array<{ url?: unknown; isPublic?: boolean }>).filter((item) => {
+        const candidate = item as { url?: unknown; isPublic?: boolean } | undefined;
+        if (!candidate || typeof candidate.url !== "string") {
+          return false;
+        }
+
+        return candidate.url.trim().length > 0 && candidate.isPublic !== false;
+      }).map((item) => ({
+        ...item,
+        url: item.url as string
+      }))
+    : []) as Guesthouse["media"];
+  const mediaItems = publicMedia ?? [];
+  const canonicalGallery = getCanonicalPublicMediaGallery(mediaItems);
+  const heroMedia = getGuesthouseHeroMedia({
+    heroImage: property.coverImage,
+    gallery: property.gallery,
+    media: mediaItems
+  });
+  const heroImage = heroMedia.heroImage;
+  const gallery = canonicalGallery.length > 0
+    ? canonicalGallery.map((item) => item.url).filter((url): url is string => Boolean(url && url.trim().length > 0))
+    : heroMedia.gallery;
   const pricedRooms = property.roomTypes.filter((room) => room.price !== "Price on request").sort((a, b) => Number(a.price.match(/[\d.]+/)?.[0] ?? Infinity) - Number(b.price.match(/[\d.]+/)?.[0] ?? Infinity));
   const firstPrice = pricedRooms[0]?.price ?? "Price on request";
 
@@ -39,8 +93,8 @@ export function adminPropertyToGuesthouse(property: AdminManagedProperty): Guest
     priceFrom: firstPrice,
     whatsapp: property.whatsapp.replace(/[^0-9]/g, ""),
     heroImage,
-    gallery: property.gallery.filter(Boolean),
-    media: property.media,
+    gallery,
+    media: publicMedia,
     amenities: property.amenities,
     about: [
       {
@@ -52,13 +106,19 @@ export function adminPropertyToGuesthouse(property: AdminManagedProperty): Guest
         body: property.policies.join(" ") || "Policies will be confirmed directly with the property."
       }
     ],
-    nearbyAttractions: [
-      {
-        name: property.island,
-        distance: "Local island stay",
-        description: property.googleMaps || property.address || "Exact location details can be confirmed before arrival."
-      }
-    ],
+    nearbyAttractions: metadataAttractions.length > 0
+      ? metadataAttractions.map((item) => ({
+          name: item.name,
+          distance: item.distance || "Nearby",
+          description: item.description || "Ask the host for details."
+        }))
+      : [
+          {
+            name: property.island,
+            distance: "Local island stay",
+            description: property.googleMaps || property.address || "Exact location details can be confirmed before arrival."
+          }
+        ],
     relatedExperienceSlugs: [],
     testimonialIds: [],
     rooms: property.roomTypes.map((room) => toPublicRoom(room, heroImage)),
@@ -67,6 +127,19 @@ export function adminPropertyToGuesthouse(property: AdminManagedProperty): Guest
     website: property.website,
     checkIn: property.checkIn,
     checkOut: property.checkOut,
-    services: property.services
+    services: property.services,
+    facilities,
+    bookingChannels,
+    bookingLinks: {
+      bookingComUrl: typeof bookingLinks.bookingComUrl === "string" ? bookingLinks.bookingComUrl : undefined,
+      airbnbUrl: typeof bookingLinks.airbnbUrl === "string" ? bookingLinks.airbnbUrl : undefined,
+      expediaUrl: typeof bookingLinks.expediaUrl === "string" ? bookingLinks.expediaUrl : undefined,
+      directBookingUrl: typeof bookingLinks.directBookingUrl === "string" ? bookingLinks.directBookingUrl : undefined
+    },
+    membershipBadge: property.membershipPlan,
+    partnerBadge: "Partner listing",
+    mapUrl: typeof metadata.metadata?.mapUrl === "string" && metadata.metadata?.mapUrl.trim().length > 0
+      ? metadata.metadata?.mapUrl
+      : property.googleMapsLink
   };
 }

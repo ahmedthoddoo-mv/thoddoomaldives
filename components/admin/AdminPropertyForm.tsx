@@ -8,7 +8,7 @@ import { PropertyPublishPanel } from "@/components/admin/PropertyPublishPanel";
 import MediaGallery from "@/components/media/MediaGallery";
 import { PropertySaveStatus } from "@/components/admin/PropertySaveStatus";
 import Badge from "@/components/ui/Badge";
-import type { AdminManagedProperty } from "@/data/adminContent";
+import type { AdminManagedProperty, AdminPropertyRoomType } from "@/data/adminContent";
 import { createPropertySlug, normalizePropertySlug } from "@/lib/properties/propertySlug";
 import { validatePropertyForSave } from "@/lib/properties/propertyValidation";
 import type { BusinessMediaItem } from "@/types/business-media";
@@ -34,7 +34,7 @@ type PropertyFormState = {
   shortDescription: string;
   fullDescription: string;
   amenities: string;
-  roomTypes: string;
+  roomTypes: AdminPropertyRoomType[];
   gallery: string;
   coverImage: string;
   policies: string;
@@ -62,7 +62,7 @@ const emptyPropertyState: PropertyFormState = {
   shortDescription: "",
   fullDescription: "",
   amenities: "",
-  roomTypes: "",
+  roomTypes: [],
   gallery: "",
   coverImage: "",
   policies: "",
@@ -95,7 +95,7 @@ function stateFromProperty(property?: AdminManagedProperty): PropertyFormState {
     shortDescription: property.shortDescription,
     fullDescription: property.fullDescription,
     amenities: property.amenities.join("\n"),
-    roomTypes: property.roomTypes.map((room) => `${room.name} | ${room.price} | ${room.capacity}`).join("\n"),
+    roomTypes: property.roomTypes,
     gallery: property.gallery.join("\n"),
     coverImage: property.coverImage,
     policies: property.policies.join("\n"),
@@ -144,10 +144,18 @@ function createPropertyFromState({
   currentProperty?: AdminManagedProperty;
 }): AdminManagedProperty {
   const gallery = listFromText(form.gallery);
-  const roomTypes = listFromText(form.roomTypes).map((line) => {
-    const [name = "Room type", price = "Price pending", capacity = "Capacity pending"] = line.split("|").map((part) => part.trim());
-    return { name, price, capacity };
-  });
+  const roomTypes = form.roomTypes
+    .filter((room) => room.name.trim())
+    .map((room) => ({
+      ...room,
+      name: room.name.trim(),
+      price: room.price.trim() || "Price on request",
+      capacity: room.capacity.trim() || "Capacity on request",
+      bedType: room.bedType?.trim() || undefined,
+      description: room.description?.trim() || undefined,
+      amenities: Array.isArray(room.amenities) ? room.amenities.filter((item) => item.trim()) : [],
+      gallery: Array.isArray(room.gallery) ? room.gallery.filter((item) => item.trim()) : []
+    }));
   const slug = createPropertySlug(form.slug || form.name);
   const name = form.name.trim();
   const heroImage = form.coverImage.trim() || gallery[0] || "";
@@ -189,6 +197,25 @@ function createPropertyFromState({
   };
 }
 
+function createBlankRoom(index: number): AdminPropertyRoomType {
+  return {
+    id: `room-${Date.now().toString(36)}-${index}`,
+    name: "",
+    price: "Price on request",
+    capacity: "2 guests",
+    bedType: "",
+    description: "",
+    image: "",
+    amenities: [],
+    breakfastIncluded: false,
+    adults: 2,
+    children: 0,
+    featured: false,
+    quantity: 1,
+    gallery: []
+  };
+}
+
 export function AdminPropertyForm({ mode, property, initialMedia = [] }: AdminPropertyFormProps) {
   const router = useRouter();
   const [isSaving, startSavingTransition] = useTransition();
@@ -201,10 +228,18 @@ export function AdminPropertyForm({ mode, property, initialMedia = [] }: AdminPr
 
   const preview = useMemo(() => {
     const gallery = listFromText(form.gallery);
-    const roomTypes = listFromText(form.roomTypes).map((line) => {
-      const [name = "Room type", price = "Price pending", capacity = "Capacity pending"] = line.split("|").map((part) => part.trim());
-      return { name, price, capacity };
-    });
+    const roomTypes = form.roomTypes
+      .filter((room) => room.name.trim())
+      .map((room) => ({
+        ...room,
+        name: room.name.trim(),
+        price: room.price.trim() || "Price on request",
+        capacity: room.capacity.trim() || "Capacity on request",
+        bedType: room.bedType?.trim() || undefined,
+        description: room.description?.trim() || undefined,
+        amenities: Array.isArray(room.amenities) ? room.amenities.filter((item) => item.trim()) : [],
+        gallery: Array.isArray(room.gallery) ? room.gallery.filter((item) => item.trim()) : []
+      }));
 
     return {
       gallery,
@@ -237,6 +272,31 @@ export function AdminPropertyForm({ mode, property, initialMedia = [] }: AdminPr
     const coverImage = publicMedia.find((item) => item.isCover)?.url ?? publicMedia[0]?.url ?? "";
     const gallery = publicMedia.map((item) => item.url).join("\n");
     setForm((current) => ({ ...current, coverImage, gallery }));
+  }
+
+  function addRoom() {
+    setForm((current) => ({ ...current, roomTypes: [...current.roomTypes, createBlankRoom(current.roomTypes.length)] }));
+  }
+
+  function updateRoom(index: number, updates: Partial<AdminPropertyRoomType>) {
+    setForm((current) => ({
+      ...current,
+      roomTypes: current.roomTypes.map((room, roomIndex) => (roomIndex === index ? { ...room, ...updates } : room))
+    }));
+  }
+
+  function removeRoom(index: number) {
+    setForm((current) => ({ ...current, roomTypes: current.roomTypes.filter((_, roomIndex) => roomIndex !== index) }));
+  }
+
+  function moveRoom(index: number, direction: "up" | "down") {
+    setForm((current) => {
+      const nextRooms = [...current.roomTypes];
+      const targetIndex = direction === "up" ? index - 1 : index + 1;
+      if (targetIndex < 0 || targetIndex >= nextRooms.length) return current;
+      [nextRooms[index], nextRooms[targetIndex]] = [nextRooms[targetIndex], nextRooms[index]];
+      return { ...current, roomTypes: nextRooms };
+    });
   }
 
   function saveWithStatus({
@@ -401,8 +461,80 @@ export function AdminPropertyForm({ mode, property, initialMedia = [] }: AdminPr
                 <textarea value={form.amenities} onChange={(event) => updateField("amenities", event.target.value)} rows={5} />
               </label>
               <label className="adminFormWide">
-                <span>Room types, one per line: name | price | capacity</span>
-                <textarea value={form.roomTypes} onChange={(event) => updateField("roomTypes", event.target.value)} rows={5} />
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                  <span>Rooms</span>
+                  <button type="button" className="rounded-full border border-slate-300 px-3 py-1 text-sm font-semibold text-slate-700" onClick={addRoom}>
+                    Add room
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  {form.roomTypes.length === 0 ? (
+                    <p className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                      Add at least one room so the property can be saved and published.
+                    </p>
+                  ) : null}
+                  {form.roomTypes.map((room, index) => (
+                    <div key={room.id ?? `room-${index}`} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                        <strong>{room.name.trim() || `Room ${index + 1}`}</strong>
+                        <div className="flex flex-wrap gap-2">
+                          <button type="button" className="rounded-full border border-slate-300 px-2.5 py-1 text-xs font-semibold text-slate-700" onClick={() => moveRoom(index, "up")}>Move up</button>
+                          <button type="button" className="rounded-full border border-slate-300 px-2.5 py-1 text-xs font-semibold text-slate-700" onClick={() => moveRoom(index, "down")}>Move down</button>
+                          <button type="button" className="rounded-full border border-rose-200 px-2.5 py-1 text-xs font-semibold text-rose-700" onClick={() => removeRoom(index)}>Remove</button>
+                        </div>
+                      </div>
+                      <div className="adminFormGrid">
+                        <label>
+                          <span>Room name</span>
+                          <input value={room.name} onChange={(event) => updateRoom(index, { name: event.target.value })} placeholder="Deluxe Double" />
+                        </label>
+                        <label>
+                          <span>Base price</span>
+                          <input value={room.price} onChange={(event) => updateRoom(index, { price: event.target.value })} placeholder="From $85/night" />
+                        </label>
+                        <label>
+                          <span>Capacity</span>
+                          <input value={room.capacity} onChange={(event) => updateRoom(index, { capacity: event.target.value })} placeholder="2 guests" />
+                        </label>
+                        <label>
+                          <span>Bed type</span>
+                          <input value={room.bedType ?? ""} onChange={(event) => updateRoom(index, { bedType: event.target.value })} placeholder="King bed" />
+                        </label>
+                        <label>
+                          <span>Adults</span>
+                          <input type="number" min="1" value={room.adults ?? 2} onChange={(event) => updateRoom(index, { adults: Number.parseInt(event.target.value, 10) || 1 })} />
+                        </label>
+                        <label>
+                          <span>Children</span>
+                          <input type="number" min="0" value={room.children ?? 0} onChange={(event) => updateRoom(index, { children: Number.parseInt(event.target.value, 10) || 0 })} />
+                        </label>
+                        <label>
+                          <span>Quantity</span>
+                          <input type="number" min="1" value={room.quantity ?? 1} onChange={(event) => updateRoom(index, { quantity: Number.parseInt(event.target.value, 10) || 1 })} />
+                        </label>
+                        <label>
+                          <span>Featured room</span>
+                          <select value={room.featured ? "true" : "false"} onChange={(event) => updateRoom(index, { featured: event.target.value === "true" })}>
+                            <option value="false">No</option>
+                            <option value="true">Yes</option>
+                          </select>
+                        </label>
+                        <label className="adminFormWide">
+                          <span>Description</span>
+                          <textarea value={room.description ?? ""} onChange={(event) => updateRoom(index, { description: event.target.value })} rows={3} />
+                        </label>
+                        <label className="adminFormWide">
+                          <span>Amenities (one per line)</span>
+                          <textarea value={(room.amenities ?? []).join("\n")} onChange={(event) => updateRoom(index, { amenities: event.target.value.split("\n").map((item) => item.trim()).filter(Boolean) })} rows={3} />
+                        </label>
+                        <label className="adminFormWide">
+                          <span>Gallery URLs (one per line)</span>
+                          <textarea value={(room.gallery ?? []).join("\n")} onChange={(event) => updateRoom(index, { gallery: event.target.value.split("\n").map((item) => item.trim()).filter(Boolean) })} rows={3} />
+                        </label>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </label>
               <label className="adminFormWide">
                 <span>Public gallery image URLs</span>

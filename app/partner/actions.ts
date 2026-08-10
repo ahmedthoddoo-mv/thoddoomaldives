@@ -193,6 +193,10 @@ export async function savePartnerServices(services: PartnerPortalServiceItem[]):
   if (!supabase || scope.mode !== "supabase") return { ok: false, mode, message: "Partner access is not available." };
 
   const items = services.map((service, index) => ({
+    roomAmenities: (service.metadata.amenities ?? "").split("\n").map((item) => sanitizeText(item, 120)).filter(Boolean),
+    roomGallery: (service.metadata.gallery ?? "").split("\n").map((item) => sanitizeText(item, 700)).filter(Boolean),
+    maxGuests: Number.parseInt(service.metadata.maxGuests ?? service.metadata.adults ?? "1", 10),
+    quantity: Number.parseInt(service.metadata.quantity ?? "1", 10),
     title: sanitizeText(service.title, 180),
     description: sanitizeText(service.description, 800),
     price: parsePrice(service.price),
@@ -207,7 +211,19 @@ export async function savePartnerServices(services: PartnerPortalServiceItem[]):
     adults: parseCapacity(service.metadata.adults ?? service.metadata.capacity ?? "2"),
     children: parseCapacity(service.metadata.children ?? "0"),
     breakfast_included: String(service.metadata.breakfast ?? service.notes).toLowerCase().includes("included"),
+    amenities: (service.metadata.amenities ?? "").split("\n").map((item) => sanitizeText(item, 120)).filter(Boolean),
+    image_paths: (service.metadata.gallery ?? "").split("\n").map((item) => sanitizeText(item, 700)).filter(Boolean),
     metadata: service.metadata
+  })).map((item) => ({
+    ...item,
+    metadata: {
+      ...item.metadata,
+      maxGuests: Number.isFinite(item.maxGuests) && item.maxGuests > 0 ? String(item.maxGuests) : "1",
+      quantity: Number.isFinite(item.quantity) && item.quantity > 0 ? String(item.quantity) : "1",
+      featured: item.metadata.featured === "true" ? "true" : "false",
+      amenities: item.roomAmenities.join("\n"),
+      gallery: item.roomGallery.join("\n")
+    }
   }));
   const { error } = await supabase.rpc("partner_replace_rooms_services", {
     actor_user_id: scope.authUserId,

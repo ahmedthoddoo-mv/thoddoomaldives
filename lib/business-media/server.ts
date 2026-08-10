@@ -456,6 +456,7 @@ export function revalidateBusinessMediaPaths(context: BusinessMediaContext) {
     revalidatePath("/admin/restaurants");
     revalidatePath(`/admin/restaurants/${context.businessId}/edit`);
     revalidatePath("/restaurants");
+    revalidatePath(`/restaurants/${context.slug}`);
     return;
   }
 

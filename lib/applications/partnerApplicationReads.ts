@@ -115,6 +115,13 @@ type PartnerApplicationReviewVersionRow = {
   edited_at: string;
 };
 
+type PartnerApplicationInvitationRow = {
+  application_id: string;
+  partner_id: string | null;
+  email: string | null;
+  status: string;
+};
+
 const applicationStatuses: PartnerApplicationStatus[] = [
   "draft",
   "submitted",
@@ -164,7 +171,8 @@ function mapApplication(
   verificationDocuments: PartnerApplicationVerificationDocumentRow[],
   reviewVersions: PartnerApplicationReviewVersionRow[],
   publicationStatus: string | undefined,
-  linkedPartnerName?: string
+  linkedPartnerName?: string,
+  ownerInvitationStatus?: PartnerApplicationRecord["ownerInvitationStatus"]
 ): PartnerApplicationRecord {
   const businessType = normalizeBusinessType(row.business_type);
   const source = getWorkflowSource(row.metadata);
@@ -220,6 +228,7 @@ function mapApplication(
     linkedPartnerId: row.partner_id ?? undefined,
     linkedPartnerName,
     linkedListingId: row.listing_id ?? row.property_id ?? undefined,
+    ownerInvitationStatus,
     listingPublicationStatus: publicationStatus
       && ["draft", "pending", "published", "archived"].includes(publicationStatus)
       ? publicationStatus as PartnerApplicationRecord["listingPublicationStatus"]
@@ -338,6 +347,7 @@ export async function getPartnerApplicationsForAdmin(): Promise<PartnerApplicati
       serviceResult,
       verificationResult,
       reviewVersionResult,
+      invitationResult,
       propertyResult,
       restaurantResult,
       experienceResult,
@@ -349,6 +359,7 @@ export async function getPartnerApplicationsForAdmin(): Promise<PartnerApplicati
       db.from("partner_application_services").select("*").in("application_id", applicationIds),
       db.from("partner_application_verification_documents").select("*").in("application_id", applicationIds),
       db.from("partner_application_review_versions").select("id, application_id, version, edited_by_name, edited_at").in("application_id", applicationIds).order("version", { ascending: false }),
+      db.from("partner_account_invitations").select("application_id, partner_id, email, status").in("application_id", applicationIds),
       propertyIds.length > 0
         ? db.from("properties").select("id, publication_status").in("id", propertyIds)
         : Promise.resolve({ data: [], error: null }),
@@ -389,6 +400,7 @@ export async function getPartnerApplicationsForAdmin(): Promise<PartnerApplicati
       verificationResult
     );
     const reviewVersions = readResultRows<PartnerApplicationReviewVersionRow>("partner_application_review_versions", reviewVersionResult);
+    const invitations = readResultRows<PartnerApplicationInvitationRow>("partner_account_invitations", invitationResult);
     const properties = readResultRows<PropertyPublicationRow>("properties", propertyResult);
     const restaurants = readResultRows<ListingPublicationRow>("restaurants", restaurantResult);
     const experiences = readResultRows<ListingPublicationRow>("experiences", experienceResult);
@@ -403,6 +415,12 @@ export async function getPartnerApplicationsForAdmin(): Promise<PartnerApplicati
     const partnerNameById = new Map(
       partners.map((partner) => [partner.id, partner.business_name])
     );
+    const invitationByApplicationId = new Map<string, PartnerApplicationInvitationRow>();
+    for (const invitation of invitations) {
+      if (invitation.application_id && !invitationByApplicationId.has(invitation.application_id)) {
+        invitationByApplicationId.set(invitation.application_id, invitation);
+      }
+    }
 
     return {
       applications: applications.map((application) =>
@@ -414,7 +432,10 @@ export async function getPartnerApplicationsForAdmin(): Promise<PartnerApplicati
           verificationDocuments.filter((document) => document.application_id === application.id),
           reviewVersions.filter((version) => version.application_id === application.id),
           publicationStatusByListingId.get(application.listing_id ?? application.property_id ?? ""),
-          application.partner_id ? partnerNameById.get(application.partner_id) : undefined
+          application.partner_id ? partnerNameById.get(application.partner_id) : undefined,
+          invitationByApplicationId.get(application.id)?.status && ["preview", "sending", "sent"].includes(invitationByApplicationId.get(application.id)!.status)
+            ? "pending"
+            : undefined
         )
       ),
       source: "supabase"

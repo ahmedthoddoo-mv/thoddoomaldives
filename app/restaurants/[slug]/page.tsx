@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -7,9 +6,12 @@ import RestaurantContactCard from "@/components/restaurant/RestaurantContactCard
 import RestaurantInteractiveMenu from "@/components/restaurant/RestaurantInteractiveMenu";
 import RestaurantMenuViewer from "@/components/restaurant/RestaurantMenuViewer";
 import RestaurantPromotionCard from "@/components/restaurant/RestaurantPromotionCard";
-import { mediaItemsFromUrls } from "@/lib/business-media/public";
+import {
+  getCanonicalPublicMediaGallery,
+  mediaItemsFromUrls
+} from "@/lib/business-media/public";
+import { formatRestaurantCuisine, normalizeRestaurantMembershipTier } from "@/lib/restaurant-menu/format";
 import { getPublicRestaurantMenuData } from "@/lib/restaurant-menu/server";
-import { normalizeRestaurantMembershipTier } from "@/lib/restaurant-menu/format";
 import { getLivePublishedRestaurantBySlug } from "@/lib/repositories/liveReads";
 import { createPageMetadata } from "@/lib/seo";
 
@@ -72,28 +74,30 @@ export default async function RestaurantDetailPage({ params }: RestaurantDetailP
   const menuItems = allMedia.filter((item) => isMenuMediaItem(item));
   const galleryItems = allMedia.filter((item) => !isMenuMediaItem(item) && isPublicGalleryMediaItem(item));
   const publicGalleryItems = galleryItems.length > 0
-    ? galleryItems
+    ? getCanonicalPublicMediaGallery(galleryItems)
     : mediaItemsFromUrls(
-        restaurant.gallery && restaurant.gallery.length > 0
-          ? restaurant.gallery
-          : [restaurant.image].filter(Boolean),
+        restaurant.gallery && restaurant.gallery.length > 0 ? restaurant.gallery : [],
         restaurant.name,
         "restaurant",
         restaurant.id
       );
 
-  const featuredMedia = allMedia.find((item) => item.isFeatured) ?? null;
+  const cuisineLabel = formatRestaurantCuisine(restaurant.cuisine);
   const detailItems = [
-    restaurant.cuisine.length > 0 ? { label: "Cuisine", value: restaurant.cuisine.join(", ") } : null,
+    cuisineLabel ? { label: "Cuisine", value: cuisineLabel } : null,
     restaurant.priceRange ? { label: "Price range", value: restaurant.priceRange } : null,
     restaurant.openingHours ? { label: "Opening hours", value: restaurant.openingHours } : null,
-    restaurant.location ? { label: "Area", value: restaurant.location } : null
+    restaurant.location ? { label: "Area", value: restaurant.location } : null,
+    restaurant.phone ? { label: "Phone", value: restaurant.phone } : null,
+    restaurant.email ? { label: "Email", value: restaurant.email } : null,
+    restaurant.website ? { label: "Website", value: restaurant.website } : null,
+    restaurant.address ? { label: "Address", value: restaurant.address } : null
   ].filter(Boolean) as Array<{ label: string; value: string }>;
 
   const menuData = await getPublicRestaurantMenuData(restaurant.id);
   const verified = restaurant.verificationStatus === "verified";
   const premium = normalizeRestaurantMembershipTier(restaurant.membershipTier) === "premium";
-  const hasContactSection = Boolean(restaurant.phone || restaurant.address || restaurant.openingHours || restaurant.email || restaurant.website || restaurant.instagram || restaurant.facebook || restaurant.whatsapp || restaurant.partnerWhatsapp);
+  const hasContactSection = Boolean(publicGalleryItems.length > 0 || restaurant.phone || restaurant.address || restaurant.openingHours || restaurant.email || restaurant.website || restaurant.instagram || restaurant.facebook || restaurant.whatsapp || restaurant.partnerWhatsapp);
 
   return (
     <main className="platformPage">
@@ -115,13 +119,9 @@ export default async function RestaurantDetailPage({ params }: RestaurantDetailP
             {verified ? <span className="rounded-full border border-emerald-300/50 bg-emerald-500/20 px-4 py-2 text-sm font-semibold text-emerald-100">✓ Verified by iThoddoo Maldives</span> : null}
             {premium ? <span className="rounded-full border border-amber-300/50 bg-amber-500/20 px-4 py-2 text-sm font-semibold text-amber-100">Premium Partner</span> : null}
           </div>
-          {restaurant.cuisine.length > 0 ? (
+          {cuisineLabel ? (
             <div className="platformPillRow mt-6">
-              {restaurant.cuisine.map((cuisine) => (
-                <span key={cuisine} className="platformPill bg-white/15 text-white">
-                  {cuisine}
-                </span>
-              ))}
+              <span className="platformPill bg-white/15 text-white">{cuisineLabel}</span>
             </div>
           ) : null}
         </div>
@@ -142,35 +142,37 @@ export default async function RestaurantDetailPage({ params }: RestaurantDetailP
                   Detailed description has not been added yet.
                 </p>
               )}
-
-              {featuredMedia ? (
-                <figure className="mt-8 overflow-hidden rounded-[1.75rem] border border-slate-200 bg-slate-100">
-                  <img
-                    src={featuredMedia.url}
-                    alt={featuredMedia.altText || restaurant.name}
-                    className="h-[320px] w-full object-cover"
-                  />
-                  {featuredMedia.caption ? (
-                    <figcaption className="border-t border-slate-200 px-5 py-4 text-sm text-slate-600">
-                      {featuredMedia.caption}
-                    </figcaption>
-                  ) : null}
-                </figure>
-              ) : null}
             </article>
 
             {detailItems.length > 0 ? (
               <aside className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
                 <p className="eyebrow">Restaurant details</p>
-                <dl className="mt-5 space-y-5">
-                  {detailItems.map((item) => (
-                    <div key={item.label}>
-                      <dt className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">{item.label}</dt>
-                      <dd className="mt-2 text-base font-medium text-slate-900">{item.value}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </aside>
+               <dl className="mt-5 space-y-4">
+                 {detailItems.map((item) => {
+                   const iconMap: Record<string, string> = {
+                     Cuisine: "🍽️",
+                     "Price range": "💰",
+                     "Opening hours": "🕒",
+                     Area: "📍",
+                     Phone: "📞",
+                     Email: "✉️",
+                     Website: "↗",
+                     Address: "📍"
+                   };
+                   return (
+                     <div key={item.label} className="flex gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cyan-50 text-lg" aria-hidden="true">
+                         {iconMap[item.label] ?? "•"}
+                       </span>
+                       <div>
+                         <dt className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">{item.label}</dt>
+                         <dd className="mt-1 text-base font-medium text-slate-900">{item.value}</dd>
+                       </div>
+                     </div>
+                   );
+                 })}
+               </dl>
+             </aside>
             ) : null}
           </div>
         </div>
@@ -179,9 +181,14 @@ export default async function RestaurantDetailPage({ params }: RestaurantDetailP
       {hasContactSection ? (
         <section id="contact" className="platformSection pt-0">
           <div className="platformContainer">
-            <RestaurantContactCard restaurant={restaurant} membershipTier={restaurant.membershipTier} />
-          </div>
-        </section>
+           <RestaurantContactCard
+             restaurant={restaurant}
+             membershipTier={restaurant.membershipTier}
+             mediaItems={publicGalleryItems}
+             galleryHref="#gallery"
+           />
+         </div>
+       </section>
       ) : null}
 
       <RestaurantPromotionCard restaurant={restaurant} />
@@ -221,7 +228,7 @@ export default async function RestaurantDetailPage({ params }: RestaurantDetailP
       ) : null}
 
       {publicGalleryItems.length > 0 ? (
-        <section className="platformSection pt-0">
+        <section id="gallery" className="platformSection pt-0">
           <div className="platformContainer">
             <MediaGallery
               mode="public"
