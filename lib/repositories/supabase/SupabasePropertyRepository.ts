@@ -38,7 +38,7 @@ async function readPublicProperties(options: { slug?: string; featured?: boolean
   if (error) throw error;
   if (!properties?.length) return [];
 
-  const ids = properties.map((property) => property.id);
+  const ids = properties.map((property) => property.id).filter((id): id is string => Boolean(id));
   const [roomResult, mediaResult, serviceResult, businessMediaMap] = await Promise.all([
     supabase.from("public_rooms").select("*").in("property_id", ids),
     supabase.from("public_property_media").select("*").in("property_id", ids).order("sort_order"),
@@ -61,8 +61,8 @@ async function readPublicProperties(options: { slug?: string; featured?: boolean
         created_at: property.created_at,
         media_assets: {
           id: media.id,
-          filename: media.path.split("/").at(-1) ?? "property-image",
-          path: media.path,
+          filename: (media.path ?? "").split("/").at(-1) ?? "property-image",
+          path: media.path ?? "",
           category: media.media_type ?? "gallery",
           file_type: "image/jpeg",
           width: media.width,
@@ -87,15 +87,15 @@ async function readPublicProperties(options: { slug?: string; featured?: boolean
     const mapped = mapPropertyRowToDomain(property as Tables<"properties">, {
       rooms: propertyRooms as Tables<"rooms">[],
       propertyMedia: propertyMedia as NonNullable<PropertyWithRooms["property_media"]>,
-      businessMedia: businessMediaMap.get(property.id) ?? []
+      businessMedia: businessMediaMap.get(property.id ?? "") ?? []
     });
     mapped.services = (serviceResult.data ?? []).filter((service) => service.property_id === property.id).map((service) => ({
-      id: service.id,
-      name: service.title,
+      id: service.id ?? "",
+      name: service.title ?? "",
       description: service.description ?? "",
       price: service.price,
-      currency: service.currency,
-      unit: service.unit
+      currency: service.currency ?? "",
+      unit: service.unit ?? ""
     }));
     return mapped;
   });
@@ -146,7 +146,19 @@ export const SupabasePropertyRepository = {
     if (!supabase) return [];
     const { data, error } = await supabase.from("public_room_availability").select("*").eq("property_id", propertyId).gte("availability_date", new Date().toISOString().slice(0, 10)).order("availability_date");
     if (error) throw error;
-    return (data ?? []).map((row) => ({ id: row.id, propertyId: row.property_id, roomId: row.room_id ?? undefined, date: row.availability_date, roomsAvailable: row.rooms_available, rate: row.rate, currency: row.currency, restrictions: row.restrictions && typeof row.restrictions === "object" && !Array.isArray(row.restrictions) ? row.restrictions : {}, provider: row.provider as import("@/types/availability").AvailabilityProvider, lastSynchronizedAt: row.last_synchronized_at ?? undefined, syncStatus: row.sync_status }));
+    return (data ?? []).map((row) => ({
+      id: row.id ?? "",
+      propertyId: row.property_id ?? "",
+      roomId: row.room_id ?? undefined,
+      date: row.availability_date ?? "",
+      roomsAvailable: row.rooms_available ?? null,
+      rate: row.rate ?? null,
+      currency: row.currency ?? "",
+      restrictions: row.restrictions && typeof row.restrictions === "object" && !Array.isArray(row.restrictions) ? row.restrictions : {},
+      provider: (row.provider as import("@/types/availability").AvailabilityProvider) ?? "manual",
+      lastSynchronizedAt: row.last_synchronized_at ?? undefined,
+      syncStatus: row.sync_status ?? "unknown"
+    }));
   },
   async search(query: string) {
     const supabase = createSupabaseServerClient();

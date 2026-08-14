@@ -19,6 +19,16 @@ export function PartnerMembershipView({ portalData }: { portalData: PartnerPorta
             <strong>{portalData.membership.renewalDate}</strong>
             <small>Database membership record</small>
           </div>
+          <div>
+            <span>Complimentary</span>
+            <strong>{portalData.operationalStatus.complimentaryStatus}</strong>
+            <small>{portalData.operationalStatus.complimentaryRange}</small>
+          </div>
+          <div>
+            <span>Remaining</span>
+            <strong>{portalData.operationalStatus.daysRemainingText}</strong>
+            <small>{portalData.operationalStatus.subscriptionStatus}</small>
+          </div>
         </div>
       </section>
     </div>

@@ -271,19 +271,15 @@ export const partnerMembershipPlans: PartnerMembershipPlan[] = [
 ];
 
 export const partnerNavigation = [
-  { label: "Dashboard", href: "/partner/dashboard" },
-  { label: "My Business", href: "/partner/business" },
-  { label: "Rooms / Services", href: "/partner/rooms" },
-  { label: "Pricing", href: "/partner/pricing" },
+  { label: "Overview", href: "/partner/dashboard" },
+  { label: "Listings", href: "/partner/business" },
   { label: "Bookings", href: "/partner/bookings" },
-  { label: "Calendar", href: "/partner/calendar" },
-  { label: "Integrations", href: "/partner/integrations" },
-  { label: "Gallery", href: "/partner/gallery" },
-  { label: "Documents", href: "/partner/documents" },
-  { label: "Verification", href: "/partner/verification" },
-  { label: "Membership", href: "/partner/membership" },
   { label: "Analytics", href: "/partner/analytics" },
+  { label: "Membership", href: "/partner/membership" },
+  { label: "Statements & Commission", href: "/partner/coming-soon" },
+  { label: "Invoices & Payments", href: "/partner/coming-soon" },
+  { label: "Agreement", href: "/partner/agreement" },
+  { label: "Documents", href: "/partner/documents" },
   { label: "Notifications", href: "/partner/notifications" },
-  { label: "Support", href: "/partner/support" },
-  { label: "Application", href: "/partner/application" }
+  { label: "Support", href: "/partner/support" }
 ];

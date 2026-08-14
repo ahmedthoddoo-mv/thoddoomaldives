@@ -53,8 +53,16 @@ export async function getPublishedStayPropertyBySlug(slug: string): Promise<Prop
       };
     }
 
+    if (!property.id) {
+      return {
+        data: undefined,
+        source: "supabase"
+      };
+    }
+
+    const propertyId = property.id ?? "";
     const guesthouse = adminPropertyToGuesthouse(property);
-    guesthouse.availability = await SupabasePropertyRepository.findPublicAvailability(property.id);
+    guesthouse.availability = await SupabasePropertyRepository.findPublicAvailability(propertyId);
     return {
       data: guesthouse,
       source: "supabase"

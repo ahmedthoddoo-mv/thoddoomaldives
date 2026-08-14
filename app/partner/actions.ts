@@ -360,7 +360,7 @@ export async function savePartnerTransferSchedule(schedule: TransferSchedule): P
     weatherNotice: sanitizeText(schedule.weatherNotice ?? "", 800), active: schedule.active
   };
   const exceptions = schedule.exceptions.map((item) => ({ date: item.date, departureTime: item.departureTime ?? "", cancelled: item.cancelled, notice: sanitizeText(item.notice ?? "", 400) }));
-  const { error } = await supabase.rpc("partner_save_transfer_schedule", { actor_user_id: scope.authUserId, partner_uuid: scope.partnerId, transfer_uuid: scope.listingId, schedule_uuid: schedule.id.startsWith("new-") ? null : schedule.id, payload: payload as unknown as Json, exceptions: exceptions as unknown as Json });
+  const { error } = await supabase.rpc("partner_save_transfer_schedule", { actor_user_id: scope.authUserId, partner_uuid: scope.partnerId ?? "", transfer_uuid: scope.listingId ?? "", schedule_uuid: schedule.id.startsWith("new-") ? "" : schedule.id, payload: payload as unknown as Json, exceptions: exceptions as unknown as Json });
   return error ? { ok: false, mode, message: error.message } : { ok: true, mode, message: "Transfer schedule saved." };
 }
 
@@ -368,13 +368,13 @@ export async function savePartnerManualAvailability(entries: Array<{ roomId?: st
   const { scope, supabase, mode } = await getScopedSupabase();
   if (!supabase || scope.mode !== "supabase" || scope.listingType !== "property") return { ok: false, mode, message: "Property owner access is required." };
   const normalized = entries.map((item) => ({ roomId: item.roomId ?? "", date: item.date, roomsAvailable: item.roomsAvailable, rate: item.rate, currency: item.currency, restrictions: {} }));
-  const { error } = await supabase.rpc("partner_save_manual_availability", { actor_user_id: scope.authUserId, partner_uuid: scope.partnerId, property_uuid: scope.propertyId, entries: normalized as unknown as Json });
+  const { error } = await supabase.rpc("partner_save_manual_availability", { actor_user_id: scope.authUserId, partner_uuid: scope.partnerId ?? "", property_uuid: scope.propertyId ?? "", entries: normalized as unknown as Json });
   return error ? { ok: false, mode, message: error.message } : { ok: true, mode, message: "Manual availability saved." };
 }
 
 export async function setPartnerAvailabilityProvider(provider: AvailabilityProvider): Promise<PartnerPortalActionResult> {
   const { scope, supabase, mode } = await getScopedSupabase();
   if (!supabase || scope.mode !== "supabase" || scope.listingType !== "property") return { ok: false, mode, message: "Property owner access is required." };
-  const { error } = await supabase.rpc("partner_set_availability_provider", { actor_user_id: scope.authUserId, partner_uuid: scope.partnerId, property_uuid: scope.propertyId, provider_name: provider });
+  const { error } = await supabase.rpc("partner_set_availability_provider", { actor_user_id: scope.authUserId, partner_uuid: scope.partnerId ?? "", property_uuid: scope.propertyId ?? "", provider_name: provider });
   return error ? { ok: false, mode, message: error.message } : { ok: true, mode, message: "Availability source saved. No OTA password is stored." };
 }

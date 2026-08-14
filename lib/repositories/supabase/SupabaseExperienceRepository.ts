@@ -15,8 +15,9 @@ export const SupabaseExperienceRepository = {
     if (!supabase) throw new Error("Supabase is not configured.");
     const { data, error } = await supabase.from("public_experiences").select("*").order("created_at", { ascending: false });
     if (error) throw error;
-    const mediaMap = await getPublicBusinessMediaMap("experience", (data ?? []).map((row) => row.id));
-    return (data ?? []).map((row) => mapExperienceRowToDomain(row, mediaMap.get(row.id) ?? []));
+    const ids = (data ?? []).map((row) => row.id).filter((id): id is string => Boolean(id));
+    const mediaMap = await getPublicBusinessMediaMap("experience", ids);
+    return (data ?? []).map((row) => mapExperienceRowToDomain(row as Parameters<typeof mapExperienceRowToDomain>[0], mediaMap.get(row.id ?? "") ?? []));
   },
   async findById(id: string) {
     const rows = await this.findAll();

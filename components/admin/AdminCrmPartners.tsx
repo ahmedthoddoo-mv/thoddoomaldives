@@ -162,6 +162,9 @@ export function AdminCrmPartners({ partners: crmPartners }: { partners: CrmPartn
               <button onClick={() => setSelectedPartnerId(partner.id)} type="button">
                 Preview
               </button>
+              <Link href={`/admin/partners/${partner.id}`}>
+                Operations
+              </Link>
             </div>
           </article>
         ))}

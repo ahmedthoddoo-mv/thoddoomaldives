@@ -66,11 +66,13 @@ export async function getAdminAuthState(): Promise<AdminAuthState> {
     return { status: "unauthenticated", reason: "This account does not have dashboard access." };
   }
 
+  const role = adminRecord.role as "owner" | "admin";
+
   return {
     status: "authenticated",
     userId: userResult.user.id,
     email: userResult.user.email,
-    role: adminRecord.role
+    role
   };
 }
 

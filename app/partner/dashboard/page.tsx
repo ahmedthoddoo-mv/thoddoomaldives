@@ -14,6 +14,7 @@ export default async function PartnerDashboardPage() {
   return (
     <PartnerPortalShell portalData={portalData} title="Business Dashboard" subtitle="Bookings, revenue, visibility, membership, and profile health at a glance.">
       <PartnerDashboard
+        portalData={portalData}
         initialPartnerBookings={portalData.bookings}
         initialPropertyRooms={portalData.services.map((service) => ({
           id: service.id,

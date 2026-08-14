@@ -354,7 +354,7 @@ export async function publishBusinessOnboardingDraft(input: {
     const guesthouse = mapOnboardingValuesToPropertyPayload(values as Record<string, unknown>);
     const { data, error } = await db.rpc("admin_save_property", {
       admin_user_id: admin.userId,
-      property_uuid: listingId,
+      property_uuid: (listingId ?? undefined) as string,
       property_payload: guesthouse.property as Json,
       room_payload: guesthouse.rooms as Json,
       media_payload: [] as Json
@@ -402,7 +402,7 @@ export async function publishBusinessOnboardingDraft(input: {
         : normalizedBusinessType === "experience"
           ? "experience"
           : "restaurant",
-      listing_uuid: listingId,
+      listing_uuid: (listingId ?? undefined) as string,
       listing_payload: payload as Json
     });
     if (error) return { ok: false as const, message: error.message };

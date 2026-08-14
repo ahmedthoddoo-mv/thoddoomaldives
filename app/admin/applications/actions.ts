@@ -558,7 +558,7 @@ export async function inviteApplicationOwner(input: {
     admin_user_id: admin.userId,
     application_uuid: input.applicationId,
     reviewer_name: reviewer,
-    partner_uuid: null
+    partner_uuid: undefined
   });
   if (error || !data || typeof data !== "object" || Array.isArray(data)) {
     return { ok: false, message: error?.message ?? "Owner invitation setup failed." };

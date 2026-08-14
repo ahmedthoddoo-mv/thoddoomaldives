@@ -76,7 +76,7 @@ export async function saveAdminPropertyToSupabase({
 
   const { data, error } = await supabase.rpc("admin_save_property", {
     admin_user_id: admin.userId,
-    property_uuid: propertyId,
+    property_uuid: propertyId ?? "",
     property_payload: {
       name: property.name.trim(),
       slug: property.slug.trim(),
@@ -84,12 +84,12 @@ export async function saveAdminPropertyToSupabase({
       address: property.address,
       latitude,
       longitude,
-      whatsapp: property.whatsapp,
-      email: property.email,
-      website: property.website,
+      whatsapp: property.whatsapp ?? "",
+      email: property.email ?? "",
+      website: property.website ?? "",
       short_description: property.shortDescription,
       full_description: property.fullDescription || property.shortDescription,
-      hero_image_path: property.coverImage,
+      hero_image_path: property.coverImage ?? "",
       amenities: property.amenities,
       policies: property.policies,
       check_in_time: property.checkIn || null,

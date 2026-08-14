@@ -35,8 +35,9 @@ export const SupabaseTransferRepository = {
     if (!supabase) throw new Error("Supabase is not configured.");
     const { data, error } = await supabase.from("public_transfers").select("*").order("created_at", { ascending: false });
     if (error) throw error;
-    const mediaMap = await getPublicBusinessMediaMap("transfer", (data ?? []).map((row) => row.id));
-    return (data ?? []).map((row) => mapTransferRowToDomain(row, mediaMap.get(row.id) ?? []));
+    const ids = (data ?? []).map((row) => row.id).filter((id): id is string => Boolean(id));
+    const mediaMap = await getPublicBusinessMediaMap("transfer", ids);
+    return (data ?? []).map((row) => mapTransferRowToDomain(row as Parameters<typeof mapTransferRowToDomain>[0], mediaMap.get(row.id ?? "") ?? []));
   },
   async findById(id: string) {
     const rows = await this.findAll();
@@ -54,8 +55,8 @@ export const SupabaseTransferRepository = {
     if (!data) {
       return undefined;
     }
-    const mediaMap = await getPublicBusinessMediaMap("transfer", [data.id]);
-    return mapTransferRowToDomain(data, mediaMap.get(data.id) ?? []);
+    const mediaMap = await getPublicBusinessMediaMap("transfer", [data.id ?? ""].filter((id): id is string => Boolean(id)));
+    return mapTransferRowToDomain(data as Parameters<typeof mapTransferRowToDomain>[0], mediaMap.get(data.id ?? "") ?? []);
   },
   async findPublishedSchedules(transferId: string) {
     const supabase = createSupabaseServerClient();
@@ -66,7 +67,7 @@ export const SupabaseTransferRepository = {
     ]);
     if (error) throw error;
     if (exceptionError) throw exceptionError;
-    return (data ?? []).map((row) => mapSchedule(row, exceptions ?? []));
+    return (data ?? []).map((row) => mapSchedule(row as ScheduleRow, (exceptions ?? []) as ExceptionRow[]));
   },
   async findAllSchedules(transferId: string) {
     const supabase = createSupabaseServiceRoleClient() ?? createSupabaseServerClient();

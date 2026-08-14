@@ -1,9 +1,11 @@
 "use client";
 
+import { PartnerOperationalStatusPanel } from "@/components/partner-portal/PartnerOperationalStatusPanel";
 import { PartnerStatCard } from "@/components/partner-portal/PartnerStatCard";
 import { calculateBookingAnalytics } from "@/lib/bookings/bookingAnalytics";
 import type { AdminManagedProperty } from "@/data/adminContent";
 import type { Booking } from "@/types/booking";
+import type { PartnerPortalData } from "@/lib/partner-portal/partnerAccess";
 
 type PartnerDashboardProps = {
   initialPartnerBookings?: Booking[];
@@ -11,6 +13,7 @@ type PartnerDashboardProps = {
   membershipName?: string;
   propertyName?: string;
   selectedPartnerId?: string;
+  portalData?: PartnerPortalData;
 };
 
 export function PartnerDashboard({
@@ -18,7 +21,8 @@ export function PartnerDashboard({
   initialPropertyRooms,
   membershipName,
   propertyName = "Business",
-  selectedPartnerId = ""
+  selectedPartnerId = "",
+  portalData
 }: PartnerDashboardProps) {
   const partnerBookings = (repositoryBookings ?? []).filter((booking) => booking.partnerId === selectedPartnerId);
   const bookingAnalytics = calculateBookingAnalytics(partnerBookings);
@@ -32,6 +36,7 @@ export function PartnerDashboard({
 
   return (
     <div className="partnerPortalStack">
+      {portalData ? <PartnerOperationalStatusPanel portalData={portalData} /> : null}
       <section className="partnerPortalStatsGrid" aria-label="Partner dashboard statistics">
         {liveStats.map((stat) => (
           <PartnerStatCard key={stat.label} stat={stat} />

@@ -15,8 +15,9 @@ export const SupabaseRestaurantRepository = {
     if (!supabase) throw new Error("Supabase is not configured.");
     const { data, error } = await supabase.from("public_restaurants").select("*").order("created_at", { ascending: false });
     if (error) throw error;
-    const mediaMap = await getPublicBusinessMediaMap("restaurant", (data ?? []).map((row) => row.id));
-    return (data ?? []).map((row) => mapRestaurantRowToDomain(row, mediaMap.get(row.id) ?? []));
+    const ids = (data ?? []).map((row) => row.id).filter((id): id is string => Boolean(id));
+    const mediaMap = await getPublicBusinessMediaMap("restaurant", ids);
+    return (data ?? []).map((row) => mapRestaurantRowToDomain(row as Parameters<typeof mapRestaurantRowToDomain>[0], mediaMap.get(row.id ?? "") ?? []));
   },
   async findPublishedBySlug(slug: string) {
     const supabase = createSupabaseServerClient();
@@ -30,8 +31,8 @@ export const SupabaseRestaurantRepository = {
     if (!data) {
       return null;
     }
-    const mediaMap = await getPublicBusinessMediaMap("restaurant", [data.id]);
-    return mapRestaurantRowToDomain(data, mediaMap.get(data.id) ?? []);
+    const mediaMap = await getPublicBusinessMediaMap("restaurant", [data.id ?? ""].filter((id): id is string => Boolean(id)));
+    return mapRestaurantRowToDomain(data as Parameters<typeof mapRestaurantRowToDomain>[0], mediaMap.get(data.id ?? "") ?? []);
   },
   async findById(id: string) {
     const rows = await this.findAll();

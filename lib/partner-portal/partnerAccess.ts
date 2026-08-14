@@ -7,6 +7,16 @@ import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
 import { getDataMode } from "@/lib/supabase/status";
 import { mapBookingRowToDomain } from "@/lib/supabase/mappers";
 import { getPartnerAuthState } from "@/lib/partner-portal/partnerAuth";
+import {
+  buildPartnerAgreementStatus,
+  buildPartnerOperationalStatus,
+  buildPartnerSubscriptionStatus,
+  calculateDaysRemaining,
+  describeAgreementState,
+  describeLifecycleState,
+  describeSubscriptionState,
+  describeVerificationState,
+} from "@/lib/partner-platform/services";
 import type { Booking } from "@/types/booking";
 import type { Tables } from "@/lib/supabase/types";
 import type { BusinessType } from "@/types/business-type";
@@ -89,6 +99,28 @@ export type PartnerPortalData = {
     plan: string;
     renewalDate: string;
     status: string;
+  };
+  operationalStatus: {
+    headline: string;
+    partnerStatus: string;
+    verificationStatus: string;
+    membershipPlan: string;
+    subscriptionStatus: string;
+    complimentaryStatus: string;
+    complimentaryRange: string;
+    daysRemainingText: string;
+    agreementStatus: string;
+    publicationStatus: string;
+    requiresAction: string;
+    operationalAccess: string;
+    accessDetail: string;
+  };
+  agreementStatus: {
+    label: string;
+    state: string;
+    message: string;
+    detail: string;
+    nextStep: string;
   };
   verification: {
     status: "Verified" | "Pending" | "Rejected" | "Missing";
@@ -191,6 +223,22 @@ function getRestrictedPortalData(
     membership: {
       ...base.membership,
       status: source === "pending" ? "Under review" : source === "rejected" ? "Rejected" : source === "suspended" ? "Suspended" : base.membership.status
+    },
+    operationalStatus: {
+      ...base.operationalStatus,
+      partnerStatus: source === "pending" ? "Review pending" : source === "rejected" ? "Rejected" : source === "suspended" ? "Suspended" : base.operationalStatus.partnerStatus,
+      verificationStatus: source === "pending" ? "Pending" : source === "rejected" ? "Rejected" : source === "suspended" ? "Suspended" : base.operationalStatus.verificationStatus,
+      requiresAction: source === "pending" || source === "rejected" || source === "suspended" ? "Action required" : base.operationalStatus.requiresAction,
+      operationalAccess: source === "pending" || source === "rejected" || source === "suspended" ? "Restricted" : base.operationalStatus.operationalAccess,
+      accessDetail: source === "pending" ? "Partner access is currently limited" : source === "rejected" ? "This account is not active" : source === "suspended" ? "Contact support to resolve the suspension" : base.operationalStatus.accessDetail
+    },
+    agreementStatus: {
+      ...base.agreementStatus,
+      label: source === "pending" ? "Agreement review pending" : source === "rejected" ? "Agreement unavailable" : source === "suspended" ? "Agreement paused" : base.agreementStatus.label,
+      state: source === "pending" ? "Review pending" : source === "rejected" ? "Unavailable" : source === "suspended" ? "Paused" : base.agreementStatus.state,
+      message: source === "pending" ? "Your account is under review. No agreement action is required yet." : source === "rejected" ? "The account is not currently active for agreement workflows." : source === "suspended" ? "Agreement actions are paused while the account is suspended." : base.agreementStatus.message,
+      detail: source === "pending" ? "The team is reviewing your setup." : source === "rejected" ? "Contact support for next steps." : source === "suspended" ? "Reach out to support to restore access." : base.agreementStatus.detail,
+      nextStep: source === "pending" || source === "rejected" || source === "suspended" ? "Contact support" : base.agreementStatus.nextStep
     }
   };
 }
@@ -223,6 +271,28 @@ function getAccountSetupPortalData(email: string | null, source: PartnerPortalDa
       plan: "Free",
       renewalDate: "Pending",
       status: "Setup required"
+    },
+    operationalStatus: {
+      headline: "Setup required",
+      partnerStatus: "Application in progress",
+      verificationStatus: "Not started",
+      membershipPlan: "Free",
+      subscriptionStatus: "Draft",
+      complimentaryStatus: "Standard membership",
+      complimentaryRange: "No complimentary period configured",
+      daysRemainingText: "No subscription configured",
+      agreementStatus: "Not required",
+      publicationStatus: "Legacy publication logic remains authoritative",
+      requiresAction: "No action required",
+      operationalAccess: "Restricted",
+      accessDetail: "Complete account setup to unlock the partner portal"
+    },
+    agreementStatus: {
+      label: "Agreement not required",
+      state: "Not required",
+      message: "No agreement action is currently required.",
+      detail: "The agreement workflow is available for future activation only.",
+      nextStep: "No action required"
     },
     verification: {
       status: "Missing",
@@ -297,6 +367,56 @@ function mapNotification(row: Tables<"partner_notifications">): PartnerPortalNot
   };
 }
 
+function buildOperationalDisplay(input: {
+  lifecycleState: string;
+  verificationState: string;
+  agreementState: string;
+  subscriptionState: string;
+  membershipPlan: string;
+  complimentaryStartAt: string | null;
+  complimentaryEndAt: string | null;
+  daysRemaining: number | null;
+  requiresAction: boolean;
+  canLogin: boolean;
+  canViewDashboard: boolean;
+  canManageListings: boolean;
+  publicationBlockedReason: string | null;
+}): PartnerPortalData["operationalStatus"] {
+  const daysRemainingText = input.daysRemaining == null ? "Not configured" : `${input.daysRemaining} day${input.daysRemaining === 1 ? "" : "s"} remaining`;
+  return {
+    headline: input.requiresAction ? "Action required to keep access open" : "Operational access is active",
+    partnerStatus: describeLifecycleState(input.lifecycleState as Parameters<typeof describeLifecycleState>[0]),
+    verificationStatus: describeVerificationState(input.verificationState as Parameters<typeof describeVerificationState>[0]),
+    membershipPlan: input.membershipPlan,
+    subscriptionStatus: describeSubscriptionState(input.subscriptionState as Parameters<typeof describeSubscriptionState>[0]),
+    complimentaryStatus: input.subscriptionState === "complimentary_active" ? "Complimentary membership" : "Standard membership",
+    complimentaryRange: input.complimentaryStartAt && input.complimentaryEndAt
+      ? `${new Date(input.complimentaryStartAt).toLocaleDateString()} → ${new Date(input.complimentaryEndAt).toLocaleDateString()}`
+      : "No complimentary period configured",
+    daysRemainingText,
+    agreementStatus: describeAgreementState(input.agreementState as Parameters<typeof describeAgreementState>[0]),
+    publicationStatus: input.publicationBlockedReason ? "Needs review" : "Live listing access",
+    requiresAction: input.requiresAction ? "Action required" : "No action required",
+    operationalAccess: input.canLogin && input.canViewDashboard && input.canManageListings ? "Full access" : "Restricted",
+    accessDetail: input.canLogin && input.canViewDashboard ? "Partner dashboard remains available" : "Limited access"
+  };
+}
+
+function buildAgreementDisplay(input: {
+  state: string;
+  message: string;
+  detail: string;
+  nextStep: string;
+}): PartnerPortalData["agreementStatus"] {
+  return {
+    label: input.state,
+    state: input.state,
+    message: input.message,
+    detail: input.detail,
+    nextStep: input.nextStep,
+  };
+}
+
 export async function getCurrentPartnerPortalData(): Promise<PartnerPortalData> {
   if (getDataMode() !== "supabase") {
     return getAccountSetupPortalData(null);
@@ -332,6 +452,28 @@ export async function getCurrentPartnerPortalData(): Promise<PartnerPortalData> 
     ]);
     if (membershipError) throw membershipError;
     if (applicationError) throw applicationError;
+
+    const [lifecycleResult, verificationResult, agreementResult, subscriptionResult] = await Promise.all([
+      db.from("partner_lifecycles").select("*").eq("partner_id", authState.partner.id).maybeSingle(),
+      db.from("partner_verifications").select("*").eq("partner_id", authState.partner.id).maybeSingle(),
+      db.from("partner_agreements").select("*").eq("partner_id", authState.partner.id).maybeSingle(),
+      db.from("partner_subscriptions").select("*").eq("partner_id", authState.partner.id).maybeSingle()
+    ]);
+
+    if (lifecycleResult.error || verificationResult.error || agreementResult.error || subscriptionResult.error) {
+      throw new Error("Partner operational status unavailable");
+    }
+
+    const operationalStatus = buildPartnerOperationalStatus({
+      partnerId: authState.partner.id,
+      lifecycleRow: lifecycleResult.data,
+      verificationRow: verificationResult.data,
+      agreementRow: agreementResult.data,
+      subscriptionRow: subscriptionResult.data,
+    });
+    const agreementStatus = buildPartnerAgreementStatus({ partnerId: authState.partner.id, agreementRow: agreementResult.data });
+    const subscriptionStatus = buildPartnerSubscriptionStatus({ partnerId: authState.partner.id, subscriptionRow: subscriptionResult.data });
+    const daysRemaining = calculateDaysRemaining(subscriptionStatus.complimentaryEndAt ?? subscriptionStatus.currentPeriodEndAt ?? null);
 
     const { data: propertyData, error: propertyError } = await db
       .from("properties")
@@ -380,6 +522,27 @@ export async function getCurrentPartnerPortalData(): Promise<PartnerPortalData> 
           instagram: "", facebook: "", operatingHours: String(listing.opening_hours ?? listing.schedule_note ?? ""), languages: [], amenities: [], policies: [],
           seoTitle: `${name} | iThoddoo Maldives`, seoDescription: description },
         membership: { plan: membershipPlan?.name ?? "Free", renewalDate: "Not configured", status: membershipPlan ? "Active" : "Not configured" },
+        operationalStatus: buildOperationalDisplay({
+          lifecycleState: operationalStatus.lifecycle.state,
+          verificationState: operationalStatus.verification.state,
+          agreementState: operationalStatus.agreement.requirementState,
+          subscriptionState: operationalStatus.subscription.state,
+          membershipPlan: membershipPlan?.name ?? "Free",
+          complimentaryStartAt: operationalStatus.subscription.complimentaryStartAt,
+          complimentaryEndAt: operationalStatus.subscription.complimentaryEndAt,
+          daysRemaining,
+          requiresAction: operationalStatus.lifecycle.requiresAction,
+          canLogin: operationalStatus.lifecycle.canLogin,
+          canViewDashboard: operationalStatus.lifecycle.canViewDashboard,
+          canManageListings: operationalStatus.lifecycle.canManageListings,
+          publicationBlockedReason: operationalStatus.lifecycle.publicationBlockedReason,
+        }),
+        agreementStatus: buildAgreementDisplay({
+          state: describeAgreementState(operationalStatus.agreement.requirementState),
+          message: agreementStatus.requirementState === "not_required" ? "No agreement action is currently required." : "Agreement review is visible in the partner portal.",
+          detail: agreementStatus.acceptedAt ? `Accepted on ${new Date(agreementStatus.acceptedAt).toLocaleDateString()}` : "No acceptance recorded yet.",
+          nextStep: agreementStatus.requirementState === "not_required" ? "No action required" : "Agreement acceptance will be enabled in a future release",
+        }),
         verification: { status: listing.verification_status === "verified" ? "Verified" : "Pending", completion: 100, missingDocuments: [], adminNotes: [] },
         services, gallery: gallery.length ? gallery : image ? [{ ...galleryFallbackItem(image, name), businessType: managedBusinessType, businessId: listingId }] : [],
         documents: [], bookings: ((bookings ?? []) as unknown as BookingWithRelations[]).map((booking) => mapBookingRowToDomain(booking, booking.guests ?? undefined, booking.properties ?? undefined, booking.rooms ?? undefined)), notifications: []
@@ -463,6 +626,27 @@ export async function getCurrentPartnerPortalData(): Promise<PartnerPortalData> 
         renewalDate: "Not configured",
         status: membershipPlan ? "Active" : "Not configured"
       },
+      operationalStatus: buildOperationalDisplay({
+        lifecycleState: operationalStatus.lifecycle.state,
+        verificationState: operationalStatus.verification.state,
+        agreementState: operationalStatus.agreement.requirementState,
+        subscriptionState: operationalStatus.subscription.state,
+        membershipPlan: membershipPlan?.name ?? "Free",
+        complimentaryStartAt: operationalStatus.subscription.complimentaryStartAt,
+        complimentaryEndAt: operationalStatus.subscription.complimentaryEndAt,
+        daysRemaining,
+        requiresAction: operationalStatus.lifecycle.requiresAction,
+        canLogin: operationalStatus.lifecycle.canLogin,
+        canViewDashboard: operationalStatus.lifecycle.canViewDashboard,
+        canManageListings: operationalStatus.lifecycle.canManageListings,
+        publicationBlockedReason: operationalStatus.lifecycle.publicationBlockedReason,
+      }),
+      agreementStatus: buildAgreementDisplay({
+        state: describeAgreementState(operationalStatus.agreement.requirementState),
+        message: agreementStatus.requirementState === "not_required" ? "No agreement action is currently required." : "Agreement review is visible in the partner portal.",
+        detail: agreementStatus.acceptedAt ? `Accepted on ${new Date(agreementStatus.acceptedAt).toLocaleDateString()}` : "No acceptance recorded yet.",
+        nextStep: agreementStatus.requirementState === "not_required" ? "No action required" : "Agreement acceptance will be enabled in a future release",
+      }),
       verification: {
         status: property.verification_status === "verified" ? "Verified" : property.verification_status === "rejected" ? "Rejected" : "Pending",
         completion: Math.round((completedDocuments.length / Math.max(1, requiredDocuments.length)) * 100),
