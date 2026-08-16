@@ -1,9 +1,111 @@
-// default open-next.config.ts file created by @opennextjs/cloudflare
 import { defineCloudflareConfig } from "@opennextjs/cloudflare";
-// import r2IncrementalCache from "@opennextjs/cloudflare/overrides/incremental-cache/r2-incremental-cache";
 
-export default defineCloudflareConfig({
-	// For best results consider enabling R2 caching
-	// See https://opennext.js.org/cloudflare/caching for more details
-	// incrementalCache: r2IncrementalCache
-});
+const base = defineCloudflareConfig();
+
+const config = {
+  ...base,
+  default: {
+    ...base.default,
+    runtime: "node",
+  },
+  functions: {
+    admin: {
+      runtime: "node",
+      placement: "regional",
+      routes: [
+        "app/admin/page",
+        "app/admin/agreements/page",
+        "app/admin/agreements/new/page",
+        "app/admin/agreements/[id]/page",
+        "app/admin/agreements/[id]/edit/page",
+        "app/admin/agreements/[id]/preview/page",
+        "app/admin/agreements/[id]/publish/page",
+        "app/admin/applications/page",
+        "app/admin/applications/[id]/page",
+        "app/admin/bookings/page",
+        "app/admin/businesses/[id]/onboarding/page",
+        "app/admin/businesses/new/page",
+        "app/admin/crm/page",
+        "app/admin/crm/notes/page",
+        "app/admin/crm/partners/page",
+        "app/admin/crm/tasks/page",
+        "app/admin/experiences/page",
+        "app/admin/experiences/[id]/edit/page",
+        "app/admin/experiences/new/page",
+        "app/admin/guesthouses/page",
+        "app/admin/guesthouses/[id]/edit/page",
+        "app/admin/guesthouses/new/page",
+        "app/admin/media/page",
+        "app/admin/media/[id]/page",
+        "app/admin/partners/[partnerId]/page",
+        "app/admin/properties/page",
+        "app/admin/properties/[id]/edit/page",
+        "app/admin/properties/new/page",
+        "app/admin/property-dashboard/page",
+        "app/admin/restaurants/page",
+        "app/admin/restaurants/[id]/edit/page",
+        "app/admin/restaurants/new/page",
+        "app/admin/transfers/page",
+        "app/admin/transfers/[id]/edit/page",
+        "app/admin/transfers/new/page",
+      ],
+      patterns: ["/admin/*"],
+    },
+    partner: {
+      runtime: "node",
+      placement: "regional",
+      routes: [
+        "app/partner/page",
+        "app/partner/access-denied/page",
+        "app/partner/agreement/page",
+        "app/partner/analytics/page",
+        "app/partner/application/page",
+        "app/partner/bookings/page",
+        "app/partner/business/page",
+        "app/partner/calendar/page",
+        "app/partner/coming-soon/page",
+        "app/partner/dashboard/page",
+        "app/partner/documents/page",
+        "app/partner/forgot-password/page",
+        "app/partner/gallery/page",
+        "app/partner/integrations/page",
+        "app/partner/login/page",
+        "app/partner/membership/page",
+        "app/partner/notifications/page",
+        "app/partner/onboarding/page",
+        "app/partner/pending/page",
+        "app/partner/pricing/page",
+        "app/partner/profile/page",
+        "app/partner/rejected/page",
+        "app/partner/reset-password/page",
+        "app/partner/rooms/page",
+        "app/partner/support/page",
+        "app/partner/suspended/page",
+        "app/partner/verification/page",
+      ],
+      patterns: ["/partner/*"],
+    },
+    publicForms: {
+      runtime: "node",
+      placement: "regional",
+      routes: [
+        "app/contact/page",
+        "app/booking/failure/page",
+        "app/booking/success/page",
+        "app/partners/onboarding/page",
+      ],
+      patterns: ["/contact", "/contact/*", "/booking/*", "/partners/onboarding"],
+    },
+    api: {
+      runtime: "node",
+      placement: "regional",
+      routes: [
+        "app/api/business-media/upload/route",
+        "app/api/partner/agreements/accept/route",
+      ],
+      patterns: ["/api/*"],
+    },
+  },
+};
+
+export default config;

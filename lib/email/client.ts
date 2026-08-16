@@ -1,4 +1,4 @@
-import { createTransport, type Transporter } from "nodemailer";
+import type { Transporter } from "nodemailer";
 import type { ReactElement } from "react";
 import type { SendEmailInput, SendEmailResult } from "@/lib/email/types";
 
@@ -50,8 +50,9 @@ function getEmailRuntimeConfig(): EmailRuntimeConfig {
   };
 }
 
-function getTransporter() {
+async function getTransporter() {
   if (cachedTransporter) return cachedTransporter;
+  const { createTransport } = await import("nodemailer");
   const config = getEmailRuntimeConfig();
   cachedTransporter = createTransport({
     host: config.smtpHost,
@@ -82,7 +83,7 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
   }
 
   const config = getEmailRuntimeConfig();
-  const transporter = getTransporter();
+  const transporter = await getTransporter();
   const message = await transporter.sendMail({
     from: `"${config.fromName}" <${config.fromAddress}>`,
     to: formatAddress(input.to),
